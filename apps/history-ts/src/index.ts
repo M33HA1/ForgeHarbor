@@ -1,8 +1,9 @@
 import Fastify from "fastify";
 import { MongoClient, ObjectId } from "mongodb";
 import dotenv from "dotenv";
+import path from "path";
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "../../config/.env") });
 
 const app = Fastify();
 

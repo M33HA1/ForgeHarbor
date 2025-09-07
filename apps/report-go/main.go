@@ -22,7 +22,7 @@ var (
 
 func main() {
 	//load .env
-	err := godotenv.Load("../../.env")
+	err := godotenv.Load("../../config/.env")
 	if err != nil {
 		log.Println("No .env file found, using system env")
 	}
