@@ -1,0 +1,86 @@
+version: '3.8'
+services:
+mongo:
+  image: mongo:6.0
+  container_name: fh-mongo
+  ports: ['27017:27017']
+  volumes:
+  - mongo-data:/data/db
+
+
+minio:
+  image: minio/minio:RELEASE.2025-01-01T00-00-00Z
+  container_name: fh-minio
+  environment:
+  MINIO_ROOT_USER: minioadmin
+  MINIO_ROOT_PASSWORD: minioadmin
+  command: server /data
+  ports: ['9000:9000']
+  volumes:
+  - minio-data:/data
+
+rabbitmq:
+  image: rabbitmq:3-management
+  container_name: fh-rabbit
+  ports: ['5672:5672', '15672:15672']
+
+
+auth-rs:
+  build: ../../apps/auth-rs
+  container_name: fh-auth
+  env_file: ../../config/.env
+  ports: ['8080:8080']
+  depends_on: [mongo]
+
+
+phishing-rs:
+  build: ../../apps/phishing-rs
+  container_name: fh-phishing
+  env_file: ../../config/.env
+  ports: ['8081:8081']
+  depends_on: [rabbitmq, redis]
+
+
+malware-rs:
+  build: ../../apps/malware-rs
+  container_name: fh-malware
+  env_file: ../../config/.env
+  ports: ['8082:8082']
+  depends_on: [rabbitmq, mongo]
+
+
+history-ts:
+  build: ../../apps/history-ts
+  container_name: fh-history
+  env_file: ../../config/.env
+  ports: ['8083:8083']
+  depends_on: [mongo]
+
+
+report-go:
+  build: ../../apps/report-go
+  container_name: fh-report
+  env_file: ../../config/.env
+  ports: ['8084:8084']
+  depends_on: [mongo, minio, rabbitmq]
+  volumes:
+  - ../../apps/report-go/reports:/app/reports
+
+
+notify-py:
+  build: ../../apps/notify-py
+  container_name: fh-notify
+  env_file: ../../config/.env
+  ports: ['8085:8085']
+  depends_on: [rabbitmq]
+
+
+redis:
+  image: redis:7-alpine
+  container_name: fh-redis
+  ports: ['6379:6379']
+
+
+volumes:
+  mongo-data:
+  minio-data:

@@ -1,0 +1,22 @@
+{
+  "$id": "https://forgeharbor.local/schemas/scan.completed.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "scan.completed",
+  "type": "object",
+  "properties": {
+    "scan_id": { "type": "string" },
+    "user_id": { "type": "string" },
+    "type": { "type": "string", "enum": ["url", "file"] },
+    "input": { "type": "string" },
+    "result": {
+      "type": "object",
+      "properties": {
+        "risk_level": { "type": "string" },
+        "confidence": { "type": "integer" },
+        "reason": { "type": "string" }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["scan_id", "type", "input", "result", "created_at"]
+}

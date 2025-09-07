@@ -1,0 +1,27 @@
+# Node modules
+node_modules/
+
+# Production build
+dist/
+
+# Vite cache
+vite/
+
+# System files
+Thumbs.db
+
+# Environment variables
+.env
+
+# VS Code settings
+.vscode/
+
+#target folder
+target/
+
+#jwt keys
+jwt-private.pem
+jwt-public.pem
+
+#tree
+tree.txt

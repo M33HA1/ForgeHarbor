@@ -1,0 +1,18 @@
+[package]
+name = "phishing-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+actix-web = "*"
+actix-cors = "*"
+actix-web-httpauth = "*"
+serde = { version = "*", features = ["derive"] }
+serde_json = "*"
+tokio = { version = "*", features = ["full"] }
+reqwest = { version = "*", features = ["json"] }
+dotenvy = "*"
+futures-util = "*"
+mongodb = "*"
+jsonwebtoken = "*"
+chrono = { version = "*", features = ["serde"] }

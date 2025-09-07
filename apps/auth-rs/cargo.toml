@@ -1,0 +1,24 @@
+[package]
+name = "auth-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+actix-web = "*"
+actix-cors = "*"
+actix-web-httpauth = "*"
+tokio = { version = "*", features = ["full"] }
+serde = { version = "*", features = ["derive"] }
+serde_json = "*"
+mongodb = "*"
+redis = "*"
+jsonwebtoken = "*"
+base64 = "*"
+argon2 = "*"
+tracing = "*"
+tracing-subscriber = "*"
+tracing-actix-web = "*"
+uuid = { version = "*", features = ["v4", "serde"] }
+anyhow = "*"
+dotenv = "*"
+chrono = { version = "0.4", features = ["serde"] }

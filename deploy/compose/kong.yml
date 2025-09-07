@@ -1,0 +1,33 @@
+_format_version: "3.0"
+
+services:
+  - name: auth-service
+    url: http://host.docker.internal:8080
+    routes:
+      - name: auth-route
+        paths: ["/auth"]
+
+  - name: phishing-service
+    url: http://host.docker.internal:8081
+    routes:
+      - name: phishing-route
+        paths: ["/scan/url"]
+
+  - name: malware-service
+    url: http://host.docker.internal:8082
+    routes:
+      - name: malware-route
+        paths: ["/scan/file"]
+
+  - name: history-service
+    url: http://host.docker.internal:8083
+    routes:
+      - name: history-route
+        paths: ["/history"]
+
+plugins:
+  - name: cors
+    config:
+      origins: ["*"]
+      methods: ["GET", "POST", "PUT", "DELETE"]
+      headers: ["Accept", "Authorization", "Content-Type"]
