@@ -25,9 +25,47 @@ services:
       - name: history-route
         paths: ["/history"]
 
+  - name: report-service
+    url: http://host.docker.internal:8084
+    routes:
+      - name: report-route
+        paths: ["/reports"]
+
+  - name: notify-service
+    url: http://host.docker.internal:8085
+    routes:
+      - name: notify-route
+        paths: ["/notifications"]
+
 plugins:
   - name: cors
     config:
       origins: ["*"]
-      methods: ["GET", "POST", "PUT", "DELETE"]
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
       headers: ["Accept", "Authorization", "Content-Type"]
+      credentials: true
+      max_age: 3600
+
+  - name: jwt
+    service: phishing-service
+    config:
+      uri_param_names: ["jwt"]
+      cookie_names: ["jwt"]
+
+  - name: jwt  
+    service: malware-service
+    config:
+      uri_param_names: ["jwt"]
+      cookie_names: ["jwt"]
+
+  - name: jwt
+    service: history-service  
+    config:
+      uri_param_names: ["jwt"]
+      cookie_names: ["jwt"]
+
+  - name: jwt
+    service: report-service
+    config:
+      uri_param_names: ["jwt"]
+      cookie_names: ["jwt"]

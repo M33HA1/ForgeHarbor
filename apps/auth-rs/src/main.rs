@@ -300,7 +300,7 @@ async fn jwt_middleware(
     credentials: BearerAuth,
 ) -> Result<ServiceRequest, (Error, ServiceRequest)> {
     let token = credentials.token();
-    println!("🔍 Verifying JWT token...");
+    println!("Verifying JWT token...");
 
     let state = req.app_data::<web::Data<AppState>>().unwrap();
     let decoding_key = &state.jwt_decoding_key;
@@ -327,7 +327,7 @@ async fn jwt_middleware(
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    dotenv::dotenv().ok();
+    dotenv::from_filename("../../config/.env").ok();  // force load
     tracing_subscriber::fmt::init();
 
     let mongo_uri = env::var("MONGO_URI").expect("MONGO_URI must be set in .env file");
@@ -367,11 +367,11 @@ async fn main() -> std::io::Result<()> {
         .find_map(|path| {
             match fs::read_to_string(path) {
                 Ok(content) => {
-                    println!("✅ Found JWT private key at: {}", path);
+                    println!("Found JWT private key at: {}", path);
                     Some(content)
                 }
                 Err(_) => {
-                    println!("❌ JWT private key not found at: {}", path);
+                    println!("JWT private key not found at: {}", path);
                     None
                 }
             }
@@ -383,11 +383,11 @@ async fn main() -> std::io::Result<()> {
         .find_map(|path| {
             match fs::read_to_string(path) {
                 Ok(content) => {
-                    println!("✅ Found JWT public key at: {}", path);
+                    println!("Found JWT public key at: {}", path);
                     Some(content)
                 }
                 Err(_) => {
-                    println!("❌ JWT public key not found at: {}", path);
+                    println!("JWT public key not found at: {}", path);
                     None
                 }
             }
