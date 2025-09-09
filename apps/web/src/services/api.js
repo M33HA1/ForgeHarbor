@@ -1,4 +1,3 @@
-// src/services/api.js
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 class ApiService {
@@ -66,7 +65,7 @@ class ApiService {
 
   // URL Scanning Service (Phishing Detection)
   async scanUrl(url) {
-    const response = await fetch(`${API_BASE_URL}/scan/url/v1/url/check`, {
+    const response = await fetch(`${API_BASE_URL}/scan/url`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify({ url })
@@ -79,7 +78,7 @@ class ApiService {
     const formData = new FormData();
     formData.append('file', file);
     
-    const response = await fetch(`${API_BASE_URL}/scan/file/v1/file/analyze`, {
+    const response = await fetch(`${API_BASE_URL}/scan/file`, {
       method: 'POST',
       headers: {
         ...(this.token && { 'Authorization': `Bearer ${this.token}` })
