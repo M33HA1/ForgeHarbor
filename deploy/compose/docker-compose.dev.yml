@@ -42,13 +42,34 @@ services:
       - "5432:5432"
     volumes:
       - kong-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  # Kong Migration (Bootstrap)
+  kong-migration:
+    image: kong:3.6
+    container_name: kong-migration
+    depends_on:
+      kong-database:
+        condition: service_healthy
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+      KONG_PG_DATABASE: kong
+    command: kong migrations bootstrap
+    restart: "no"
 
   # Kong Gateway
   kong:
     image: kong:3.6
     container_name: kong
     depends_on:
-      - kong-database
+      - kong-migration
     environment:
       KONG_DATABASE: postgres
       KONG_PG_HOST: kong-database
@@ -68,6 +89,9 @@ services:
       - "8444:8444"   # Admin TLS
     volumes:
       - ./kong.yml:/usr/local/kong/declarative/kong.yml
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # Microservices
   auth-rs:

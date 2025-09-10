@@ -19,10 +19,10 @@ COPY ./src ./src
 RUN cargo build --release
 
 # Stage 2: Create the final, minimal production image
-FROM debian:buster-slim
+FROM debian:bookworm-slim
 
-# Copy the compiled binary from the builder stage
-COPY --from=builder /app/target/release/app /usr/local/bin/
+# Copy the compiled binary from the builder stage (FIXED: use correct binary name)
+COPY --from=builder /app/target/release/auth-rs /usr/local/bin/auth-rs
 
 # Expose the correct port for each service
 # For auth-rs: EXPOSE 8080
@@ -30,5 +30,5 @@ COPY --from=builder /app/target/release/app /usr/local/bin/
 # For malware-rs: EXPOSE 8082
 EXPOSE 8080
 
-# Set the startup command to run the binary
-CMD ["/usr/local/bin/app"]
+# Set the startup command to run the binary (FIXED: use correct binary name)
+CMD ["/usr/local/bin/auth-rs"]
