@@ -12,7 +12,23 @@ dotenv.config({ path: path.resolve(__dirname, "../../config/.env") });
 
 const app = Fastify();
 
-const mongo = new MongoClient(process.env.MONGO_URI || "mongodb://localhost:27017");
+const mongo = new MongoClient(process.env.MONGO_URI || "mongodb://fh-mongo:27017");
+
+app.get("/health", async (req, reply) => {
+  let mongodbStatus = "disconnected";
+  try {
+    await mongo.db(process.env.MONGO_DB || "forgeharbor").command({ ping: 1 });
+    mongodbStatus = "connected";
+  } catch {
+    mongodbStatus = "disconnected";
+  }
+  return { 
+    status: "healthy", 
+    service: "history-ts",
+    timestamp: new Date().toISOString(),
+    mongodb: mongodbStatus
+  };
+});
 
 app.get("/history", async (req, reply) => {
   const { limit = "20", cursor, type, risk } = req.query as any;

@@ -8,8 +8,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Load shared env from ../../config/.env
-env_path = Path(__file__).resolve().parents[2] / "config" / ".env"
-load_dotenv(dotenv_path=env_path)
+# Fix: Use environment variable override instead of path resolution
+load_dotenv()
 
 # MongoDB setup
 mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017")
@@ -19,7 +19,7 @@ db = client[mongo_db]
 notifications_col = db["notifications"]
 
 # RabbitMQ setup
-rabbitmq_url = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
+rabbitmq_url = os.getenv("RABBITMQ_URL", "amqp://localhost:5672/")
 queue_name = os.getenv("NOTIFY_QUEUE", "notifications")
 
 # FastAPI app
@@ -61,5 +61,5 @@ def start_worker():
 if __name__ == "__main__":
     start_worker()
     import uvicorn
-    port = int(os.getenv("NOTIFY_PORT", 8084))
+    port = int(os.getenv("NOTIFY_PORT", 8085))
     uvicorn.run(app, host="0.0.0.0", port=port)

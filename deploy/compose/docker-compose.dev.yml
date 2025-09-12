@@ -8,11 +8,21 @@ services:
     ports: ['27017:27017']
     volumes:
       - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   redis:
     image: redis:7-alpine
     container_name: fh-redis
     ports: ['6379:6379']
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   minio:
     image: minio/minio:latest
@@ -20,15 +30,27 @@ services:
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data
-    ports: ['9000:9000']
+    command: server /data --console-address ":9001"
+    ports: 
+      - '9000:9000'    # S3 API
+      - '9001:9001'    # Console
     volumes:
       - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   rabbitmq:
     image: rabbitmq:3-management
     container_name: fh-rabbit
     ports: ['5672:5672', '15672:15672']
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Kong DB
   kong-database:
@@ -92,51 +114,218 @@ services:
     restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Microservices
+  # ===== PRIMARY MICROSERVICES =====
+  
   auth-rs:
     build: ../../apps/auth-rs
     container_name: fh-auth
     env_file: ../../config/.env
     ports: ['8080:8080']
-    depends_on: [mongo]
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      - INSTANCE_ID=auth-primary
+      - SERVICE_PORT=8080
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   phishing-rs:
     build: ../../apps/phishing-rs
     container_name: fh-phishing
     env_file: ../../config/.env
     ports: ['8081:8081']
-    depends_on: [rabbitmq, redis]
+    depends_on:
+      - rabbitmq
+      - redis
+      - mongo
+    environment:
+      - INSTANCE_ID=phishing-primary
+      - SERVICE_PORT=8081
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   malware-rs:
     build: ../../apps/malware-rs
     container_name: fh-malware
     env_file: ../../config/.env
     ports: ['8082:8082']
-    depends_on: [rabbitmq, mongo]
+    depends_on:
+      - rabbitmq
+      - mongo
+    environment:
+      - INSTANCE_ID=malware-primary
+      - SERVICE_PORT=8082
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   history-ts:
     build: ../../apps/history-ts
     container_name: fh-history
     env_file: ../../config/.env
     ports: ['8083:8083']
-    depends_on: [mongo]
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      - INSTANCE_ID=history-primary
+      - HISTORY_PORT=8083
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   report-go:
     build: ../../apps/report-go
     container_name: fh-report
     env_file: ../../config/.env
     ports: ['8084:8084']
-    depends_on: [mongo, minio, rabbitmq]
+    depends_on:
+      - mongo
+      - minio
+      - rabbitmq
     volumes:
       - ../../apps/report-go/reports:/app/reports
+    environment:
+      - INSTANCE_ID=report-primary
+      - REPORT_PORT=8084
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   notify-py:
     build: ../../apps/notify-py
     container_name: fh-notify
     env_file: ../../config/.env
     ports: ['8085:8085']
-    depends_on: [rabbitmq]
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - INSTANCE_ID=notify-primary
+      - NOTIFY_PORT=8085
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # ===== SECONDARY INSTANCES FOR LOAD BALANCING =====
+
+  phishing-rs-2:
+    build: ../../apps/phishing-rs
+    container_name: fh-phishing-2
+    env_file: ../../config/.env
+    ports: ['8091:8081']
+    depends_on:
+      - rabbitmq
+      - redis
+      - mongo
+    environment:
+      - INSTANCE_ID=phishing-secondary
+      - SERVICE_PORT=8081
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    profiles: ["scaling"]  # Only start with --profile scaling
+
+  malware-rs-2:
+    build: ../../apps/malware-rs
+    container_name: fh-malware-2
+    env_file: ../../config/.env
+    ports: ['8092:8082']
+    depends_on:
+      - rabbitmq
+      - mongo
+    environment:
+      - INSTANCE_ID=malware-secondary
+      - SERVICE_PORT=8082
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    profiles: ["scaling"]
+
+  history-ts-2:
+    build: ../../apps/history-ts
+    container_name: fh-history-2
+    env_file: ../../config/.env
+    ports: ['8093:8083']
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      - INSTANCE_ID=history-secondary
+      - HISTORY_PORT=8083
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    profiles: ["scaling"]
+
+  report-go-2:
+    build: ../../apps/report-go
+    container_name: fh-report-2
+    env_file: ../../config/.env
+    ports: ['8094:8084']
+    depends_on:
+      - mongo
+      - minio
+      - rabbitmq
+    volumes:
+      - ../../apps/report-go/reports:/app/reports
+    environment:
+      - INSTANCE_ID=report-secondary
+      - REPORT_PORT=8084
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    profiles: ["scaling"]
+
+  # ===== MONITORING & LOGGING (Optional) =====
+  
+  log-collector:
+    image: nginx:alpine
+    container_name: fh-log-collector
+    ports: ['8086:80']
+    volumes:
+      - ./nginx-logs.conf:/etc/nginx/nginx.conf:ro
+    profiles: ["monitoring"]
 
 volumes:
   mongo-data:

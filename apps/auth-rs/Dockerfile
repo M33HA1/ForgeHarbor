@@ -21,6 +21,12 @@ RUN cargo build --release
 # Stage 2: Create the final, minimal production image
 FROM debian:bookworm-slim
 
+# Install SSL libraries and CA certificates
+RUN apt-get update && apt-get install -y \
+    libssl3 \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy the compiled binary from the builder stage (FIXED: use correct binary name)
 COPY --from=builder /app/target/release/auth-rs /usr/local/bin/auth-rs
 

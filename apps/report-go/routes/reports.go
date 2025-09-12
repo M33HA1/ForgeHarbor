@@ -115,7 +115,14 @@ func RegisterReportRoutes(r *gin.Engine, mongoClient *mongo.Client, rabbitConn *
 
 		c.JSON(http.StatusOK, report)
 	})
-
+	// Add to apps/report-go/routes/reports.go
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":    "healthy",
+			"service":   "report-go",
+			"timestamp": time.Now().Format(time.RFC3339),
+		})
+	})
 	// GET /reports/:id → fetch metadata
 	r.GET("/reports/:id", func(c *gin.Context) {
 		idHex := c.Param("id")

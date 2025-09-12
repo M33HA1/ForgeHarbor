@@ -1,55 +1,311 @@
 _format_version: "3.0"
 
 services:
+  # Health Check Service (Kong's built-in response)
+  - name: health-service
+    url: http://httpbin.org  # Dummy URL, won't be used
+    routes:
+      - name: health-route
+        paths: ["/health"]
+        strip_path: true
+
   - name: auth-service
-    url: http://host.docker.internal:8080
+    host: host.docker.internal
+    port: 8080
+    protocol: http
+    connect_timeout: 5000
+    write_timeout: 10000 
+    read_timeout: 10000
+    retries: 3
     routes:
       - name: auth-route
         paths: ["/auth"]
+        strip_path: true
+      - name: auth-signup-route
+        paths: ["/auth/signup"]
+        strip_path: false
+      - name: auth-login-route
+        paths: ["/auth/login"]
+        strip_path: false
+      - name: auth-me-route
+        paths: ["/auth/me"]
+        strip_path: false
+      - name: auth-jwks-route
+        paths: ["/auth/jwks"]
+        strip_path: false
+    # Load balancing targets with health checks
+    targets:
+      - target: host.docker.internal:8080
+        weight: 100
+        health_checks:
+          active:
+            type: http
+            http_path: "/health"
+            healthy:
+              interval: 15
+              successes: 2
+            unhealthy:
+              interval: 15
+              http_failures: 3
+              timeouts: 3
 
   - name: phishing-service
-    url: http://host.docker.internal:8081
+    host: host.docker.internal
+    port: 8081
+    protocol: http
+    connect_timeout: 10000  # Longer for AI API calls
+    write_timeout: 45000    # Gemini API can be slow
+    read_timeout: 45000
+    retries: 2
+    algorithm: round-robin
     routes:
       - name: phishing-route
         paths: ["/scan/url"]
         strip_path: true
         preserve_host: false
+    # Multiple instances for load balancing
+    targets:
+      - target: host.docker.internal:8081
+        weight: 100
+        health_checks:
+          active:
+            type: http
+            http_path: "/health"
+            healthy:
+              interval: 20
+              successes: 2
+            unhealthy:
+              interval: 20
+              http_failures: 3
+              timeouts: 2
+      - target: host.docker.internal:8091
+        weight: 100
+        health_checks:
+          active:
+            type: http
+            http_path: "/health"
+            healthy:
+              interval: 20
+              successes: 2
+            unhealthy:
+              interval: 20
+              http_failures: 3
+              timeouts: 2
 
   - name: malware-service
-    url: http://host.docker.internal:8082
+    host: host.docker.internal
+    port: 8082
+    protocol: http
+    connect_timeout: 20000  # Very long for VirusTotal uploads
+    write_timeout: 120000   # 2 minutes for file analysis
+    read_timeout: 120000
+    retries: 1  # No retries for expensive operations
+    algorithm: least-connections  # Better for varying file sizes
     routes:
       - name: malware-route
         paths: ["/scan/file"]
         strip_path: true
         preserve_host: false
+    # Multiple instances with different weights
+    targets:
+      - target: host.docker.internal:8082
+        weight: 150  # Primary instance
+        health_checks:
+          active:
+            type: http
+            http_path: "/health"
+            healthy:
+              interval: 30
+              successes: 2
+            unhealthy:
+              interval: 30
+              http_failures: 2
+              timeouts: 2
+      - target: host.docker.internal:8092
+        weight: 100  # Secondary instance
+        health_checks:
+          active:
+            type: http
+            http_path: "/health"
+            healthy:
+              interval: 30
+              successes: 2
+            unhealthy:
+              interval: 30
+              http_failures: 2
+              timeouts: 2
 
   - name: history-service
-    url: http://host.docker.internal:8083
+    host: host.docker.internal
+    port: 8083
+    protocol: http
+    connect_timeout: 5000
+    write_timeout: 10000
+    read_timeout: 10000
+    retries: 3
+    algorithm: round-robin
     routes:
       - name: history-route
         paths: ["/history"]
+        strip_path: true
+      - name: history-detail-route
+        paths: ["/history/"]
+        strip_path: true
+    targets:
+      - target: host.docker.internal:8083
+        weight: 100
+        health_checks:
+          active:
+            type: http
+            http_path: "/health"
+            healthy:
+              interval: 15
+              successes: 2
+            unhealthy:
+              interval: 15
+              http_failures: 3
+              timeouts: 3
+      - target: host.docker.internal:8093
+        weight: 100
+        health_checks:
+          active:
+            type: http
+            http_path: "/health"
+            healthy:
+              interval: 15
+              successes: 2
+            unhealthy:
+              interval: 15
+              http_failures: 3
+              timeouts: 3
 
   - name: report-service
-    url: http://host.docker.internal:8084
+    host: host.docker.internal
+    port: 8084
+    protocol: http
+    connect_timeout: 10000
+    write_timeout: 60000  # Reports with S3 can take time
+    read_timeout: 60000
+    retries: 2
+    algorithm: round-robin
     routes:
       - name: report-route
         paths: ["/reports"]
+        strip_path: false  # Keep /reports prefix for Go router
+      - name: report-download-route
+        paths: ["/reports/", "/reports/:id/download"]
+        strip_path: false
+    targets:
+      - target: host.docker.internal:8084
+        weight: 100
+        health_checks:
+          active:
+            type: http
+            http_path: "/health"
+            healthy:
+              interval: 20
+              successes: 2
+            unhealthy:
+              interval: 20
+              http_failures: 3
+              timeouts: 3
+      - target: host.docker.internal:8094
+        weight: 100
+        health_checks:
+          active:
+            type: http
+            http_path: "/health"
+            healthy:
+              interval: 20
+              successes: 2
+            unhealthy:
+              interval: 20
+              http_failures: 3
+              timeouts: 3
 
   - name: notify-service
-    url: http://host.docker.internal:8085
+    host: host.docker.internal
+    port: 8085
+    protocol: http
+    connect_timeout: 5000
+    write_timeout: 10000
+    read_timeout: 10000
+    retries: 3
+    algorithm: round-robin
     routes:
       - name: notify-route
         paths: ["/notifications"]
+        strip_path: true
+    targets:
+      - target: host.docker.internal:8085
+        weight: 100
+        health_checks:
+          active:
+            type: http
+            http_path: "/health"
+            healthy:
+              interval: 15
+              successes: 2
+            unhealthy:
+              interval: 15
+              http_failures: 3
+              timeouts: 3
 
 plugins:
+  # Health check response plugin
+  - name: request-termination
+    route: health-route
+    config:
+      status_code: 200
+      content_type: "application/json"
+      body: |
+        {
+          "status": "healthy",
+          "timestamp": "{{.now}}",
+          "service": "forgeharbor-api-gateway",
+          "version": "1.0.0",
+          "services": {
+            "auth": "monitoring",
+            "phishing": "monitoring", 
+            "malware": "monitoring",
+            "history": "monitoring",
+            "report": "monitoring",
+            "notify": "monitoring"
+          }
+        }
+
   # Global CORS
   - name: cors
     config:
-      origins: ["http://localhost:5173", "http://localhost:3000", "*"]
+      origins: ["http://localhost:5173", "http://localhost:3000"]
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"]
-      headers: ["Accept", "Authorization", "Content-Type", "X-Requested-With"]
+      headers: ["Accept", "Authorization", "Content-Type", "X-Requested-With", "X-Forwarded-For", "X-Real-IP"]
       credentials: true
       max_age: 3600
+      preflight_continue: false
+
+  # Rate limiting for scan endpoints
+  - name: rate-limiting
+    service: phishing-service
+    config:
+      minute: 30    # Conservative for Gemini API limits
+      hour: 500
+      policy: "local"
+      hide_client_headers: false
+
+  - name: rate-limiting
+    service: malware-service
+    config:
+      minute: 10    # Very conservative for VirusTotal API
+      hour: 100
+      policy: "local"
+      hide_client_headers: false
+
+  # Request size limiting for file uploads
+  - name: request-size-limiting
+    service: malware-service
+    config:
+      allowed_payload_size: 50  # 50MB for malware files
 
   # Path rewrite for phishing service
   - name: request-transformer
@@ -57,7 +313,8 @@ plugins:
     config:
       add:
         headers:
-          - "X-Forwarded-Proto: http"
+          - "X-Forwarded-Proto:http"
+          - "X-Service-Name:phishing-service"
       replace:
         uri: "/v1/url/check"
 
@@ -67,11 +324,12 @@ plugins:
     config:
       add:
         headers:
-          - "X-Forwarded-Proto: http"
+          - "X-Forwarded-Proto:http"
+          - "X-Service-Name:malware-service"
       replace:
         uri: "/v1/file/analyze"
 
-  # JWT Authentication for protected services
+  # JWT Authentication for protected services (exclude auth login/signup)
   - name: jwt
     service: phishing-service
     config:
@@ -80,6 +338,7 @@ plugins:
       uri_param_names: ["token"]
       cookie_names: ["token"] 
       header_names: ["authorization"]
+      claims_to_verify: ["exp", "iss"]
 
   - name: jwt  
     service: malware-service
@@ -89,6 +348,7 @@ plugins:
       uri_param_names: ["token"]
       cookie_names: ["token"]
       header_names: ["authorization"]
+      claims_to_verify: ["exp", "iss"]
 
   - name: jwt
     service: history-service  
@@ -98,6 +358,7 @@ plugins:
       uri_param_names: ["token"]
       cookie_names: ["token"]
       header_names: ["authorization"]
+      claims_to_verify: ["exp", "iss"]
 
   - name: jwt
     service: report-service
@@ -107,9 +368,49 @@ plugins:
       uri_param_names: ["token"]
       cookie_names: ["token"]
       header_names: ["authorization"]
+      claims_to_verify: ["exp", "iss"]
+
+  # Response transformation to add security headers
+  - name: response-transformer
+    config:
+      add:
+        headers:
+          - "X-Content-Type-Options:nosniff"
+          - "X-Frame-Options:DENY"
+          - "X-XSS-Protection:1; mode=block"
+          - "Referrer-Policy:strict-origin-when-cross-origin"
+
+  # Load balancing health monitoring
+  - name: prometheus
+    config:
+      per_consumer: true
+      status_code_metrics: true
+      latency_metrics: true
+      bandwidth_metrics: true
+
+  # Logging for monitoring
+  - name: http-log
+    config:
+      http_endpoint: "http://host.docker.internal:8086/health-logs"
+      method: "POST"
+      timeout: 1000
+      keepalive: 1000
+      content_type: "application/json"
+      queue_size: 100
+      flush_timeout: 2
 
 consumers:
   - username: forgeharbor-frontend
     jwt_secrets:
       - key: "forgeharbor"
         algorithm: "RS256"
+        rsa_public_key: |
+          -----BEGIN PUBLIC KEY-----
+          # Your actual RSA public key from config/jwt-public.pem
+          -----END PUBLIC KEY-----
+
+  - username: forgeharbor-api
+    jwt_secrets:
+      - key: "forgeharbor-api"
+        algorithm: "HS256"
+        secret: "your-secret-key-here"  # Use environment variable in production
