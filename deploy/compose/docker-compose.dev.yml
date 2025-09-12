@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Databases
   mongo:
@@ -32,8 +30,8 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin
     command: server /data --console-address ":9001"
     ports: 
-      - '9000:9000'    # S3 API
-      - '9001:9001'    # Console
+      - '9000:9000'      # S3 API
+      - '9001:9001'      # Console
     volumes:
       - minio-data:/data
     healthcheck:
@@ -105,15 +103,13 @@ services:
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
       KONG_DECLARATIVE_CONFIG: /usr/local/kong/declarative/kong.yml
     ports:
-      - "8000:8000"   # Public Gateway
-      - "8443:8443"   # TLS Gateway
-      - "8001:8001"   # Admin API
-      - "8444:8444"   # Admin TLS
+      - "8000:8000"  # Public Gateway
+      - "8443:8443"  # TLS Gateway
+      - "8001:8001"  # Admin API
+      - "8444:8444"  # Admin TLS
     volumes:
       - ./kong.yml:/usr/local/kong/declarative/kong.yml
     restart: unless-stopped
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "kong", "health"]
       interval: 30s
@@ -233,6 +229,19 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    restart: unless-stopped
+
+  # ===== WEB SERVICE =====
+
+  web: # RENAMED
+    build:
+      context: ../../apps/web
+      dockerfile: Dockerfile
+    container_name: fh-web # RENAMED
+    ports:
+      - "5173:5173"
+    depends_on:
+      - kong
     restart: unless-stopped
 
   # ===== SECONDARY INSTANCES FOR LOAD BALANCING =====
