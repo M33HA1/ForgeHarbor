@@ -1,4 +1,4 @@
-// components/Footer.jsx
+// components/Layout/Footer.jsx
 import React from 'react';
 import { Shield, Heart, Fish, Waves } from 'lucide-react';
 

@@ -17,6 +17,8 @@ body {
   background-size: 400% 400%;
   animation: ocean-wave 20s ease-in-out infinite;
   overflow-x: hidden;
+  background-color: #0f172a;
+  color: #e2e8f0;
 }
 
 /* Ocean wave animation */
