@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useAuth } from "../contexts/AuthContext";
+// contexts/AuthContext.jsx is the correct path
+import { useAuth } from "../contexts/AuthContext"; 
 import { useNavigate, Link } from "react-router-dom";
 
 const LoginPage = () => {
