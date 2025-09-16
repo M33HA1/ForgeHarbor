@@ -61,19 +61,19 @@ const LandingPage = () => {
       <section className="relative py-20 overflow-hidden">
         <div className="container mx-auto px-6 text-center">
           <div className="max-w-4xl mx-auto">
-            <div className="flex justify-center mb-8">
-              <div className="p-6 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 backdrop-blur-sm">
-                <Anchor className="w-16 h-16 text-cyan-400" />
-              </div>
+            <div className="flex items-center justify-center mb-6">
+              <Anchor className="w-16 h-16 md:w-20 md:h-20 text-cyan-400 mr-4" />
+              <h1 className="text-6xl md:text-8xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent leading-tight">
+                ForgeHarbor
+              </h1>
             </div>
             
-            <h1 className="text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent leading-tight">
+            <p className="text-xl md:text-2xl text-slate-300 mb-12 max-w-3xl mx-auto leading-relaxed">
               Navigate Digital Seas Safely
-            </h1>
+            </p>
             
-            <p className="text-xl md:text-2xl text-slate-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-              ForgeHarbor provides advanced threat detection for URLs and files, 
-              keeping you safe from phishing attacks, malware, and other digital dangers.
+            <p className="text-lg md:text-xl text-slate-400 mb-8 max-w-2xl mx-auto leading-relaxed">
+              Advanced threat detection for URLs and files, keeping you safe from phishing attacks, malware, and other digital dangers.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
