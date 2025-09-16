@@ -1,40 +1,40 @@
 # Stage 1: Build the application using the nightly Rust toolchain
-FROM rustlang/rust:nightly as builder
+FROM rustlang/rust:nightly AS builder
 
 WORKDIR /app
 
 # Copy the dependency manifests first
-# Using a wildcard to handle both "cargo.toml" and "Cargo.toml"
-COPY ./*argo.toml ./
-COPY ./Cargo.lock ./
+COPY Cargo.toml ./
+COPY Cargo.lock ./
 
 # Create a dummy main.rs file to build and cache only the dependencies
 RUN mkdir src && echo "fn main() {}" > src/main.rs
 RUN cargo build --release
 
-# Now, copy the actual application source code, replacing the dummy file
+# Remove the dummy file and copy actual source code
+RUN rm -rf src
 COPY ./src ./src
 
-# Build the application for release, which will now use the cached dependencies
+# Build the application for release
 RUN cargo build --release
 
 # Stage 2: Create the final, minimal production image
 FROM debian:bookworm-slim
 
-# Install SSL libraries and CA certificates
+# Install required runtime dependencies
 RUN apt-get update && apt-get install -y \
     libssl3 \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the compiled binary from the builder stage (FIXED: use correct binary name)
-COPY --from=builder /app/target/release/phishing-rs /usr/local/bin/phishing-rs
+# Copy the compiled binary from the builder stage
+COPY --from=builder /app/target/release/malware-rs /usr/local/bin/phishing-rs
 
-# Expose the correct port for each service
-# For auth-rs: EXPOSE 8080
-# For phishing-rs: EXPOSE 8081
-# For malware-rs: EXPOSE 8082
+# Set ownership and make executable
+RUN chmod +x /usr/local/bin/malware-rs
+
+# Expose the port
 EXPOSE 8081
 
-# Set the startup command to run the binary (FIXED: use correct binary name)
-CMD ["/usr/local/bin/phishing-rs"]
+# Set the startup command
+CMD ["/usr/local/bin/malware-rs"]

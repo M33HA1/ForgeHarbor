@@ -1,6 +1,4 @@
-# deploy/compose/kong.yml (Corrected Version)
-
-_format_version: "3.0"
+format_version: "3.0"
 
 services:
   # Health Check Service
@@ -12,16 +10,25 @@ services:
         strip_path: true
 
   - name: auth-service
-    host: auth-rs # CORRECTED from host.docker.internal
+    host: auth-rs
     port: 8080
     protocol: http
     routes:
-      - name: auth-route
-        paths: ["/auth"]
-        strip_path: true
+      - name: auth-signup-route
+        paths: ["/auth/signup"]
+        strip_path: false # Keep /auth/signup
+      - name: auth-login-route
+        paths: ["/auth/login"]
+        strip_path: false # Keep /auth/login
+      - name: auth-me-route
+        paths: ["/auth/me"]
+        strip_path: false # Keep /auth/me
+      - name: auth-jwks-route
+        paths: ["/auth/jwks"]
+        strip_path: false # Keep /auth/jwks
 
   - name: phishing-service
-    host: phishing-rs # CORRECTED from host.docker.internal
+    host: phishing-rs
     port: 8081
     protocol: http
     routes:
@@ -30,7 +37,7 @@ services:
         strip_path: true
 
   - name: malware-service
-    host: malware-rs # CORRECTED from host.docker.internal
+    host: malware-rs
     port: 8082
     protocol: http
     routes:
@@ -39,7 +46,7 @@ services:
         strip_path: true
 
   - name: history-service
-    host: history-ts # CORRECTED from host.docker.internal
+    host: history-ts
     port: 8083
     protocol: http
     routes:
@@ -48,7 +55,7 @@ services:
         strip_path: true
 
   - name: report-service
-    host: report-go # CORRECTED from host.docker.internal
+    host: report-go
     port: 8084
     protocol: http
     routes:
@@ -57,7 +64,7 @@ services:
         strip_path: true
 
   - name: notify-service
-    host: notify-py # CORRECTED from host.docker.internal
+    host: notify-py
     port: 8085
     protocol: http
     routes:
@@ -84,8 +91,33 @@ plugins:
       credentials: true
       max_age: 3600
 
-  # JWT Authentication for all protected services
+  # JWT Authentication for all protected services (excluding auth)
   - name: jwt
+    route: phishing-route
+    config:
+      header_names: ["authorization"]
+      key_claim_name: "iss"
+      secret_is_base64: false
+      run_on_preflight: false
+
+  - name: jwt
+    route: malware-route
+    config:
+      header_names: ["authorization"]
+      key_claim_name: "iss"
+      secret_is_base64: false
+      run_on_preflight: false
+
+  - name: jwt
+    route: history-route
+    config:
+      header_names: ["authorization"]
+      key_claim_name: "iss"
+      secret_is_base64: false
+      run_on_preflight: false
+      
+  - name: jwt
+    route: report-route
     config:
       header_names: ["authorization"]
       key_claim_name: "iss"

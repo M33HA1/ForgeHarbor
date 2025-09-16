@@ -5,6 +5,8 @@ WORKDIR /app
 
 # Copy module files and download dependencies
 COPY go.mod go.sum ./
+# Set a reliable Go proxy and then download dependencies
+RUN go env -w GOPROXY=https://proxy.golang.org,direct
 RUN go mod download
 
 # Copy the rest of the application source code
