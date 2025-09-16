@@ -64,7 +64,7 @@ const LandingPage = () => {
             <div className="flex items-center justify-center mb-6">
               <Anchor className="w-16 h-16 md:w-20 md:h-20 text-cyan-400 mr-4" />
               <h1 className="text-6xl md:text-8xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent leading-tight">
-                ForgeHarbor
+                FORGEHARBOR
               </h1>
             </div>
             
