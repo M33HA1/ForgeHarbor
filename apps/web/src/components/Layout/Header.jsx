@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Anchor, User, LogOut, History } from "lucide-react";
+import { Anchor, User, LogOut, History, BarChart3 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 const Header = () => {
@@ -9,7 +9,7 @@ const Header = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/");
   };
 
   return (
@@ -24,26 +24,53 @@ const Header = () => {
               ForgeHarbor
             </h1>
           </Link>
+          
           <nav className="flex items-center space-x-2 sm:space-x-4">
             {user ? (
               <>
-                <Link to="/history" className="px-3 py-2 rounded-lg font-medium bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white transition-colors flex items-center space-x-2">
-                    <History className="w-4 h-4" />
-                    <span className="hidden sm:inline">History</span>
+                <Link 
+                  to="/dashboard" 
+                  className="px-3 py-2 rounded-lg font-medium bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white transition-colors flex items-center space-x-2"
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Dashboard</span>
                 </Link>
-                <Link to="/profile" className="px-3 py-2 rounded-lg font-medium bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white transition-colors flex items-center space-x-2">
+                <Link 
+                  to="/history" 
+                  className="px-3 py-2 rounded-lg font-medium bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white transition-colors flex items-center space-x-2"
+                >
+                  <History className="w-4 h-4" />
+                  <span className="hidden sm:inline">History</span>
+                </Link>
+                <Link 
+                  to="/profile" 
+                  className="px-3 py-2 rounded-lg font-medium bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white transition-colors flex items-center space-x-2"
+                >
                   <User className="w-4 h-4" />
-                  <span className="hidden sm:inline">{user.email}</span>
+                  <span className="hidden sm:inline">{user.email?.split('@')[0] || 'Profile'}</span>
                 </Link>
-                <button onClick={handleLogout} className="px-3 py-2 rounded-lg font-medium bg-red-600/80 text-white hover:bg-red-600 transition-colors flex items-center space-x-2">
+                <button 
+                  onClick={handleLogout} 
+                  className="px-3 py-2 rounded-lg font-medium bg-red-600/80 text-white hover:bg-red-600 transition-colors flex items-center space-x-2"
+                >
                   <LogOut className="w-4 h-4" />
                   <span className="hidden sm:inline">Logout</span>
                 </button>
               </>
             ) : (
               <>
-                <Link to="/login" className="px-4 py-2 rounded-lg font-medium bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white transition-colors">Login</Link>
-                <Link to="/signup" className="px-4 py-2 rounded-lg font-medium bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:opacity-90 transition-opacity">Sign Up</Link>
+                <Link 
+                  to="/login" 
+                  className="px-4 py-2 rounded-lg font-medium bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white transition-colors"
+                >
+                  Login
+                </Link>
+                <Link 
+                  to="/signup" 
+                  className="px-4 py-2 rounded-lg font-medium bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:opacity-90 transition-opacity"
+                >
+                  Sign Up
+                </Link>
               </>
             )}
           </nav>

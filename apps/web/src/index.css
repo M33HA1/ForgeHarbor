@@ -64,81 +64,60 @@ body {
   animation: bubble 8s linear infinite;
 }
 
-/* Ripple effect */
-@keyframes ripple {
-  0% {
-    transform: scale(0);
+/* Wave animation for ocean elements */
+@keyframes wave {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(10px);
+  }
+}
+
+.animate-wave {
+  animation: wave 4s ease-in-out infinite;
+}
+
+/* Pulse animation for important elements */
+@keyframes pulse {
+  0%, 100% {
     opacity: 1;
   }
-  100% {
-    transform: scale(4);
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s ease-in-out infinite;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
     opacity: 0;
+    transform: translateY(20px);
   }
-}
-
-.animate-ripple {
-  animation: ripple 1s ease-out;
-}
-
-/* Glow effect for interactive elements */
-@keyframes glow {
-  0%, 100% {
-    box-shadow: 0 0 5px rgba(6, 182, 212, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(6, 182, 212, 0.8), 0 0 30px rgba(6, 182, 212, 0.6);
-  }
-}
-
-.animate-glow {
-  animation: glow 2s ease-in-out infinite;
-}
-
-/* Harbor light flicker */
-@keyframes harbor-light {
-  0%, 100% {
-    opacity: 0.8;
-    transform: scale(1);
-  }
-  50% {
+  to {
     opacity: 1;
-    transform: scale(1.1);
+    transform: translateY(0);
   }
 }
 
-.animate-harbor-light {
-  animation: harbor-light 3s ease-in-out infinite;
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out;
 }
 
-/* Seaweed sway animation */
-@keyframes seaweed-sway {
-  0%, 100% {
-    transform: rotate(-2deg);
-  }
-  50% {
-    transform: rotate(2deg);
+/* Loading animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
-.animate-seaweed-sway {
-  animation: seaweed-sway 4s ease-in-out infinite;
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
-
-/* Jellyfish pulse */
-/* @keyframes jellyfish-pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.2;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 0.3;
-  }
-}
-
-.animate-jellyfish-pulse {
-  animation: jellyfish-pulse 5s ease-in-out infinite;
-} */
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
@@ -164,196 +143,10 @@ body {
   outline-offset: 2px;
 }
 
-/* Custom button hover effects */
-.btn-hover {
-  @apply transition-all duration-300;
-}
-
-.btn-hover:hover {
-  @apply transform scale-105;
-}
-
-/* Loading animation */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-/* Fade in animation */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.6s ease-out;
-}
-
-/* Slide in animation */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.animate-slide-in {
-  animation: slideIn 0.5s ease-out;
-}
-
-/* Pulse animation for important elements */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-.animate-pulse-slow {
-  animation: pulse 3s ease-in-out infinite;
-}
-
-/* Wave animation for ocean elements */
-@keyframes wave {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  50% {
-    transform: translateX(10px);
-  }
-}
-
-.animate-wave {
-  animation: wave 4s ease-in-out infinite;
-}
-
-/* Sea bed shimmer effect */
-@keyframes sea-bed-shimmer {
-  0%, 100% {
-    opacity: 0.3;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.animate-sea-bed-shimmer {
-  animation: sea-bed-shimmer 8s ease-in-out infinite;
-}
-
-/* Fish school animation */
-@keyframes fish-school {
-  0%, 100% {
-    transform: translateX(0) translateY(0);
-  }
-  25% {
-    transform: translateX(10px) translateY(-5px);
-  }
-  50% {
-    transform: translateX(20px) translateY(0);
-  }
-  75% {
-    transform: translateX(10px) translateY(5px);
-  }
-}
-
-.animate-fish-school {
-  animation: fish-school 10s ease-in-out infinite;
-}
-
-/* Boat Bobbing Animation */
-@keyframes boatBob {
-  0%, 100% {
-    transform: translateY(0) rotate(-2deg);
-  }
-  50% {
-    transform: translateY(-10px) rotate(2deg);
-  }
-}
-.animate-boat-bob {
-  animation: boatBob 3s ease-in-out infinite;
-}
-
-/* Fishing Line Animation */
-@keyframes fishingLine {
-  0% {
-    stroke-dasharray: 0 100;
-    stroke-dashoffset: 0;
-  }
-  40% {
-    stroke-dasharray: 30 70;
-    stroke-dashoffset: 0;
-  }
-  100% {
-    stroke-dasharray: 30 70;
-    stroke-dashoffset: 0;
-  }
-}
-.animate-fishing-line {
-  stroke-dasharray: 30 70;
-  stroke-dashoffset: 0;
-  animation: fishingLine 1.2s 0.2s cubic-bezier(0.4,0,0.2,1) forwards;
-}
-.animate-fishing-line-delay {
-  stroke-dasharray: 30 70;
-  stroke-dashoffset: 0;
-  animation: fishingLine 1.2s 0.7s cubic-bezier(0.4,0,0.2,1) forwards;
-}
-
-/* Fishing Net Animation */
-@keyframes fishingNet {
-  0% {
-    opacity: 0;
-    transform: scaleY(0.2) translateY(-10px);
-  }
-  60% {
-    opacity: 1;
-    transform: scaleY(1.1) translateY(0);
-  }
-  100% {
-    opacity: 1;
-    transform: scaleY(1) translateY(0);
-  }
-}
-.animate-fishing-net {
-  animation: fishingNet 1.2s 1s cubic-bezier(0.4,0,0.2,1) forwards;
-  opacity: 0;
-}
-
-/* Cloud Movement Animation */
-@keyframes cloudMove {
-  0% {
-    left: -10%;
-    opacity: 0.7;
-  }
-  50% {
-    left: 50%;
-    opacity: 1;
-  }
-  100% {
-    left: 110%;
-    opacity: 0.7;
-  }
-}
-.animate-cloud-move {
-  animation: cloudMove 24s linear infinite;
+/* Glass morphism effect */
+.glass {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 /* Responsive design improvements */
@@ -366,11 +159,8 @@ body {
   /* Reduce animations on mobile for better performance */
   .animate-float,
   .animate-bubble,
-  .animate-glow,
-  .animate-harbor-light,
-  .animate-seaweed-sway,
-  .animate-jellyfish-pulse {
-    animation: none;
+  .animate-wave {
+    animation-duration: 8s;
   }
 }
 
@@ -378,64 +168,5 @@ body {
 @media print {
   .no-print {
     display: none !important;
-  }
-}
-
-/* Glass morphism effect */
-.glass {
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-/* Gradient text effect */
-.gradient-text {
-  background: linear-gradient(135deg, #06b6d4, #3b82f6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Ocean depth effect */
-.ocean-depth {
-  background: linear-gradient(180deg, 
-    rgba(6, 182, 212, 0.1) 0%,
-    rgba(59, 130, 246, 0.1) 50%,
-    rgba(14, 165, 233, 0.1) 100%
-  );
-}
-
-/* Harbor reflection effect */
-.harbor-reflection {
-  background: linear-gradient(180deg,
-    rgba(255, 193, 7, 0.1) 0%,
-    rgba(255, 193, 7, 0.05) 50%,
-    transparent 100%
-  );
-}
-
-/* Marine life glow effect */
-.marine-glow {
-  filter: drop-shadow(0 0 8px rgba(78, 205, 196, 0.3));
-}
-
-/* Sea bed texture */
-.sea-bed-texture {
-  background-image: 
-    radial-gradient(circle at 20% 80%, rgba(139, 195, 74, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(255, 193, 7, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(255, 107, 107, 0.1) 0%, transparent 50%);
-}
-
-/* Make heading visually pleasant and large */
-.heading-harbor {
-  font-size: 3rem;
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  text-shadow: 0 4px 24px rgba(0,0,0,0.18);
-  line-height: 1.1;
-}
-@media (min-width: 768px) {
-  .heading-harbor {
-    font-size: 5rem;
   }
 }
