@@ -11,6 +11,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - forgeharbor-net
 
   redis:
     image: redis:7-alpine
@@ -21,6 +23,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - forgeharbor-net
 
   minio:
     image: minio/minio:latest
@@ -30,8 +34,8 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin
     command: server /data --console-address ":9001"
     ports: 
-      - '9000:9000'      # S3 API
-      - '9001:9001'      # Console
+      - '9000:9000'
+      - '9001:9001'
     volumes:
       - minio-data:/data
     healthcheck:
@@ -39,6 +43,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - forgeharbor-net
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -49,6 +55,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - forgeharbor-net
 
   # Kong DB
   kong-database:
@@ -67,6 +75,8 @@ services:
       interval: 30s
       timeout: 30s
       retries: 3
+    networks:
+      - forgeharbor-net
 
   # Kong Migration (Bootstrap)
   kong-migration:
@@ -83,6 +93,8 @@ services:
       KONG_PG_DATABASE: kong
     command: kong migrations bootstrap
     restart: "no"
+    networks:
+      - forgeharbor-net
 
   # Kong Gateway
   kong:
@@ -103,10 +115,10 @@ services:
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
       KONG_DECLARATIVE_CONFIG: /usr/local/kong/declarative/kong.yml
     ports:
-      - "8000:8000"  # Public Gateway
-      - "8443:8443"  # TLS Gateway
-      - "8001:8001"  # Admin API
-      - "8444:8444"  # Admin TLS
+      - "8000:8000"
+      - "8443:8443"
+      - "8001:8001"
+      - "8444:8444"
     volumes:
       - ./kong.yml:/usr/local/kong/declarative/kong.yml
     restart: unless-stopped
@@ -115,13 +127,15 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - forgeharbor-net
 
   # ===== PRIMARY MICROSERVICES =====
   
   auth-rs:
     build: ../../apps/auth-rs
     container_name: fh-auth
-    env_file: ../../config/.env
+    env_file: ../../apps/config/.env # Corrected path
     ports: ['8080:8080']
     depends_on:
       mongo:
@@ -134,17 +148,23 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 30s
     restart: unless-stopped
+    networks:
+      - forgeharbor-net
 
   phishing-rs:
     build: ../../apps/phishing-rs
     container_name: fh-phishing
-    env_file: ../../config/.env
+    env_file: ../../apps/config/.env # Corrected path
     ports: ['8081:8081']
     depends_on:
-      - rabbitmq
-      - redis
-      - mongo
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
     environment:
       - INSTANCE_ID=phishing-primary
       - SERVICE_PORT=8081
@@ -153,16 +173,21 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 30s
     restart: unless-stopped
+    networks:
+      - forgeharbor-net
 
   malware-rs:
     build: ../../apps/malware-rs
     container_name: fh-malware
-    env_file: ../../config/.env
+    env_file: ../../apps/config/.env # Corrected path
     ports: ['8082:8082']
     depends_on:
-      - rabbitmq
-      - mongo
+      rabbitmq:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
     environment:
       - INSTANCE_ID=malware-primary
       - SERVICE_PORT=8082
@@ -171,12 +196,15 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 30s
     restart: unless-stopped
+    networks:
+      - forgeharbor-net
 
   history-ts:
     build: ../../apps/history-ts
     container_name: fh-history
-    env_file: ../../config/.env
+    env_file: ../../apps/config/.env # Corrected path
     ports: ['8083:8083']
     depends_on:
       mongo:
@@ -190,16 +218,21 @@ services:
       timeout: 10s
       retries: 3
     restart: unless-stopped
+    networks:
+      - forgeharbor-net
 
   report-go:
     build: ../../apps/report-go
     container_name: fh-report
-    env_file: ../../config/.env
+    env_file: ../../apps/config/.env # Corrected path
     ports: ['8084:8084']
     depends_on:
-      - mongo
-      - minio
-      - rabbitmq
+      mongo:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ../../apps/report-go/reports:/app/reports
     environment:
@@ -212,11 +245,13 @@ services:
       timeout: 10s
       retries: 3
     restart: unless-stopped
+    networks:
+      - forgeharbor-net
 
   notify-py:
     build: ../../apps/notify-py
     container_name: fh-notify
-    env_file: ../../config/.env
+    env_file: ../../apps/config/.env # Corrected path
     ports: ['8085:8085']
     depends_on:
       rabbitmq:
@@ -230,19 +265,23 @@ services:
       timeout: 10s
       retries: 3
     restart: unless-stopped
+    networks:
+      - forgeharbor-net
 
   # ===== WEB SERVICE =====
 
-  web: # RENAMED
+  web:
     build:
       context: ../../apps/web
       dockerfile: Dockerfile
-    container_name: fh-web # RENAMED
+    container_name: fh-web
     ports:
       - "5173:5173"
     depends_on:
       - kong
     restart: unless-stopped
+    networks:
+      - forgeharbor-net
 
   # ===== SECONDARY INSTANCES FOR LOAD BALANCING =====
 
