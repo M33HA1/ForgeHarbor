@@ -24,7 +24,7 @@ class ApiService {
   async handleResponse(response) {
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Network error' }));
-      throw new Error(error.error || `HTTP ${response.status}`);
+      throw new Error(error.error || error.message || `HTTP ${response.status}`);
     }
     return response.json();
   }
@@ -63,7 +63,7 @@ class ApiService {
     this.setAuthToken(null);
   }
 
-  // URL Scanning Service (Phishing Detection)
+  // URL Scanning Service
   async scanUrl(url) {
     const response = await fetch(`${API_BASE_URL}/scan/url`, {
       method: 'POST',
@@ -73,7 +73,7 @@ class ApiService {
     return this.handleResponse(response);
   }
 
-  // File Scanning Service (Malware Detection)
+  // File Scanning Service
   async scanFile(file) {
     const formData = new FormData();
     formData.append('file', file);
@@ -137,7 +137,7 @@ class ApiService {
     return this.handleResponse(response);
   }
 
-  // Health checks
+  // Health checks for individual services
   async checkServiceHealth() {
     const services = [
       { name: 'auth', url: `${API_BASE_URL}/auth/health` },
@@ -152,14 +152,23 @@ class ApiService {
       services.map(async service => {
         try {
           const response = await fetch(service.url);
-          return { name: service.name, status: response.ok ? 'healthy' : 'unhealthy' };
-        } catch {
-          return { name: service.name, status: 'unavailable' };
+          const data = await response.json().catch(() => ({}));
+          return { 
+            name: service.name, 
+            status: response.ok ? 'healthy' : 'unhealthy',
+            message: data.message || data.status || 'OK'
+          };
+        } catch (error) {
+          return { 
+            name: service.name, 
+            status: 'unavailable',
+            message: error.message
+          };
         }
       })
     );
 
-    return results.map(result => result.value);
+    return results.map(result => result.value || result.reason);
   }
 }
 

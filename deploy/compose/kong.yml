@@ -1,31 +1,15 @@
-format_version: "3.0"
+_format_version: "3.0"
 
 services:
-  # Health Check Service
-  - name: health-service
-    url: http://httpbin.org # Dummy URL, will be overridden by the plugin
-    routes:
-      - name: health-route
-        paths: ["/health"]
-        strip_path: true
-
   - name: auth-service
     host: auth-rs
     port: 8080
     protocol: http
     routes:
-      - name: auth-signup-route
-        paths: ["/auth/signup"]
-        strip_path: false # Keep /auth/signup
-      - name: auth-login-route
-        paths: ["/auth/login"]
-        strip_path: false # Keep /auth/login
-      - name: auth-me-route
-        paths: ["/auth/me"]
-        strip_path: false # Keep /auth/me
-      - name: auth-jwks-route
-        paths: ["/auth/jwks"]
-        strip_path: false # Keep /auth/jwks
+      - name: auth-route
+        paths:
+          - "/auth"
+        strip_path: true
 
   - name: phishing-service
     host: phishing-rs
@@ -33,7 +17,8 @@ services:
     protocol: http
     routes:
       - name: phishing-route
-        paths: ["/scan/url"]
+        paths:
+          - "/scan/url"
         strip_path: true
 
   - name: malware-service
@@ -42,7 +27,8 @@ services:
     protocol: http
     routes:
       - name: malware-route
-        paths: ["/scan/file"]
+        paths:
+          - "/scan/file"
         strip_path: true
 
   - name: history-service
@@ -51,7 +37,8 @@ services:
     protocol: http
     routes:
       - name: history-route
-        paths: ["/history"]
+        paths:
+          - "/history"
         strip_path: true
 
   - name: report-service
@@ -60,7 +47,8 @@ services:
     protocol: http
     routes:
       - name: report-route
-        paths: ["/reports"]
+        paths:
+          - "/reports"
         strip_path: true
 
   - name: notify-service
@@ -69,20 +57,11 @@ services:
     protocol: http
     routes:
       - name: notify-route
-        paths: ["/notifications"]
+        paths:
+          - "/notifications"
         strip_path: true
 
 plugins:
-  # Health check response plugin
-  - name: request-termination
-    route: health-route
-    config:
-      status_code: 200
-      content_type: "application/json"
-      body: |
-        { "status": "gateway_healthy" }
-
-  # Global CORS plugin for the frontend
   - name: cors
     config:
       origins: ["http://localhost:5173"]
@@ -90,52 +69,3 @@ plugins:
       headers: ["Authorization", "Content-Type"]
       credentials: true
       max_age: 3600
-
-  # JWT Authentication for all protected services (excluding auth)
-  - name: jwt
-    route: phishing-route
-    config:
-      header_names: ["authorization"]
-      key_claim_name: "iss"
-      secret_is_base64: false
-      run_on_preflight: false
-
-  - name: jwt
-    route: malware-route
-    config:
-      header_names: ["authorization"]
-      key_claim_name: "iss"
-      secret_is_base64: false
-      run_on_preflight: false
-
-  - name: jwt
-    route: history-route
-    config:
-      header_names: ["authorization"]
-      key_claim_name: "iss"
-      secret_is_base64: false
-      run_on_preflight: false
-      
-  - name: jwt
-    route: report-route
-    config:
-      header_names: ["authorization"]
-      key_claim_name: "iss"
-      secret_is_base64: false
-      run_on_preflight: false
-
-consumers:
-  - username: forgeharbor-frontend
-    jwt_secrets:
-      - key: "forgeharbor"
-        algorithm: "RS256"
-        rsa_public_key: |
-          -----BEGIN PUBLIC KEY-----
-          MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6nscMKVPONezGAzN3gaF
-          CFMjKc3JhJIOTHLWbY6cvqeTUH9dcUNpI+7XSEA2ZgCJid5JfttqlOOiTWH/yEiL
-          CTIGz3yqPEJTy9fsSBl6av/Q5eqtG/mhqxzyvKRj5CRPerbTWRtNmryyMBlfisvg
-          a7HoI5+tzm4zRHAVE9Q74t7Yz3zmUB1Q0v9jfud67tI8WX6F5Vx0iYijGmS0nVyK
-          Yexhlc1tnGRqmPfeKhcuV+4PcnA91Yw63y9XIX8AYdkoDIj/CBch9oqoxsYuWYtK
-          w3xtacrL229T2LDxxmETqBIbdXWPG5R8zknpBKXwseAl+P9C8ASvxgvyGjBtirrl
-          JQIDAQAB
-          -----END PUBLIC KEY-----
