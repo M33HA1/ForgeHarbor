@@ -226,12 +226,13 @@ async fn jwt_middleware(
 // ===== Main =====
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // MODIFICATION: Load .env file from the central config directory
-    println!("Attempting to load .env file from config directory...");
-    match dotenvy::from_path("../../config/.env") {
-        Ok(_) => println!("Successfully loaded .env file from ../../config/.env"),
-        Err(e) => println!("Could not load .env file from config directory: {}. Ensure the file exists at ForgeHarbor/config/.env", e),
-    };
+
+    // Uncomment this when running locally as docker loads env via env_path flag
+    // println!("Attempting to load .env file from config directory...");
+    // match dotenvy::from_path("../config/.env") {
+    //     Ok(_) => println!("Successfully loaded .env file from config/.env"),
+    //     Err(e) => println!("Could not load .env file from config directory: {}. Ensure the file exists at ForgeHarbor/config/.env", e),
+    // };
 
     // MongoDB
     let mongo_uri = env::var("MONGO_URI").expect("MONGO_URI must be set in your config/.env file");
@@ -240,7 +241,7 @@ async fn main() -> std::io::Result<()> {
 
     // JWT Keys - Load from config directory
     println!("Loading JWT public key from config directory...");
-    let public_key_pem = fs::read_to_string("../../config/jwt-public.pem")
+    let public_key_pem = fs::read_to_string("./config/jwt-public.pem")
         .expect("JWT public key file not found. Please ensure jwt-public.pem is in the config/ directory");
     let jwt_decoding_key = DecodingKey::from_rsa_pem(public_key_pem.as_bytes())
         .expect("Invalid JWT public key format");

@@ -260,25 +260,17 @@ async fn me(user: AuthUser) -> Result<HttpResponse> {
 
 async fn jwks(_state: web::Data<AppState>) -> Result<HttpResponse> {
     // Read the public key from the same location we loaded it during startup
-    let jwt_public_key_paths = [
-        "../../config/jwt-public.pem",     // From apps/auth/rs/ to config/
-        "../config/jwt-public.pem",       // From apps/ to config/
-        "config/jwt-public.pem",          // From project root
-        "jwt-public.pem",                 // Current directory fallback
-    ];
-
-    let public_key_pem = jwt_public_key_paths
-        .iter()
-        .find_map(|path| {
-            match fs::read_to_string(path) {
-                Ok(content) => Some(content),
-                Err(_) => None,
-            }
-        })
-        .ok_or_else(|| {
-            println!("JWKS endpoint: JWT public key file not found");
-            actix_web::error::ErrorInternalServerError("Missing public key")
-        })?;
+    println!("Loading JWT public key...");
+    let public_key_pem = match fs::read_to_string("./config/jwt-public.pem") {
+        Ok(key) => {
+            println!("JWT public key loaded successfully");
+            key
+        },
+        Err(e) => {
+            eprintln!("JWT public key file not found: {}", e);
+            std::process::exit(1);
+        }
+    };
 
     println!("JWKS endpoint accessed - providing public key");
 
@@ -327,8 +319,14 @@ async fn jwt_middleware(
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    dotenv::from_filename("../../config/.env").ok();  // force load
     tracing_subscriber::fmt::init();
+
+    // Uncomment this when running locally as docker loads env via env_path flag
+    // println!("Attempting to load .env file from config directory...");
+    // match dotenvy::from_path("../config/.env") {
+    //     Ok(_) => println!("Successfully loaded .env file from config/.env"),
+    //     Err(e) => println!("Could not load .env file from config directory: {}. Ensure the file exists at ForgeHarbor/config/.env", e),
+    // };
 
     let mongo_uri = env::var("MONGO_URI").expect("MONGO_URI must be set in .env file");
     println!("Connecting to MongoDB at: {}", mongo_uri);
@@ -347,52 +345,27 @@ async fn main() -> std::io::Result<()> {
 
     // JWT Keys - Load from config directory
     println!("Loading JWT keys from config directory...");
-    
-    let jwt_private_key_paths = [
-        "../../config/jwt-private.pem",    // From apps/auth/rs/ to config/
-        "../config/jwt-private.pem",      // From apps/ to config/
-        "config/jwt-private.pem",         // From project root
-        "jwt-private.pem",                // Current directory fallback
-    ];
+    let public_key_pem = match fs::read_to_string("./config/jwt-public.pem") {
+        Ok(key) => {
+            println!("JWT public key loaded successfully");
+            key
+        },
+        Err(e) => {
+            eprintln!("JWT public key file not found: {}", e);
+            std::process::exit(1);
+        }
+    };
 
-    let jwt_public_key_paths = [
-        "../../config/jwt-public.pem",     // From apps/auth/rs/ to config/
-        "../config/jwt-public.pem",       // From apps/ to config/
-        "config/jwt-public.pem",          // From project root
-        "jwt-public.pem",                 // Current directory fallback
-    ];
-
-    let private_key_pem = jwt_private_key_paths
-        .iter()
-        .find_map(|path| {
-            match fs::read_to_string(path) {
-                Ok(content) => {
-                    println!("Found JWT private key at: {}", path);
-                    Some(content)
-                }
-                Err(_) => {
-                    println!("JWT private key not found at: {}", path);
-                    None
-                }
-            }
-        })
-        .expect("JWT private key file not found. Please ensure jwt-private.pem is in the config/ directory");
-
-    let public_key_pem = jwt_public_key_paths
-        .iter()
-        .find_map(|path| {
-            match fs::read_to_string(path) {
-                Ok(content) => {
-                    println!("Found JWT public key at: {}", path);
-                    Some(content)
-                }
-                Err(_) => {
-                    println!("JWT public key not found at: {}", path);
-                    None
-                }
-            }
-        })
-        .expect("JWT public key file not found. Please ensure jwt-public.pem is in the config/ directory");
+    let private_key_pem = match fs::read_to_string("./config/jwt-private.pem") {
+        Ok(key) => {
+            println!("JWT private key loaded successfully");
+            key
+        },
+        Err(e) => {
+            eprintln!("JWT private key file not found: {}", e);
+            std::process::exit(1);
+        }
+    };
 
     let jwt_encoding_key = EncodingKey::from_rsa_pem(private_key_pem.as_bytes())
         .expect("Invalid JWT private key format");
