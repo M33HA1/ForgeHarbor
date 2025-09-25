@@ -135,7 +135,7 @@ services:
   auth-rs:
     build: ../../apps/auth-rs
     container_name: fh-auth
-    env_file: ../../apps/config/.env # Corrected path
+    env_file: ../../apps/config/.env
     ports: ['8080:8080']
     depends_on:
       mongo:
@@ -156,7 +156,7 @@ services:
   phishing-rs:
     build: ../../apps/phishing-rs
     container_name: fh-phishing
-    env_file: ../../apps/config/.env # Corrected path
+    env_file: ../../apps/config/.env
     ports: ['8081:8081']
     depends_on:
       rabbitmq:
@@ -181,7 +181,7 @@ services:
   malware-rs:
     build: ../../apps/malware-rs
     container_name: fh-malware
-    env_file: ../../apps/config/.env # Corrected path
+    env_file: ../../apps/config/.env
     ports: ['8082:8082']
     depends_on:
       rabbitmq:
@@ -204,7 +204,7 @@ services:
   history-ts:
     build: ../../apps/history-ts
     container_name: fh-history
-    env_file: ../../apps/config/.env # Corrected path
+    env_file: ../../apps/config/.env
     ports: ['8083:8083']
     depends_on:
       mongo:
@@ -224,7 +224,7 @@ services:
   report-go:
     build: ../../apps/report-go
     container_name: fh-report
-    env_file: ../../apps/config/.env # Corrected path
+    env_file: ../../apps/config/.env
     ports: ['8084:8084']
     depends_on:
       mongo:
@@ -251,7 +251,7 @@ services:
   notify-py:
     build: ../../apps/notify-py
     container_name: fh-notify
-    env_file: ../../apps/config/.env # Corrected path
+    env_file: ../../apps/config/.env
     ports: ['8085:8085']
     depends_on:
       rabbitmq:
@@ -374,6 +374,10 @@ services:
     volumes:
       - ./nginx-logs.conf:/etc/nginx/nginx.conf:ro
     profiles: ["monitoring"]
+
+networks:
+  forgeharbor-net:
+    driver: bridge
 
 volumes:
   mongo-data:
