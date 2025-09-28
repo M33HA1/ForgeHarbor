@@ -255,7 +255,7 @@ async fn main() -> std::io::Result<()> {
 
     println!("phishing-rs running at http://localhost:8081");
 
-    HttpServer::new(move || {
+    let server_result = HttpServer::new(move || {
         let cors = Cors::default().allow_any_origin().allow_any_method().allow_any_header();
 
         App::new()
@@ -268,7 +268,17 @@ async fn main() -> std::io::Result<()> {
                     .service(check_url_handler)
             )
     })
-    .bind(("0.0.0.0", 8081))?
-    .run()
-    .await
+    .bind(("0.0.0.0", 8081));
+
+    match server_result {
+        Ok(server) => {
+            println!("Server bound successfully to 0.0.0.0:8081");
+            println!("=== SERVER RUNNING ===");
+            server.run().await
+        }
+        Err(e) => {
+            eprintln!("Failed to bind server to 0.0.0.0:8081: {}", e);
+            std::process::exit(1);
+        }
+    }
 }
