@@ -29,6 +29,17 @@ app = FastAPI()
 def health():
     return {"status": "ok", "service": "notify-py"}
 
+@app.get("/notifications")
+def get_notifications():
+    """Get all notifications for the current user"""
+    try:
+        # In a real app, you'd get the user from JWT token
+        # For now, return all notifications
+        notifications = list(notifications_col.find({}, {"_id": 0}).sort("timestamp", -1))
+        return {"notifications": notifications}
+    except Exception as e:
+        return {"error": str(e)}, 500
+
 # Worker to consume messages
 def consume_notifications():
     connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_url))
