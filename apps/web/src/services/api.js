@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost';
 
 class ApiService {
   constructor() {
@@ -63,9 +63,9 @@ class ApiService {
     this.setAuthToken(null);
   }
 
-  // URL Scanning Service
+  // URL Scanning Service (Phishing Detection)
   async scanUrl(url) {
-    const response = await fetch(`${API_BASE_URL}/scan/url`, {
+    const response = await fetch(`${API_BASE_URL}/phishing/v1/url/check`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify({ url })
@@ -73,12 +73,12 @@ class ApiService {
     return this.handleResponse(response);
   }
 
-  // File Scanning Service
+  // File Scanning Service (Malware Detection)
   async scanFile(file) {
     const formData = new FormData();
     formData.append('file', file);
     
-    const response = await fetch(`${API_BASE_URL}/scan/file`, {
+    const response = await fetch(`${API_BASE_URL}/malware/v1/file/analyze`, {
       method: 'POST',
       headers: {
         ...(this.token && { 'Authorization': `Bearer ${this.token}` })
@@ -141,11 +141,11 @@ class ApiService {
   async checkServiceHealth() {
     const services = [
       { name: 'auth', url: `${API_BASE_URL}/auth/health` },
-      { name: 'phishing', url: `${API_BASE_URL}/scan/url/health` },
-      { name: 'malware', url: `${API_BASE_URL}/scan/file/health` },
+      { name: 'phishing', url: `${API_BASE_URL}/phishing/health` },
+      { name: 'malware', url: `${API_BASE_URL}/malware/health` },
       { name: 'history', url: `${API_BASE_URL}/history/health` },
       { name: 'reports', url: `${API_BASE_URL}/reports/health` },
-      { name: 'notifications', url: `${API_BASE_URL}/notifications/health` }
+      { name: 'notifications', url: `${API_BASE_URL}/notify/health` }
     ];
 
     const results = await Promise.allSettled(
