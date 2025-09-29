@@ -1,385 +1,197 @@
+version: "3.9"
+
 services:
-  # Databases
-  mongo:
-    image: mongo:6.0
-    container_name: fh-mongo
-    ports: ['27017:27017']
+  # -------------------------
+  # Traefik reverse proxy
+  # -------------------------
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080" # Traefik dashboard
     volumes:
-      - mongo-data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - forgeharbor-net
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "traefik.enable=false"
 
-  redis:
-    image: redis:7-alpine
-    container_name: fh-redis
-    ports: ['6379:6379']
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - forgeharbor-net
+  # -------------------------
+  # Auth Service (Rust)
+  # -------------------------
+  fh-auth:
+    image: compose-auth-rs:latest
+    container_name: fh-auth
+    env_file:
+      - ../../config/.env
+    depends_on:
+      - fh-mongo
+      - fh-redis
+      - fh-rabbit
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.fh-auth.rule=Host(`auth.localhost`)"
+      - "traefik.http.services.fh-auth.loadbalancer.server.port=8080"
 
-  minio:
+  # -------------------------
+  # Phishing Service (Rust)
+  # -------------------------
+  fh-phishing:
+    image: compose-phishing-rs:latest
+    container_name: fh-phishing
+    env_file:
+      - ../../config/.env
+    depends_on:
+      - fh-auth
+      - fh-mongo
+      - fh-redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.fh-phishing.rule=Host(`phishing.localhost`)"
+      - "traefik.http.services.fh-phishing.loadbalancer.server.port=8081"
+
+  # -------------------------
+  # Malware Service (Rust)
+  # -------------------------
+  fh-malware:
+    image: compose-malware-rs:latest
+    container_name: fh-malware
+    env_file:
+      - ../../config/.env
+    depends_on:
+      - fh-auth
+      - fh-mongo
+      - fh-redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.fh-malware.rule=Host(`malware.localhost`)"
+      - "traefik.http.services.fh-malware.loadbalancer.server.port=8082"
+
+  # -------------------------
+  # History Service (TypeScript)
+  # -------------------------
+  fh-history:
+    image: compose-history-ts:latest
+    container_name: fh-history
+    env_file:
+      - ../../config/.env
+    depends_on:
+      - fh-mongo
+      - fh-redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.fh-history.rule=Host(`history.localhost`)"
+      - "traefik.http.services.fh-history.loadbalancer.server.port=8083"
+
+  # -------------------------
+  # Report Service (Go)
+  # -------------------------
+  fh-report:
+    image: compose-report-go:latest
+    container_name: fh-report
+    env_file:
+      - ../../config/.env
+    depends_on:
+      - fh-mongo
+      - fh-redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.fh-report.rule=Host(`report.localhost`)"
+      - "traefik.http.services.fh-report.loadbalancer.server.port=8084"
+
+  # -------------------------
+  # Notification Service (Python)
+  # -------------------------
+  fh-notify:
+    image: compose-notify-py:latest
+    container_name: fh-notify
+    env_file:
+      - ../../config/.env
+    depends_on:
+      - fh-rabbit
+      - fh-redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.fh-notify.rule=Host(`notify.localhost`)"
+      - "traefik.http.services.fh-notify.loadbalancer.server.port=8085"
+
+  # -------------------------
+  # Web Frontend (Node/Serve)
+  # -------------------------
+  fh-web:
+    image: compose-fh-web:latest
+    container_name: fh-web
+    env_file:
+      - ../../config/.env
+    depends_on:
+      - fh-auth
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.fh-web.rule=Host(`web.localhost`)"
+      - "traefik.http.services.fh-web.loadbalancer.server.port=3000"
+
+  # -------------------------
+  # MinIO Object Storage
+  # -------------------------
+  fh-minio:
     image: minio/minio:latest
     container_name: fh-minio
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+    env_file:
+      - ../../config/.env
     command: server /data --console-address ":9001"
-    ports: 
-      - '9000:9000'
-      - '9001:9001'
+    labels:
+      - "traefik.enable=false"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     volumes:
-      - minio-data:/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - forgeharbor-net
+      - fh-minio-data:/data
 
-  rabbitmq:
+  # -------------------------
+  # MongoDB
+  # -------------------------
+  fh-mongo:
+    image: mongo:6.0
+    container_name: fh-mongo
+    env_file:
+      - ../../config/.env
+    labels:
+      - "traefik.enable=false"
+    ports:
+      - "27017:27017"
+    volumes:
+      - fh-mongo-data:/data/db
+
+  # -------------------------
+  # Redis
+  # -------------------------
+  fh-redis:
+    image: redis:7-alpine
+    container_name: fh-redis
+    labels:
+      - "traefik.enable=false"
+    ports:
+      - "6379:6379"
+
+  # -------------------------
+  # RabbitMQ
+  # -------------------------
+  fh-rabbit:
     image: rabbitmq:3-management
     container_name: fh-rabbit
-    ports: ['5672:5672', '15672:15672']
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - forgeharbor-net
-
-  # Kong DB
-  kong-database:
-    image: postgres:13
-    container_name: kong-database
-    environment:
-      POSTGRES_USER: kong
-      POSTGRES_DB: kong
-      POSTGRES_PASSWORD: kong
+    env_file:
+      - ../../config/.env
+    labels:
+      - "traefik.enable=false"
     ports:
-      - "5432:5432"
-    volumes:
-      - kong-db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kong"]
-      interval: 30s
-      timeout: 30s
-      retries: 3
-    networks:
-      - forgeharbor-net
+      - "15672:15672"
 
-  # Kong Migration (Bootstrap)
-  kong-migration:
-    image: kong:3.6
-    container_name: kong-migration
-    depends_on:
-      kong-database:
-        condition: service_healthy
-    environment:
-      KONG_DATABASE: postgres
-      KONG_PG_HOST: kong-database
-      KONG_PG_USER: kong
-      KONG_PG_PASSWORD: kong
-      KONG_PG_DATABASE: kong
-    command: kong migrations bootstrap
-    restart: "no"
-    networks:
-      - forgeharbor-net
-
-  # Kong Gateway
-  kong:
-    image: kong:3.6
-    container_name: kong
-    depends_on:
-      - kong-migration
-    environment:
-      KONG_DATABASE: postgres
-      KONG_PG_HOST: kong-database
-      KONG_PG_USER: kong
-      KONG_PG_PASSWORD: kong
-      KONG_PG_DATABASE: kong
-      KONG_PROXY_ACCESS_LOG: /dev/stdout
-      KONG_ADMIN_ACCESS_LOG: /dev/stdout
-      KONG_PROXY_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_LISTEN: 0.0.0.0:8001
-      KONG_DECLARATIVE_CONFIG: /usr/local/kong/declarative/kong.yml
-    ports:
-      - "8000:8000"
-      - "8443:8443"
-      - "8001:8001"
-      - "8444:8444"
-    volumes:
-      - ./kong.yml:/usr/local/kong/declarative/kong.yml
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "kong", "health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - forgeharbor-net
-
-  # ===== PRIMARY MICROSERVICES =====
-  
-  auth-rs:
-    build: ../../apps/auth-rs
-    container_name: fh-auth
-    env_file: ../../apps/config/.env
-    ports: ['8080:8080']
-    depends_on:
-      mongo:
-        condition: service_healthy
-    environment:
-      - INSTANCE_ID=auth-primary
-      - SERVICE_PORT=8080
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    restart: unless-stopped
-    networks:
-      - forgeharbor-net
-
-  phishing-rs:
-    build: ../../apps/phishing-rs
-    container_name: fh-phishing
-    env_file: ../../apps/config/.env
-    ports: ['8081:8081']
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      mongo:
-        condition: service_healthy
-    environment:
-      - INSTANCE_ID=phishing-primary
-      - SERVICE_PORT=8081
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    restart: unless-stopped
-    networks:
-      - forgeharbor-net
-
-  malware-rs:
-    build: ../../apps/malware-rs
-    container_name: fh-malware
-    env_file: ../../apps/config/.env
-    ports: ['8082:8082']
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      mongo:
-        condition: service_healthy
-    environment:
-      - INSTANCE_ID=malware-primary
-      - SERVICE_PORT=8082
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    restart: unless-stopped
-    networks:
-      - forgeharbor-net
-
-  history-ts:
-    build: ../../apps/history-ts
-    container_name: fh-history
-    env_file: ../../apps/config/.env
-    ports: ['8083:8083']
-    depends_on:
-      mongo:
-        condition: service_healthy
-    environment:
-      - INSTANCE_ID=history-primary
-      - HISTORY_PORT=8083
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-    networks:
-      - forgeharbor-net
-
-  report-go:
-    build: ../../apps/report-go
-    container_name: fh-report
-    env_file: ../../apps/config/.env
-    ports: ['8084:8084']
-    depends_on:
-      mongo:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    volumes:
-      - ../../apps/report-go/reports:/app/reports
-    environment:
-      - INSTANCE_ID=report-primary
-      - REPORT_PORT=8084
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8084/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-    networks:
-      - forgeharbor-net
-
-  notify-py:
-    build: ../../apps/notify-py
-    container_name: fh-notify
-    env_file: ../../apps/config/.env
-    ports: ['8085:8085']
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    environment:
-      - INSTANCE_ID=notify-primary
-      - NOTIFY_PORT=8085
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8085/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-    networks:
-      - forgeharbor-net
-
-  # ===== WEB SERVICE =====
-
-  web:
-    build:
-      context: ../../apps/web
-      dockerfile: Dockerfile
-    container_name: fh-web
-    ports:
-      - "5173:5173"
-    depends_on:
-      - kong
-    restart: unless-stopped
-    networks:
-      - forgeharbor-net
-
-  # ===== SECONDARY INSTANCES FOR LOAD BALANCING =====
-
-  phishing-rs-2:
-    build: ../../apps/phishing-rs
-    container_name: fh-phishing-2
-    env_file: ../../config/.env
-    ports: ['8091:8081']
-    depends_on:
-      - rabbitmq
-      - redis
-      - mongo
-    environment:
-      - INSTANCE_ID=phishing-secondary
-      - SERVICE_PORT=8081
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-    profiles: ["scaling"]  # Only start with --profile scaling
-
-  malware-rs-2:
-    build: ../../apps/malware-rs
-    container_name: fh-malware-2
-    env_file: ../../config/.env
-    ports: ['8092:8082']
-    depends_on:
-      - rabbitmq
-      - mongo
-    environment:
-      - INSTANCE_ID=malware-secondary
-      - SERVICE_PORT=8082
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-    profiles: ["scaling"]
-
-  history-ts-2:
-    build: ../../apps/history-ts
-    container_name: fh-history-2
-    env_file: ../../config/.env
-    ports: ['8093:8083']
-    depends_on:
-      mongo:
-        condition: service_healthy
-    environment:
-      - INSTANCE_ID=history-secondary
-      - HISTORY_PORT=8083
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-    profiles: ["scaling"]
-
-  report-go-2:
-    build: ../../apps/report-go
-    container_name: fh-report-2
-    env_file: ../../config/.env
-    ports: ['8094:8084']
-    depends_on:
-      - mongo
-      - minio
-      - rabbitmq
-    volumes:
-      - ../../apps/report-go/reports:/app/reports
-    environment:
-      - INSTANCE_ID=report-secondary
-      - REPORT_PORT=8084
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8084/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-    profiles: ["scaling"]
-
-  # ===== MONITORING & LOGGING (Optional) =====
-  
-  log-collector:
-    image: nginx:alpine
-    container_name: fh-log-collector
-    ports: ['8086:80']
-    volumes:
-      - ./nginx-logs.conf:/etc/nginx/nginx.conf:ro
-    profiles: ["monitoring"]
-
-networks:
-  forgeharbor-net:
-    driver: bridge
-
+# -------------------------
+# Volumes
+# -------------------------
 volumes:
-  mongo-data:
-  minio-data:
-  kong-db-data:
+  fh-mongo-data:
+  fh-minio-data:
