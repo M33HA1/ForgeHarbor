@@ -135,8 +135,12 @@ const Result = ({ result }) => {
 
           {data.details && (
             <div className="p-4 rounded-lg bg-slate-700/50">
-              <h4 className="font-semibold text-white mb-3">Additional Info</h4>
+              <h4 className="font-semibold text-white mb-3">Analysis Details</h4>
               <div className="space-y-2 text-sm">
+                <div className="flex flex-col">
+                  <span className="text-slate-300 mb-1">Reason:</span>
+                  <span className="text-white text-xs leading-relaxed">{data.details}</span>
+                </div>
                 {data.details.domain_age && (
                   <div className="flex justify-between">
                     <span className="text-slate-300">Domain Age</span>

@@ -32,7 +32,14 @@ const DashboardPage = () => {
     setIsAnalyzing(true);
     setResult(null);
     try {
-      const data = await api.scanUrl(url);
+      const response = await api.scanUrl(url);
+      // Transform the phishing service response to match frontend expectations
+      const data = {
+        is_malicious: false, // URL scanning doesn't detect malware
+        is_phishing: response.result.phishing,
+        confidence_score: Math.round(response.result.confidence * 100),
+        details: response.result.reason
+      };
       setResult({ type: "url", data: { ...data, targetUrl: url } });
     } catch (error) {
       setResult({ type: "error", message: error.message || "Failed to analyze URL" });
