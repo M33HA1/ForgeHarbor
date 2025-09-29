@@ -1,4 +1,6 @@
-version: "3.9"
+networks:
+  forgeharbor-network:
+    driver: bridge
 
 services:
   # -------------------------
@@ -11,11 +13,16 @@ services:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--entrypoints.web.address=:80"
+      - "--entrypoints.traefik.address=:8000"
+      - "--providers.docker.exposedbydefault=false"
+      - "--log.level=INFO"
     ports:
       - "80:80"
-      - "8080:8080" # Traefik dashboard
+      - "8000:8000" # Traefik dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - forgeharbor-network
     labels:
       - "traefik.enable=false"
 
@@ -23,114 +30,183 @@ services:
   # Auth Service (Rust)
   # -------------------------
   fh-auth:
-    image: compose-auth-rs:latest
+    build:
+      context: ../../apps/auth-rs
+      dockerfile: Dockerfile
     container_name: fh-auth
     env_file:
       - ../../config/.env
     depends_on:
-      - fh-mongo
-      - fh-redis
-      - fh-rabbit
+      fh-mongo:
+        condition: service_healthy
+      fh-redis:
+        condition: service_healthy
+      fh-rabbit:
+        condition: service_healthy
+    networks:
+      - forgeharbor-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.fh-auth.rule=Host(`auth.localhost`)"
+      - "traefik.http.routers.fh-auth.rule=Host(`localhost`) && PathPrefix(`/auth`)"
+      - "traefik.http.routers.fh-auth.priority=100"
       - "traefik.http.services.fh-auth.loadbalancer.server.port=8080"
+      - "traefik.http.middlewares.fh-auth-stripprefix.stripprefix.prefixes=/auth"
+      - "traefik.http.routers.fh-auth.middlewares=fh-auth-stripprefix"
+    volumes:
+      - ../../config:/app/config:ro
 
   # -------------------------
   # Phishing Service (Rust)
   # -------------------------
   fh-phishing:
-    image: compose-phishing-rs:latest
+    build:
+      context: ../../apps/phishing-rs
+      dockerfile: Dockerfile
     container_name: fh-phishing
     env_file:
       - ../../config/.env
     depends_on:
-      - fh-auth
-      - fh-mongo
-      - fh-redis
+      fh-auth:
+        condition: service_started
+      fh-mongo:
+        condition: service_healthy
+      fh-redis:
+        condition: service_healthy
+    networks:
+      - forgeharbor-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.fh-phishing.rule=Host(`phishing.localhost`)"
+      - "traefik.http.routers.fh-phishing.rule=Host(`localhost`) && PathPrefix(`/phishing`)"
+      - "traefik.http.routers.fh-phishing.priority=100"
       - "traefik.http.services.fh-phishing.loadbalancer.server.port=8081"
+      - "traefik.http.middlewares.fh-phishing-stripprefix.stripprefix.prefixes=/phishing"
+      - "traefik.http.routers.fh-phishing.middlewares=fh-phishing-stripprefix"
+    volumes:
+      - ../../config:/app/config:ro
 
   # -------------------------
   # Malware Service (Rust)
   # -------------------------
   fh-malware:
-    image: compose-malware-rs:latest
+    build:
+      context: ../../apps/malware-rs
+      dockerfile: Dockerfile
     container_name: fh-malware
     env_file:
       - ../../config/.env
     depends_on:
-      - fh-auth
-      - fh-mongo
-      - fh-redis
+      fh-auth:
+        condition: service_started
+      fh-mongo:
+        condition: service_healthy
+      fh-redis:
+        condition: service_healthy
+    networks:
+      - forgeharbor-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.fh-malware.rule=Host(`malware.localhost`)"
+      - "traefik.http.routers.fh-malware.rule=Host(`localhost`) && PathPrefix(`/malware`)"
+      - "traefik.http.routers.fh-malware.priority=100"
       - "traefik.http.services.fh-malware.loadbalancer.server.port=8082"
+      - "traefik.http.middlewares.fh-malware-stripprefix.stripprefix.prefixes=/malware"
+      - "traefik.http.routers.fh-malware.middlewares=fh-malware-stripprefix"
+    volumes:
+      - ../../config:/app/config:ro
 
   # -------------------------
   # History Service (TypeScript)
   # -------------------------
   fh-history:
-    image: compose-history-ts:latest
+    build:
+      context: ../../apps/history-ts
+      dockerfile: Dockerfile
     container_name: fh-history
     env_file:
       - ../../config/.env
     depends_on:
-      - fh-mongo
-      - fh-redis
+      fh-mongo:
+        condition: service_healthy
+      fh-redis:
+        condition: service_healthy
+    networks:
+      - forgeharbor-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.fh-history.rule=Host(`history.localhost`)"
+      - "traefik.http.routers.fh-history.rule=Host(`localhost`) && PathPrefix(`/history`)"
+      - "traefik.http.routers.fh-history.priority=100"
       - "traefik.http.services.fh-history.loadbalancer.server.port=8083"
+      - "traefik.http.middlewares.fh-history-stripprefix.stripprefix.prefixes=/history"
+      - "traefik.http.routers.fh-history.middlewares=fh-history-stripprefix"
 
   # -------------------------
   # Report Service (Go)
   # -------------------------
   fh-report:
-    image: compose-report-go:latest
+    build:
+      context: ../../apps/report-go
+      dockerfile: Dockerfile
     container_name: fh-report
     env_file:
       - ../../config/.env
     depends_on:
-      - fh-mongo
-      - fh-redis
+      fh-mongo:
+        condition: service_healthy
+      fh-redis:
+        condition: service_healthy
+      fh-rabbit:
+        condition: service_healthy
+    networks:
+      - forgeharbor-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.fh-report.rule=Host(`report.localhost`)"
+      - "traefik.http.routers.fh-report.rule=Host(`localhost`) && PathPrefix(`/reports`)"
+      - "traefik.http.routers.fh-report.priority=100"
       - "traefik.http.services.fh-report.loadbalancer.server.port=8084"
 
   # -------------------------
   # Notification Service (Python)
   # -------------------------
   fh-notify:
-    image: compose-notify-py:latest
+    build:
+      context: ../../apps/notify-py
+      dockerfile: Dockerfile
     container_name: fh-notify
     env_file:
       - ../../config/.env
     depends_on:
-      - fh-rabbit
-      - fh-redis
+      fh-rabbit:
+        condition: service_healthy
+      fh-redis:
+        condition: service_healthy
+    networks:
+      - forgeharbor-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.fh-notify.rule=Host(`notify.localhost`)"
+      - "traefik.http.routers.fh-notify.rule=Host(`localhost`) && PathPrefix(`/notify`)"
+      - "traefik.http.routers.fh-notify.priority=100"
       - "traefik.http.services.fh-notify.loadbalancer.server.port=8085"
+      - "traefik.http.middlewares.fh-notify-stripprefix.stripprefix.prefixes=/notify"
+      - "traefik.http.routers.fh-notify.middlewares=fh-notify-stripprefix"
 
   # -------------------------
   # Web Frontend (Node/Serve)
   # -------------------------
   fh-web:
-    image: compose-fh-web:latest
+    build:
+      context: ../../apps/web
+      dockerfile: Dockerfile
     container_name: fh-web
     env_file:
       - ../../config/.env
     depends_on:
-      - fh-auth
+      fh-auth:
+        condition: service_started
+    networks:
+      - forgeharbor-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.fh-web.rule=Host(`web.localhost`)"
+      - "traefik.http.routers.fh-web.rule=Host(`localhost`)"
+      - "traefik.http.routers.fh-web.priority=1"
       - "traefik.http.services.fh-web.loadbalancer.server.port=3000"
 
   # -------------------------
@@ -142,6 +218,8 @@ services:
     env_file:
       - ../../config/.env
     command: server /data --console-address ":9001"
+    networks:
+      - forgeharbor-network
     labels:
       - "traefik.enable=false"
     ports:
@@ -156,14 +234,19 @@ services:
   fh-mongo:
     image: mongo:6.0
     container_name: fh-mongo
-    env_file:
-      - ../../config/.env
+    networks:
+      - forgeharbor-network
     labels:
       - "traefik.enable=false"
     ports:
       - "27017:27017"
     volumes:
       - fh-mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
 
   # -------------------------
   # Redis
@@ -171,10 +254,17 @@ services:
   fh-redis:
     image: redis:7-alpine
     container_name: fh-redis
+    networks:
+      - forgeharbor-network
     labels:
       - "traefik.enable=false"
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
 
   # -------------------------
   # RabbitMQ
@@ -184,10 +274,18 @@ services:
     container_name: fh-rabbit
     env_file:
       - ../../config/.env
+    networks:
+      - forgeharbor-network
     labels:
       - "traefik.enable=false"
     ports:
+      - "5672:5672"
       - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
 
 # -------------------------
 # Volumes
