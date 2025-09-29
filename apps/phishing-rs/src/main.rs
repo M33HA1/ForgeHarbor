@@ -115,13 +115,43 @@ struct Part {
     text: String,
 }
 
+// Attempts to extract a pure JSON object string from model output that may
+// include markdown code fences or explanatory text.
+fn extract_json_from_text(text: &str) -> Option<String> {
+    let trimmed = text.trim();
+
+    // Handle fenced code blocks like ```json ... ``` or ``` ... ```
+    if trimmed.starts_with("```") {
+        // Strip opening fence and optional language tag
+        let without_opening = match trimmed.find('\n') {
+            Some(idx) => &trimmed[idx + 1..],
+            None => return None,
+        };
+        // Strip closing fence if present
+        if let Some(end_idx) = without_opening.rfind("```") {
+            let inner = &without_opening[..end_idx];
+            return Some(inner.trim().to_string());
+        }
+        return Some(without_opening.trim().to_string());
+    }
+
+    // Fallback: try to take substring from first '{' to last '}'
+    if let (Some(start), Some(end)) = (trimmed.find('{'), trimmed.rfind('}')) {
+        if end > start {
+            return Some(trimmed[start..=end].to_string());
+        }
+    }
+
+    None
+}
 // ===== Logic: Call Gemini =====
 async fn check_phishing_with_gemini(
     url: &str,
     api_key: &str,
 ) -> Result<AnalysisResult, Box<dyn std::error::Error>> {
     let endpoint = format!(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={}",
+        "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
+        "gemini-2.5-flash",
         api_key
     );
 
@@ -140,9 +170,17 @@ async fn check_phishing_with_gemini(
         let gemini_response: GeminiResponse = serde_json::from_str(&raw_text)?;
         if let Some(candidate) = gemini_response.candidates.first() {
             if let Some(part) = candidate.content.parts.first() {
-                let analysis: AnalysisResult = serde_json::from_str(&part.text)
-                    .map_err(|e| format!("Parse JSON failed: {}. Raw: {}", e, part.text))?;
-                return Ok(analysis);
+                let candidate_text = part.text.trim();
+                // Try direct parse first
+                if let Ok(parsed) = serde_json::from_str::<AnalysisResult>(candidate_text) {
+                    return Ok(parsed);
+                }
+                // Try to extract JSON from fenced/verbose output
+                if let Some(json_str) = extract_json_from_text(candidate_text) {
+                    let parsed: AnalysisResult = serde_json::from_str(&json_str)
+                        .map_err(|e| format!("Parse JSON failed: {}. Raw: {}", e, candidate_text))?;
+                    return Ok(parsed);
+                }
             }
         }
         Err("No valid response content".into())
@@ -235,21 +273,68 @@ async fn main() -> std::io::Result<()> {
     // };
 
     // MongoDB
-    let mongo_uri = env::var("MONGO_URI").expect("MONGO_URI must be set in your config/.env file");
-    let client = Client::with_uri_str(&mongo_uri).await.expect("MongoDB connect failed");
+    let mongo_uri = match env::var("MONGO_URI") {
+        Ok(uri) => {
+            println!("MongoDB URI loaded successfully");
+            uri
+        },
+        Err(e) => {
+            eprintln!("MONGO_URI not found: {}", e);
+            std::process::exit(1);
+        }
+    };
+    
+    println!("Connecting to MongoDB...");
+    let client = match Client::with_uri_str(&mongo_uri).await {
+        Ok(client) => {
+            println!("MongoDB connection established");
+            client
+        },
+        Err(e) => {
+            eprintln!("MongoDB connection failed: {}", e);
+            std::process::exit(1);
+        }
+    };
     let db = client.database("forgeharbor");
 
     // JWT Keys - Load from config directory
     println!("Loading JWT public key from config directory...");
-    let public_key_pem = fs::read_to_string("./config/jwt-public.pem")
-        .expect("JWT public key file not found. Please ensure jwt-public.pem is in the config/ directory");
-    let jwt_decoding_key = DecodingKey::from_rsa_pem(public_key_pem.as_bytes())
-        .expect("Invalid JWT public key format");
-    println!("JWT public key loaded successfully!");
+    let public_key_pem = match fs::read_to_string("./config/jwt-public.pem") {
+        Ok(key) => {
+            println!("JWT public key loaded successfully");
+            key
+        },
+        Err(e) => {
+            eprintln!("JWT public key file not found: {}", e);
+            std::process::exit(1);
+        }
+    };
+    
+    let jwt_decoding_key = match DecodingKey::from_rsa_pem(public_key_pem.as_bytes()) {
+        Ok(key) => {
+            println!("JWT decoding key created successfully");
+            key
+        },
+        Err(e) => {
+            eprintln!("Invalid JWT public key format: {}", e);
+            std::process::exit(1);
+        }
+    };
+
+    let gemini_key = match env::var("GEMINI_API_KEY") {
+        Ok(key) => {
+            println!("GEMINI_API_KEY loaded successfully");
+            key
+        },
+        Err(e) => {
+            eprintln!("GEMINI_API_KEY not found: {}", e);
+            std::process::exit(1);
+        }
+    };
 
     let state = web::Data::new(AppState {
         db,
-        gemini_key: env::var("GEMINI_API_KEY").expect("GEMINI_API_KEY missing from your config/.env file"),
+        gemini_key,
         jwt_decoding_key,
     });
 
