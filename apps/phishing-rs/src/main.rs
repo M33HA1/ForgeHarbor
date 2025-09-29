@@ -229,7 +229,7 @@ async fn main() -> std::io::Result<()> {
 
     // Uncomment this when running locally as docker loads env via env_path flag
     // println!("Attempting to load .env file from config directory...");
-    // match dotenvy::from_path("../config/.env") {
+    // match dotenvy::from_path("../../config/.env") {
     //     Ok(_) => println!("Successfully loaded .env file from config/.env"),
     //     Err(e) => println!("Could not load .env file from config directory: {}. Ensure the file exists at ForgeHarbor/config/.env", e),
     // };
