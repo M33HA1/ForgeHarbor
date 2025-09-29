@@ -14,12 +14,12 @@ ForgeHarbor is a sophisticated, microservice-based application designed to provi
 
 ## 🏗️ Architecture
 
-ForgeHarbor utilizes a distributed microservices architecture. Each service is independently deployable and responsible for a distinct business capability. Services are containerized with Docker and orchestrated via Docker Compose. All external traffic is routed through a Kong API Gateway, which handles concerns like authentication and CORS.
+ForgeHarbor utilizes a distributed microservices architecture. Each service is independently deployable and responsible for a distinct business capability. Services are containerized with Docker and orchestrated via Docker Compose. All external traffic is routed through a Traefik API Gateway, which handles load balancing, path-based routing, and service discovery.
 
 ```
 +----------------+      +----------------+      +---------------------+
-|   Web Client   |----->| Kong Gateway   |----->| Backend Services    |
-| (React/Vite)   |      | (Port 8000)    |      | (Rust, Go, TS, Py)  |
+|   Web Client   |----->| Traefik Gateway|----->| Backend Services    |
+| (React/Vite)   |      | (Port 80)      |      | (Rust, Go, TS, Py)  |
 +----------------+      +----------------+      +----------+----------+
                                                            |
                +----------------+   +----------------+   +-----------+
@@ -34,8 +34,8 @@ ForgeHarbor utilizes a distributed microservices architecture. Each service is i
 |-----------|------------|
 | Frontend | React.js, Vite, Tailwind CSS, lucide-react |
 | Backend Services | Rust (Actix Web), TypeScript (Fastify), Go (Gin), Python (FastAPI) |
-| API Gateway | Kong |
-| Databases | MongoDB (Primary Data), Redis (Caching/Sessions), PostgreSQL (Kong) |
+| API Gateway | Traefik |
+| Databases | MongoDB (Primary Data), Redis (Caching/Sessions) |
 | Message Broker | RabbitMQ (for asynchronous notifications) |
 | Object Storage | Minio (for storing generated reports) |
 | Containerization | Docker, Docker Compose |
@@ -106,8 +106,15 @@ NODE_ENV=development
 
 #### 3. Run the Application
 
-Navigate to the `deploy/compose` directory and use Docker Compose to build and start all the services.
+You can start the application in two ways:
 
+**Option 1: Using the start script (Recommended)**
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+**Option 2: Manual Docker Compose**
 ```bash
 cd deploy/compose
 docker-compose -f docker-compose.dev.yml up -d --build
@@ -117,16 +124,27 @@ This command will build the images for all custom services and start them in the
 
 ### Accessing the Services
 
-- **Web Application**: http://localhost:5173
-- **API Gateway**: http://localhost:8000
+- **Web Application**: http://localhost (main entry point)
+- **Traefik Dashboard**: http://localhost:8080
 - **RabbitMQ Management**: http://localhost:15672 (user: `guest`, pass: `guest`)
-- **Minio Console**: http://localhost:9001 (user: `minioadmin`, pass: `minioadmin`)
+- **MinIO Console**: http://localhost:9001 (user: `minioadmin`, pass: `minioadmin`)
+
+### API Endpoints
+
+All backend services are accessible through the Traefik API Gateway at http://localhost:
+
+- **Authentication**: http://localhost/auth/*
+- **Phishing Detection**: http://localhost/phishing/*
+- **Malware Scanning**: http://localhost/malware/*
+- **Scan History**: http://localhost/history/*
+- **Report Generation**: http://localhost/reports/*
+- **Notifications**: http://localhost/notify/*
 
 ## 🔧 Usage
 
 Once the application is running, you can:
 
-1. Navigate to http://localhost:5173
+1. Navigate to http://localhost
 2. Sign up for a new account and log in
 3. Use the dashboard to analyze URLs or upload files for scanning
 4. View results and previous scans in the "History" section
@@ -134,16 +152,18 @@ Once the application is running, you can:
 
 ## ↔️ API Endpoints
 
-All backend services are exposed through the Kong API Gateway at http://localhost:8000.
+All backend services are exposed through the Traefik API Gateway at http://localhost.
 
 ### Authentication
 - `POST /auth/signup`
 - `POST /auth/login`
 - `GET /auth/me` (Protected)
 
-### Scanning
-- `POST /scan/url` (Protected)
-- `POST /scan/file` (Protected)
+### Phishing Detection
+- `POST /phishing/scan` (Protected)
+
+### Malware Scanning
+- `POST /malware/scan` (Protected)
 
 ### History
 - `GET /history` (Protected)
@@ -152,6 +172,9 @@ All backend services are exposed through the Kong API Gateway at http://localhos
 ### Reports
 - `POST /reports` (Protected)
 - `GET /reports/:id/download` (Protected)
+
+### Notifications
+- `GET /notify/status` (Protected)
 
 ## 📜 License
 
