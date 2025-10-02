@@ -1,4 +1,5 @@
 import Fastify from "fastify";
+import jwt from "jsonwebtoken";
 import { MongoClient, ObjectId } from "mongodb";
 import dotenv from "dotenv";
 import path from "path";
@@ -11,6 +12,30 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../../config/.env") });
 
 const app = Fastify();
+
+// Simple JWT auth parser: expects "Authorization: Bearer <token>"
+app.addHook('preHandler', async (req, reply) => {
+  if (req.routerPath && req.routerPath.startsWith('/health')) {
+    return; // no auth for health
+  }
+  const auth = req.headers['authorization'];
+  if (!auth || !auth.startsWith('Bearer ')) {
+    return; // allow anonymous; route can enforce if needed
+  }
+  const token = auth.substring('Bearer '.length);
+  try {
+    const publicKey = process.env.JWT_PUBLIC_KEY || '';
+    let decoded: any;
+    if (publicKey) {
+      decoded = jwt.verify(token, publicKey, { algorithms: ['RS256'] });
+    } else {
+      decoded = jwt.decode(token);
+    }
+    (req as any).user = decoded;
+  } catch {
+    // ignore invalid tokens; downstream can decide
+  }
+});
 
 const mongo = new MongoClient(process.env.MONGO_URI || "mongodb://fh-mongo:27017");
 
@@ -36,6 +61,12 @@ app.get("/history", async (req, reply) => {
   const scans = db.collection("scans");
 
   const q: any = {};
+  const user = (req as any).user;
+  // Filter by user if available from JWT (common fields: sub, user_id, uid)
+  const userId = user?.sub || user?.user_id || user?.uid || user?.id;
+  if (userId) {
+    q.user_id = userId;
+  }
   if (type) q.type = type;
   if (risk) q["result.risk_level"] = risk;
 

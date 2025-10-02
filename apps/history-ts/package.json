@@ -10,10 +10,12 @@
   "dependencies": {
     "dotenv": "*",
     "fastify": "*",
-    "mongodb": "*"
+    "mongodb": "*",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
     "@types/dotenv": "*",
+    "@types/jsonwebtoken": "^9.0.6",
     "ts-node-dev": "*",
     "typescript": "^5.9.2"
   }
