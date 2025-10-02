@@ -65,6 +65,8 @@ services:
     container_name: fh-phishing
     env_file:
       - ../../config/.env
+    environment:
+      - GEMINI_API_KEY=dummy-dev-key
     depends_on:
       fh-auth:
         condition: service_started
@@ -94,6 +96,8 @@ services:
     container_name: fh-malware
     env_file:
       - ../../config/.env
+    environment:
+      - VIRUSTOTAL_API_KEY=dummy-dev-key
     depends_on:
       fh-auth:
         condition: service_started
@@ -135,8 +139,6 @@ services:
       - "traefik.http.routers.fh-history.rule=Host(`localhost`) && PathPrefix(`/history`)"
       - "traefik.http.routers.fh-history.priority=100"
       - "traefik.http.services.fh-history.loadbalancer.server.port=8083"
-      - "traefik.http.middlewares.fh-history-stripprefix.stripprefix.prefixes=/history"
-      - "traefik.http.routers.fh-history.middlewares=fh-history-stripprefix"
 
   # -------------------------
   # Report Service (Go)
@@ -148,6 +150,15 @@ services:
     container_name: fh-report
     env_file:
       - ../../config/.env
+    environment:
+      - MONGO_URI=mongodb://fh-mongo:27017
+      - MONGO_DB=forgeharbor
+      - RABBITMQ_URL=amqp://guest:guest@fh-rabbit:5672
+      - S3_ENDPOINT=http://fh-minio:9000
+      - S3_REGION=us-east-1
+      - S3_BUCKET=forgeharbor-reports
+      - S3_ACCESS_KEY=minioadmin
+      - S3_SECRET_KEY=minioadmin
     depends_on:
       fh-mongo:
         condition: service_healthy
@@ -155,6 +166,8 @@ services:
         condition: service_healthy
       fh-rabbit:
         condition: service_healthy
+      fh-minio:
+        condition: service_started
     networks:
       - forgeharbor-network
     labels:
