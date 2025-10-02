@@ -39,6 +39,12 @@ func RegisterReportRoutes(r *gin.Engine, mongoClient *mongo.Client, rabbitConn *
 	// S3 setup
 	awsCfg, err := config.LoadDefaultConfig(
 		context.TODO(),
+		config.WithRegion(func() string {
+			if v := os.Getenv("S3_REGION"); v != "" {
+				return v
+			}
+			return "us-east-1"
+		}()),
 		config.WithEndpointResolver(aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
 			return aws.Endpoint{URL: os.Getenv("S3_ENDPOINT"), HostnameImmutable: true}, nil
 		})),
@@ -51,8 +57,23 @@ func RegisterReportRoutes(r *gin.Engine, mongoClient *mongo.Client, rabbitConn *
 	if err != nil {
 		log.Fatal("S3 config error:", err)
 	}
-	s3Client := s3.NewFromConfig(awsCfg)
+	s3Client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
+		// MinIO/S3-compatible: prefer path-style addressing
+		o.UsePathStyle = true
+	})
 	bucket := os.Getenv("S3_BUCKET")
+
+	// Ensure bucket exists (create if missing)
+	if bucket == "" {
+		log.Fatal("S3_BUCKET env var is required")
+	}
+	_, err = s3Client.HeadBucket(context.TODO(), &s3.HeadBucketInput{Bucket: aws.String(bucket)})
+	if err != nil {
+		_, createErr := s3Client.CreateBucket(context.TODO(), &s3.CreateBucketInput{Bucket: aws.String(bucket)})
+		if createErr != nil {
+			log.Fatal("S3 bucket check/create error:", createErr)
+		}
+	}
 
 	// RabbitMQ setup
 	ch, err := rabbitConn.Channel()
