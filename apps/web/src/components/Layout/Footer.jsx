@@ -4,7 +4,7 @@ import { Shield, Heart, Fish, Waves } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="py-8">
+    <footer className="py-8 border-t border-slate-800/60 bg-slate-900/40 backdrop-blur">
       <div className="container mx-auto px-6">
         <div className="text-center">
           <div className="flex items-center justify-center mb-4">
@@ -14,24 +14,24 @@ const Footer = () => {
             </p>
           </div>
           
-          <div className="flex items-center justify-center space-x-4 mb-4">
+          <div className="flex items-center justify-center space-x-4 mb-4 text-slate-400">
             <a 
               href="#" 
-              className="text-sm hover:underline transition-colors text-slate-400 hover:text-cyan-300"
+              className="text-sm hover:underline transition-colors hover:text-cyan-300"
             >
               Privacy Policy
             </a>
             <span className="text-sm text-slate-600">•</span>
             <a 
               href="#" 
-              className="text-sm hover:underline transition-colors text-slate-400 hover:text-cyan-300"
+              className="text-sm hover:underline transition-colors hover:text-cyan-300"
             >
               Terms of Service
             </a>
             <span className="text-sm text-slate-600">•</span>
             <a 
               href="#" 
-              className="text-sm hover:underline transition-colors text-slate-400 hover:text-cyan-300"
+              className="text-sm hover:underline transition-colors hover:text-cyan-300"
             >
               Contact Support
             </a>
