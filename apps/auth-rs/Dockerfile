@@ -44,4 +44,7 @@ COPY --from=builder /app/target/release/auth-rs /usr/local/bin/auth-rs
 EXPOSE 8080
 
 # Set the startup command to run the binary (FIXED: use correct binary name)
+ENV RUST_BACKTRACE=1 \
+    RUST_LOG=debug
+
 CMD ["/usr/local/bin/auth-rs"]
