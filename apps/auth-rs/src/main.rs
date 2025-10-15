@@ -323,7 +323,7 @@ async fn main() -> std::io::Result<()> {
 
     // Uncomment this when running locally as docker loads env via env_path flag
     // println!("Attempting to load .env file from config directory...");
-    // match dotenv::from_path("../../config/.env") {
+    // match dotenvy::from_path("../config/.env") {
     //     Ok(_) => println!("Successfully loaded .env file from config/.env"),
     //     Err(e) => println!("Could not load .env file from config directory: {}. Ensure the file exists at ForgeHarbor/config/.env", e),
     // };
@@ -387,7 +387,7 @@ async fn main() -> std::io::Result<()> {
 
     println!("Auth service starting on http://localhost:8080");
 
-    let server_result = HttpServer::new(move || {
+    HttpServer::new(move || {
         App::new()
             .app_data(app_state.clone())
             .wrap(Logger::default())
@@ -407,17 +407,7 @@ async fn main() -> std::io::Result<()> {
                     .route("/me", web::get().to(me))
             )
     })
-    .bind("0.0.0.0:8080");
-
-    match server_result {
-        Ok(server) => {
-            println!("Server bound successfully to 0.0.0.0:8080");
-            println!("=== SERVER RUNNING ===");
-            server.run().await
-        }
-        Err(e) => {
-            eprintln!("Failed to bind server to 0.0.0.0:8080: {}", e);
-            std::process::exit(1);
-        }
-    }
+    .bind("0.0.0.0:8080")?
+    .run()
+    .await
 }
