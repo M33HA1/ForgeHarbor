@@ -12,14 +12,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # MongoDB setup
-mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+mongo_uri = os.getenv("MONGO_URI", "mongodb://fh-mongo:27017")
 mongo_db = os.getenv("MONGO_DB", "forgeharbor")
 client = pymongo.MongoClient(mongo_uri)
 db = client[mongo_db]
 notifications_col = db["notifications"]
 
 # RabbitMQ setup
-rabbitmq_url = os.getenv("RABBITMQ_URL", "amqp://localhost:5672/")
+rabbitmq_url = os.getenv("RABBITMQ_URL", "amqp://guest:guest@fh-rabbit:5672/")
 queue_name = os.getenv("NOTIFY_QUEUE", "notifications")
 
 # FastAPI app
