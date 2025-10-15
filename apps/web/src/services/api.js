@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
 
 class ApiService {
   constructor() {
@@ -131,7 +131,7 @@ class ApiService {
 
   // Notifications Service
   async getNotifications() {
-    const response = await fetch(`${API_BASE_URL}/notifications`, {
+    const response = await fetch(`${API_BASE_URL}/notify`, {
       headers: this.getAuthHeaders()
     });
     return this.handleResponse(response);
