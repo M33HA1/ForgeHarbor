@@ -398,13 +398,13 @@ async fn main() -> std::io::Result<()> {
                     .allow_any_header()
             )
             .route("/health", web::get().to(health))
-            .route("/signup", web::post().to(signup))
-            .route("/login", web::post().to(login))
-            .route("/jwks", web::get().to(jwks))
+            .route("/auth/signup", web::post().to(signup))
+            .route("/auth/login", web::post().to(login))
+            .route("/auth/jwks", web::get().to(jwks))
             .service(
                 web::scope("")
                     .wrap(actix_web_httpauth::middleware::HttpAuthentication::bearer(jwt_middleware))
-                    .route("/me", web::get().to(me))
+                    .route("/auth/me", web::get().to(me))
             )
     })
     .bind("0.0.0.0:8080")?

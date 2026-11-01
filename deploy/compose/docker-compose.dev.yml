@@ -67,8 +67,6 @@ services:
     container_name: fh-phishing
     env_file:
       - ../../config/.env
-    environment:
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
     depends_on:
       fh-auth:
         condition: service_started
@@ -100,8 +98,6 @@ services:
     container_name: fh-malware
     env_file:
       - ../../config/.env
-    environment:
-      - VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY}
     depends_on:
       fh-auth:
         condition: service_started
@@ -244,20 +240,22 @@ services:
   # MinIO Object Storage
   # -------------------------
   fh-minio:
-    image: minio/minio:latest
+    image: localstack/localstack:3.0.2
     container_name: fh-minio
     env_file:
       - ../../config/.env
-    command: server /data --console-address ":9001"
+    environment:
+      - SERVICES=s3
+      - EDGE_PORT=4566
     networks:
       - forgeharbor-network
     labels:
       - "traefik.enable=false"
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9000:4566"
+      - "9001:4566"
     volumes:
-      - fh-minio-data:/data
+      - fh-minio-data:/var/lib/localstack
 
   # -------------------------
   # MongoDB

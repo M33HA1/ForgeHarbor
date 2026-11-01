@@ -8,7 +8,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Load shared env from ../../config/.env
-# Fix: Use environment variable override instead of path resolution
 load_dotenv()
 
 # MongoDB setup

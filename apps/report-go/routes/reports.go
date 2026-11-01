@@ -86,8 +86,8 @@ func RegisterReportRoutes(r *gin.Engine, mongoClient *mongo.Client, rabbitConn *
 		log.Fatal("RabbitMQ queue declare error:", err)
 	}
 
-	// POST /reports → create new report
-	r.POST("/reports", func(c *gin.Context) {
+	// POST /reports → create new report (becomes / after Traefik strips prefix)
+	r.POST("/", func(c *gin.Context) {
 		var body struct {
 			ScanID  string `json:"scanId"`
 			Content string `json:"content"`
@@ -136,6 +136,17 @@ func RegisterReportRoutes(r *gin.Engine, mongoClient *mongo.Client, rabbitConn *
 
 		c.JSON(http.StatusOK, report)
 	})
+
+	// GET /reports → service info (becomes / after Traefik strips prefix)
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message":   "Report service is running",
+			"service":   "report-go",
+			"timestamp": time.Now().Format(time.RFC3339),
+			"endpoints": []string{"/health", "/", "/:id", "/:id/download"},
+		})
+	})
+
 	// Add to apps/report-go/routes/reports.go
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -144,8 +155,8 @@ func RegisterReportRoutes(r *gin.Engine, mongoClient *mongo.Client, rabbitConn *
 			"timestamp": time.Now().Format(time.RFC3339),
 		})
 	})
-	// GET /reports/:id → fetch metadata
-	r.GET("/reports/:id", func(c *gin.Context) {
+	// GET /reports/:id → fetch metadata (becomes /:id after Traefik strips prefix)
+	r.GET("/:id", func(c *gin.Context) {
 		idHex := c.Param("id")
 		id, err := primitive.ObjectIDFromHex(idHex)
 		if err != nil {
@@ -163,8 +174,8 @@ func RegisterReportRoutes(r *gin.Engine, mongoClient *mongo.Client, rabbitConn *
 		c.JSON(http.StatusOK, report)
 	})
 
-	// GET /reports/:id/download → fetch report file
-	r.GET("/reports/:id/download", func(c *gin.Context) {
+	// GET /reports/:id/download → fetch report file (becomes /:id/download after Traefik strips prefix)
+	r.GET("/:id/download", func(c *gin.Context) {
 		idHex := c.Param("id")
 		id, err := primitive.ObjectIDFromHex(idHex)
 		if err != nil {

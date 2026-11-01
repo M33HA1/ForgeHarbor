@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/streadway/amqp"
@@ -48,6 +49,19 @@ func main() {
 
 	//gin router
 	r := gin.Default()
+	// Trust only the docker bridge subnet to silence the proxy warning without opening it broadly
+	// 172.16.0.0/12 covers default docker bridge ranges like 172.17.0.0/16
+	if err := r.SetTrustedProxies([]string{"172.16.0.0/12"}); err != nil {
+		log.Println("Failed to set trusted proxies:", err)
+	}
+
+	// Configure CORS
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"*"} // Allow all origins in development
+	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
+	r.Use(cors.New(config))
+
 	routes.RegisterReportRoutes(r, mongoClient, rabbitConn)
 
 	port := os.Getenv("REPORT_PORT")

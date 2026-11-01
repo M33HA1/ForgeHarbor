@@ -121,7 +121,7 @@ async fn check_phishing_with_gemini(
     api_key: &str,
 ) -> Result<AnalysisResult, Box<dyn std::error::Error>> {
     let endpoint = format!(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={}",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={}",
         api_key
     );
 
@@ -140,26 +140,7 @@ async fn check_phishing_with_gemini(
         let gemini_response: GeminiResponse = serde_json::from_str(&raw_text)?;
         if let Some(candidate) = gemini_response.candidates.first() {
             if let Some(part) = candidate.content.parts.first() {
-                // Extract JSON from markdown code blocks if present
-                let json_text = if part.text.trim().starts_with("```json") {
-                    part.text
-                        .trim()
-                        .strip_prefix("```json")
-                        .and_then(|s| s.strip_suffix("```"))
-                        .unwrap_or(&part.text)
-                        .trim()
-                } else if part.text.trim().starts_with("```") {
-                    part.text
-                        .trim()
-                        .strip_prefix("```")
-                        .and_then(|s| s.strip_suffix("```"))
-                        .unwrap_or(&part.text)
-                        .trim()
-                } else {
-                    &part.text
-                };
-                
-                let analysis: AnalysisResult = serde_json::from_str(json_text)
+                let analysis: AnalysisResult = serde_json::from_str(&part.text)
                     .map_err(|e| format!("Parse JSON failed: {}. Raw: {}", e, part.text))?;
                 return Ok(analysis);
             }

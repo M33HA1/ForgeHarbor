@@ -91,14 +91,16 @@ class ApiService {
   // History Service
   async getScanHistory(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    const response = await fetch(`${API_BASE_URL}/history?${queryString}`, {
+    // Traefik strips `/history` prefix, service expects `/history` route → call `/history/history`
+    const response = await fetch(`${API_BASE_URL}/history/history?${queryString}`, {
       headers: this.getAuthHeaders()
     });
     return this.handleResponse(response);
   }
 
   async getScanDetails(scanId) {
-    const response = await fetch(`${API_BASE_URL}/history/${scanId}`, {
+    // Maps to service route `/history/:scan_id`
+    const response = await fetch(`${API_BASE_URL}/history/history/${scanId}`, {
       headers: this.getAuthHeaders()
     });
     return this.handleResponse(response);

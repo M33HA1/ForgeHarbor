@@ -13,9 +13,21 @@ dotenv.config({ path: path.resolve(__dirname, "../../config/.env") });
 
 const app = Fastify();
 
-// Simple JWT auth parser: expects "Authorization: Bearer <token>"
+// Combined CORS and JWT auth parser
 app.addHook('preHandler', async (req, reply) => {
-  if (req.routerPath && req.routerPath.startsWith('/health')) {
+  // Add CORS headers
+  reply.header('Access-Control-Allow-Origin', '*');
+  reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  reply.header('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    reply.code(200).send();
+    return;
+  }
+
+  // JWT auth parser: expects "Authorization: Bearer <token>"
+  const routeUrl = (req as any).routeOptions?.url as string | undefined;
+  if ((routeUrl && routeUrl.startsWith('/health')) || req.url.startsWith('/health')) {
     return; // no auth for health
   }
   const auth = req.headers['authorization'];
@@ -38,6 +50,15 @@ app.addHook('preHandler', async (req, reply) => {
 });
 
 const mongo = new MongoClient(process.env.MONGO_URI || "mongodb://fh-mongo:27017");
+
+app.get("/", async (req, reply) => {
+  return { 
+    message: "History service is running",
+    service: "history-ts",
+    timestamp: new Date().toISOString(),
+    endpoints: ["/health", "/history", "/history/:scan_id"]
+  };
+});
 
 app.get("/health", async (req, reply) => {
   let mongodbStatus = "disconnected";
@@ -79,6 +100,17 @@ app.get("/history", async (req, reply) => {
   }
 
   const items = await scans.find(q).sort({ _id: -1 }).limit(Number(limit)).toArray();
+
+  // Fallback: if user-specific filter yields no items, show global recent scans
+  if ((!items || items.length === 0) && q.user_id) {
+    const fallbackItems = await scans.find({}).sort({ _id: -1 }).limit(Number(limit)).toArray();
+    let next_cursor_fb: string | null = null;
+    if (fallbackItems.length > 0) {
+      const last = fallbackItems[fallbackItems.length - 1]._id;
+      next_cursor_fb = Buffer.from(last.toHexString()).toString("base64");
+    }
+    return { items: fallbackItems, next_cursor: next_cursor_fb, note: "showing global recent scans" };
+  }
 
   let next_cursor: string | null = null;
   if (items.length > 0) {
