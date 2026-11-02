@@ -20,6 +20,8 @@ Public requests go to `http://localhost:8088`. Traefik strips the service prefix
 | `/reports/*` | `/*` |
 | `/notify/*` | `/*` |
 
+The table describes the gateway rule, not whether the service matches it. History, Reports, and Notify currently register the full prefix and therefore 404 through the gateway. See [[Gateway-Routing]].
+
 ## Auth
 
 | Method | Public path | Auth | Request | Response |
@@ -51,6 +53,8 @@ Public requests go to `http://localhost:8088`. Traefik strips the service prefix
 | GET | `/history/health` | None | MongoDB status |
 | GET | `/history?limit=20&cursor=...&type=url&risk=high` | Should be Bearer | Current code allows anonymous access |
 | GET | `/history/:scan_id` | Should be Bearer | Current code has no ownership check |
+
+The gateway strips `/history`, but the service registers `/history` and `/history/:scan_id`, so these routes return 404 through the gateway.
 
 ## Reports
 
@@ -92,6 +96,7 @@ The gateway prefix strip currently prevents these routes from matching. See [[Ga
 
 ## Related notes
 
+- [[Architecture-Review]]
 - [[Gateway-Routing]]
 - [[Web]]
 - [[History]]

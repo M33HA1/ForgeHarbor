@@ -90,16 +90,44 @@ sequenceDiagram
 | Notifications | Notify | Notify |
 | Audit events | None | Audit service |
 
+## Target flow — asynchronous scans
+
+```mermaid
+sequenceDiagram
+    participant U as Browser
+    participant B as Go BFF / Orchestrator
+    participant Q as RabbitMQ
+    participant W as Scan worker
+    participant DB as PostgreSQL
+    participant N as Notify
+
+    U->>B: POST /v1/scans
+    B->>DB: Insert scan (queued)
+    B->>Q: Publish scan.requested
+    B-->>U: 202 {scan_id, status}
+    Q->>W: Consume scan.requested
+    W->>DB: Update scan (running, verdict)
+    W->>Q: Publish scan.completed
+    Q->>N: Consume scan.completed
+    U->>B: GET /v1/scans/{id}
+    B-->>U: status and verdict
+```
+
+The orchestrator owns the scan lifecycle. Workers own provider calls. History reads the completed record instead of being written by each scanner.
+
 ## Current gaps
 
-- Scans are synchronous and can block on Gemini or VirusTotal.
+- Scans are synchronous and can block on Gemini or VirusTotal. Malware sleeps 20 seconds inside the request (`apps/malware-rs/src/main.rs:161`).
 - There is no reliable `scan.completed` event between scan services, History, Reports, and Notify.
-- Queue names and event shapes are not consistent across producers and consumers.
+- The event producer and consumer do not meet: Reports publishes to `report_events`, Notify consumes `notifications` (`apps/report-go/routes/reports.go:83`, `apps/notify-py/main.py:23`).
+- Three services write the same `scans` collection with different result shapes, and History filters fields that no writer produces. See [[Architecture-Review]] (AR-04).
 - History has no enforced ownership filter; see [[Security-Review]].
 - Report creation is not authenticated, and the gateway path rewrite conflicts with the service routes.
+- Notify never nacks a failed message, so a poison message is redelivered forever with no dead-letter queue.
 
 ## Related notes
 
+- [[Architecture-Review]]
 - [[Service-Map]]
 - [[Gateway-Routing]]
 - [[History]]

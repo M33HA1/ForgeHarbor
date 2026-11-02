@@ -17,6 +17,7 @@ Acceptance criteria:
 - [ ] All seven service images build.
 - [ ] All seven services and Traefik are running.
 - [ ] Every `/health` endpoint returns success through the gateway.
+- [ ] Every documented data route returns its expected status through the gateway, not 404.
 - [ ] README commands match the real ports and paths.
 
 ## M1 — Secure core
@@ -29,6 +30,8 @@ Acceptance criteria:
 - [ ] History list and detail are scoped to the caller.
 - [ ] Reports require auth and enforce report ownership.
 - [ ] Notify requires auth and enforces notification ownership.
+- [ ] JWT validation happens once at the edge; services receive a trusted identity.
+- [ ] No `.env` or private key is present in any built image.
 - [ ] Malformed IDs return 400.
 - [ ] The security regression tests in [[Test-Matrix]] pass.
 
@@ -41,6 +44,7 @@ Acceptance criteria:
 - [ ] A scan request creates a durable job.
 - [ ] The orchestrator enforces timeouts, retries, and idempotency.
 - [ ] A `scan.completed` event reaches History, Reports, and Notify.
+- [ ] Events use one versioned envelope and a dead-letter queue.
 - [ ] The UI shows queued, running, failed, and complete states.
 - [ ] Dead-letter handling is documented and tested.
 

@@ -18,6 +18,7 @@ tags: [forgeharbor, dashboard, moc]
 | Knowledge base | In place | This vault, linked from this dashboard |
 | Developer tooling | In place | `scripts/dev.ps1`, `scripts/dev.sh`, `.tool-versions` |
 | Application stack | Partial | MongoDB, Redis, RabbitMQ, History, Notify, and Traefik are up; Auth, Web, and Reports are not |
+| Architecture | Reviewed | [[Architecture-Review]] — contracts, routing, auth boundary, events, secrets |
 | Security | P0 open | [[Security-Review]] |
 | MCP tooling | Configured | Verify with `opencode mcp list`; see [[MCP]] |
 
@@ -27,6 +28,8 @@ tags: [forgeharbor, dashboard, moc]
 |---|---|---|
 | Auth service does not compile | Blocks login and every protected flow | [[Auth]] |
 | Gateway routing and service auth are inconsistent | Unauthorized access and 404s | [[Gateway-Routing]], [[Security-Review]] |
+| Services share infrastructure but not contracts | Routing, data, and event drift | [[Architecture-Review]] |
+| Scans run synchronously in the request | Timeouts, duplicate cost, no retries | [[Architecture-Review]] |
 | Web Dockerfile uses Node 14 | Vite 7 cannot build | [[Web]] |
 | MinIO image pull fails | Reports cannot store artifacts | [[Reports]] |
 | Traefik cannot read the Docker provider | No gateway routes load | [[Gateway-Routing]] |
@@ -42,6 +45,7 @@ See [[Roadmap]] for the full sequence.
 
 ## Architecture
 
+- [[Architecture-Review]]
 - [[System-Overview]]
 - [[Service-Map]]
 - [[Data-Flow]]
@@ -76,6 +80,7 @@ See [[Roadmap]] for the full sequence.
 
 - [[Change-Log]]
 - [[2026-11-02-initial-audit]]
+- [[2026-11-02-architecture-review]]
 - [[2026-11-02-project-operating-system]]
 
 ## Roadmap

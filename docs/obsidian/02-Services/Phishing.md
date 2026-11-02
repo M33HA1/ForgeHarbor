@@ -73,6 +73,9 @@ Invoke-WebRequest http://localhost:8081/health -UseBasicParsing
 |---|---|---|
 | P1 | Compose passes a blank `GEMINI_API_KEY` when the variable is not set | Service starts but analysis fails |
 | P1 | No timeout, retry, or circuit breaker around Gemini | Slow or failed provider calls block the request |
+| P1 | The Gemini API key is passed in the URL query string | The key can leak through logs and proxies |
+| P1 | The URL is interpolated directly into the model prompt | Prompt-injection risk |
+| P1 | The error path returns `phishing: true` with confidence `0` | A failure is indistinguishable from a verdict |
 | P1 | No cache of repeated URLs | Duplicate provider cost and latency |
 | P2 | No unit or integration tests in the repository | Behavior is unverified |
 | P2 | CORS allows any origin | Broad browser exposure |
@@ -80,6 +83,7 @@ Invoke-WebRequest http://localhost:8081/health -UseBasicParsing
 
 ## Related notes
 
+- [[Architecture-Review]]
 - [[Data-Flow]]
 - [[Build]]
 - [[Test]]

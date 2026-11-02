@@ -16,11 +16,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 - PowerShell and POSIX build/status scripts.
 - `.tool-versions` for reproducible local toolchains.
 - `config/.env.example` with placeholders only.
+- Architecture review note with eight findings, a target architecture, and three open decisions.
 
 ### Changed
 
 - `.gitignore` now excludes Obsidian workspace state, installed vault plugins, and Superpowers scratch files.
 - The Obsidian vault is the project's living knowledge base; `00-Home.md` is the dashboard.
+- Architecture and routing notes now document the History, Reports, and Notify prefix conflicts and the inconsistent gateway contract.
 
 ### Security
 
@@ -35,11 +37,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 - Traefik cannot read the Docker provider.
 - Compose passes blank `GEMINI_API_KEY` and `VIRUSTOTAL_API_KEY` values.
 - History, Reports, and Notify have auth and ownership defects.
+- History, Reports, and Notify routes do not match the gateway's prefix strip.
+- Reports publishes to `report_events` while Notify consumes `notifications`.
 - The frontend misreads file-scan results and calls the wrong notification path.
+- No `.dockerignore` exists, and the Auth image copies `.env` and the private key.
 - `config/.env` contains live-looking keys and must be rotated before publication.
 
 ### Documentation
 
 - See `docs/obsidian/05-Changes/2026-11-02-initial-audit.md` for the audit record.
-- See `docs/obsidian/05-Changes/2026-11-02-project-operating-system.md` for this tooling change.
+- See `docs/obsidian/05-Changes/2026-11-02-architecture-review.md` for this review.
+- See `docs/obsidian/01-Architecture/Architecture-Review.md` for the findings and target shape.
+- See `docs/obsidian/05-Changes/2026-11-02-project-operating-system.md` for the tooling change.
 - See `docs/obsidian/06-Roadmap/Roadmap.md` for the Phase 0–4 plan.

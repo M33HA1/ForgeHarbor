@@ -1,6 +1,6 @@
 ---
 type: service
-status: security-defects
+status: routing-and-security-defects
 priority: P0
 language: typescript
 updated: 2026-11-02
@@ -30,6 +30,10 @@ Reads scan records from MongoDB and exposes a paginated history API.
 | GET | `/health` | None | N/A | Includes MongoDB ping status |
 | GET | `/history` | Optional | Broken | Returns all users' scans when no token is present |
 | GET | `/history/:scan_id` | Optional | Broken | No owner check; invalid ID returns 500 |
+
+## Gateway contract
+
+Traefik strips `/history`, but the service registers `/history` and `/history/:scan_id`. Through the gateway the request reaches `/` and `/:scan_id` and returns 404. The direct port works, which is why the defect is easy to miss. See [[Gateway-Routing]] and [[Architecture-Review]].
 
 ## Query parameters
 
@@ -74,12 +78,14 @@ Pop-Location
 | P0 | Unauthenticated history returns all users' scans | Data disclosure |
 | P0 | Unsigned or forged JWT is accepted when `JWT_PUBLIC_KEY` is absent | Identity spoofing |
 | P0 | Detail route has no ownership check | IDOR |
+| P0 | Gateway strips `/history`, but the service registers `/history` | 404 through Traefik |
 | P1 | `type` and `risk` filters do not match stored fields | Broken filters |
 | P1 | Invalid scan ID returns 500 | Error handling and log noise |
 | P2 | No maximum page size | Resource exhaustion |
 
 ## Related notes
 
+- [[Architecture-Review]]
 - [[Data-Flow]]
 - [[Gateway-Routing]]
 - [[Security-Review]]

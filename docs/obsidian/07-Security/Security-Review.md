@@ -34,6 +34,10 @@ Manual review of the service code and live API probes against the local Compose 
 | SEC-012 | P1 | Report content is accepted from the client without validation | Reports | Generate reports server-side from trusted scan data | Open |
 | SEC-013 | P1 | Direct host ports bypass the gateway | Platform | Bind services to the internal network in production | Open |
 | SEC-014 | P2 | `pyyaml==5.3.1` is pinned despite being old | Notify | Upgrade or remove if unused | Open |
+| SEC-015 | P1 | The Auth runtime image copies `.env` and `jwt-private.pem`; no `.dockerignore` exists | Auth, Notify, all builds | Add `.dockerignore`; copy only the public key; mount secrets at runtime | Open |
+| SEC-016 | P1 | The Gemini API key is sent in the URL query string | Phishing | Send the key in a header; rotate it if logs captured the URL | Open |
+| SEC-017 | P1 | Compose `environment:` overrides `env_file` and passes blank provider keys | Phishing, Malware | Remove the blank overrides or require the variables at startup | Open |
+| SEC-018 | P2 | The JWT is stored in `localStorage` | Web | Prefer an httpOnly cookie, or an in-memory token with refresh | Open |
 
 ## Positive controls
 
@@ -65,9 +69,11 @@ Expected after remediation: 401 for missing or invalid auth, 403/404 for cross-u
 1. Fix History auth and ownership.
 2. Fix Reports auth and ownership.
 3. Fix Notify auth and ownership.
-4. Rotate keys and clean test data.
-5. Add regression tests.
-6. Add rate limiting, CORS restrictions, upload limits, and audit logging.
+4. Centralize JWT validation at the edge and delete the per-service parsers.
+5. Rotate keys and clean test data.
+6. Remove secrets from build contexts and images; close infrastructure ports.
+7. Add regression tests.
+8. Add rate limiting, CORS restrictions, upload limits, and audit logging.
 
 ## Related notes
 

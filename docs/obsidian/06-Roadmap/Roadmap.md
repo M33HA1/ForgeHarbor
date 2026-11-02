@@ -34,10 +34,10 @@ tags: [roadmap, planning]
 
 ### Routing and contracts
 
-- [ ] Resolve the `/reports` prefix strip conflict.
-- [ ] Align Notify's `/notifications` route with the frontend and gateway.
+- [ ] Choose the gateway convention (strip or no-strip) and record it in an ADR.
+- [ ] Align History, Reports, and Notify routes with that convention.
 - [ ] Correct README ports and entrypoints.
-- [ ] Add a gateway smoke test for every route.
+- [ ] Add a gateway contract test for every documented route, not only `/health`.
 
 ### Security
 
@@ -45,6 +45,8 @@ tags: [roadmap, planning]
 - [ ] Scope History list and detail queries to the caller.
 - [ ] Add JWT auth and ownership checks to Reports.
 - [ ] Add JWT auth and ownership checks to Notify.
+- [ ] Centralize JWT validation at the edge (ForwardAuth or BFF).
+- [ ] Add `.dockerignore`; stop copying `.env` and key material into images.
 - [ ] Fix malformed-ID handling to return 400.
 - [ ] Fix History `type` and `risk` filters.
 - [ ] Rotate exposed-looking keys and remove test records.
@@ -60,7 +62,7 @@ tags: [roadmap, planning]
 ## Phase 1 — Core product
 
 - Add a Go scan orchestrator with idempotency, timeouts, retries, and a dead-letter queue.
-- Define `scan.requested`, `scan.completed`, and `report.created` event contracts.
+- Define `scan.requested`, `scan.completed`, and `report.created` event contracts with one versioned envelope.
 - Make Reports consume or publish the same event contract as Notify.
 - Add PostgreSQL for users, scans, reports, and audit records.
 - Add a scan status endpoint and UI state.
@@ -97,6 +99,7 @@ Do not add Phase 2 services while Phase 0 exit criteria are unmet. A smaller sta
 
 ## Related notes
 
+- [[Architecture-Review]]
 - [[Backlog]]
 - [[Milestones]]
 - [[Roadmap.canvas]]

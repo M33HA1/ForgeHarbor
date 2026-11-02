@@ -73,12 +73,16 @@ docker compose -f deploy/compose/docker-compose.dev.yml build fh-report
 | P0 | No JWT authentication or ownership checks | Anyone can create, read, or download reports |
 | P0 | Gateway prefix stripping conflicts with `/reports` routes | 404s through the gateway |
 | P1 | `report_events` queue is not consumed by Notify | Report notifications never arrive |
+| P1 | One AMQP channel is shared across concurrent Gin handlers | Data race and connection corruption |
+| P1 | Bucket creation uses `log.Fatal` at startup; MinIO may not be ready | Crash loop on startup |
 | P1 | Report content is accepted from the client without validation | Stored content injection and integrity risk |
 | P1 | MinIO image pull failure blocks startup | Reports cannot store objects |
+| P2 | S3, Mongo, and RabbitMQ calls use `context.TODO()` with no timeout | Requests can hang |
 | P2 | No tests in the repository | Behavior is unverified |
 
 ## Related notes
 
+- [[Architecture-Review]]
 - [[Gateway-Routing]]
 - [[Notify]]
 - [[Build]]

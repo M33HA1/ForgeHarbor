@@ -14,10 +14,12 @@ tags: [forgeharbor, architecture, services]
 | Auth | Rust | 8080 | `/auth` | MongoDB | Broken build | [[Auth]] |
 | Phishing | Rust | 8081 | `/phishing` | MongoDB | Unverified | [[Phishing]] |
 | Malware | Rust | 8082 | `/malware` | MongoDB | Unverified | [[Malware]] |
-| History | TypeScript | 8083 | `/history` | MongoDB | Security defects | [[History]] |
+| History | TypeScript | 8083 | `/history` | MongoDB | Routing and security defects | [[History]] |
 | Reports | Go | 8084 | `/reports` | MongoDB, MinIO, RabbitMQ | Routing and auth defects | [[Reports]] |
-| Notify | Python | 8085 | `/notify` | MongoDB, RabbitMQ | Auth and queue defects | [[Notify]] |
+| Notify | Python | 8085 | `/notify` | MongoDB, RabbitMQ | Routing, auth, and queue defects | [[Notify]] |
 | Web | React + Vite | 3000 | `/` | Browser storage | Build broken | [[Web]] |
+
+The public route and the service's registered route must agree after the gateway strips the prefix. History, Reports, and Notify currently do not; see [[Gateway-Routing]] and [[Architecture-Review]].
 
 ## Infrastructure
 
@@ -63,6 +65,7 @@ flowchart TD
 
 ## Related notes
 
+- [[Architecture-Review]]
 - [[System-Overview]]
 - [[Data-Flow]]
 - [[Gateway-Routing]]

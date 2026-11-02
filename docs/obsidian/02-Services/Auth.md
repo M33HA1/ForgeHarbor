@@ -69,7 +69,10 @@ Pop-Location
 | P0 | Dockerfile copies `Cargo.toml` but the tracked file is `cargo.toml` | Case-sensitive Linux builds fail before compilation |
 | P0 | JWT key files are ignored by git and absent from a clean clone | Service exits at startup if keys are missing |
 | P1 | Dockerfile uses `rustlang/rust:nightly` and wildcard dependency versions | Non-reproducible builds |
+| P1 | The runtime image copies `./config`, including `.env` and `jwt-private.pem` | Key material ships in the image |
 | P1 | CORS allows any origin, method, and header | Broad browser exposure |
+| P2 | `/jwks` returns a PEM in a non-standard `pem` field instead of `n`, `e`, and `kid` | Standard JWT clients cannot consume it |
+| P2 | Email uniqueness relies on a find-then-insert check, not a unique index | Concurrent signups can create duplicates |
 | P2 | No login rate limiting or refresh-token flow | Brute-force and session-management gaps |
 
 ## Security notes
@@ -81,6 +84,7 @@ Pop-Location
 
 ## Related notes
 
+- [[Architecture-Review]]
 - [[Service-Map]]
 - [[Build]]
 - [[Debug]]

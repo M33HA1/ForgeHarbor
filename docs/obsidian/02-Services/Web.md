@@ -46,10 +46,12 @@ React single-page application for signup, login, URL scans, file scans, history,
 |---|---|---|
 | P0 | Dockerfile uses `node:14` while Vite 7 requires Node 20.19+ or 22.12+ | Image build fails |
 | P0 | File scan result reads top-level `is_malicious` and `is_phishing`; API returns nested `status` and `result` | Malicious files render as clean |
+| P0 | History, Reports, and Notify data calls return 404 through the gateway | History, reports, and notifications do not load |
 | P1 | Confidence fallback uses `|| 85`, so a real `0` becomes 85 | Misleading scores |
 | P1 | History ignores report IDs and malware status | Incomplete UI state |
 | P1 | Notification path is `/notify` but the service exposes `/notifications` | Notifications do not load |
 | P1 | API base defaults to the current origin, which is correct only when served through Traefik | Direct-port development breaks |
+| P2 | The JWT is stored in `localStorage` | XSS can steal the session |
 | P2 | No frontend tests | Regressions are easy |
 
 ## Build and test
@@ -64,6 +66,7 @@ Pop-Location
 
 ## Related notes
 
+- [[Architecture-Review]]
 - [[Gateway-Routing]]
 - [[History]]
 - [[Reports]]

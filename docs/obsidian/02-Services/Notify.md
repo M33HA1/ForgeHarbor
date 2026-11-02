@@ -59,11 +59,14 @@ Pop-Location
 | P0 | Queue name mismatch: Reports publishes to `report_events`, Notify consumes `notifications` | Report notifications are never processed |
 | P1 | Route mismatch: frontend calls `/notify`, service exposes `/notifications` | 404 through the gateway |
 | P1 | Notification `user` field is stored as a raw value and never scoped to a caller | Cannot enforce ownership |
+| P1 | The error path returns a tuple, which FastAPI serializes as an array instead of a 500 response | Clients receive a malformed body |
+| P1 | The consumer has no reconnect or backoff after a broker restart | The worker stops silently |
 | P1 | No dead-letter queue or retry policy | Failed messages are lost or stuck |
 | P2 | `pyyaml==5.3.1` is pinned despite being old | Dependency risk; remove if unused |
 
 ## Related notes
 
+- [[Architecture-Review]]
 - [[Reports]]
 - [[Gateway-Routing]]
 - [[Security-Review]]

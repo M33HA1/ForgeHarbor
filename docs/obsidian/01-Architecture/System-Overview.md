@@ -36,6 +36,10 @@ flowchart LR
 
 Redis is provisioned in Compose but is not used by the current service code. Treat it as reserved capacity for caching, sessions, or rate limiting.
 
+## Assessment
+
+The 2026-11-02 review found that the services share infrastructure but not contracts: routing conventions differ per service, auth is re-implemented per service, three services write the same collection with different shapes, and the queue producer and consumer never meet. The full findings, evidence, target shape, and decisions are in [[Architecture-Review]].
+
 ## Language boundaries
 
 | Language | Specialty | Current services | Target direction |
@@ -58,6 +62,9 @@ The polyglot split is intentional. The goal is credible specialty, not language 
 | Notifications | Queue consumer with auth and naming gaps | Authenticated consumer with retries and a dead-letter queue |
 | Observability | Logs only | OpenTelemetry traces and structured logs |
 | Contracts | Hand-written frontend calls | OpenAPI or protobuf contracts checked in |
+| Routing | Mixed prefix conventions; three data routes 404 | One gateway convention enforced by a contract test |
+| Auth boundary | Re-implemented in each service | Validated once at the edge; trusted identity downstream |
+| Secrets | `.env` and keys copied into images | Runtime secrets; `.dockerignore`; no key material in images |
 
 ## Known blockers
 
@@ -67,9 +74,13 @@ The polyglot split is intentional. The goal is credible specialty, not language 
 - Traefik cannot read the Docker provider and loads no routes.
 - Compose passes blank `GEMINI_API_KEY` and `VIRUSTOTAL_API_KEY` values.
 - History, Reports, and Notify do not enforce authentication and ownership consistently.
+- History, Reports, and Notify routes do not match the gateway's prefix strip.
+- Reports publishes to `report_events` while Notify consumes `notifications`.
+- No `.dockerignore` exists, and the Auth image copies `.env` and the private key.
 
 ## Related notes
 
+- [[Architecture-Review]]
 - [[Service-Map]]
 - [[Data-Flow]]
 - [[Gateway-Routing]]

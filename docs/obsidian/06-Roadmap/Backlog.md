@@ -16,13 +16,16 @@ tags: [roadmap, backlog]
 | FH-003 | Build | Use a pullable, pinned MinIO image | Reports cannot start | Open |
 | FH-004 | Routing | Fix Traefik Docker provider | No gateway routes load | Open |
 | FH-005 | Config | Provide non-blank provider keys through local config | Scans fail at runtime | Open |
-| FH-006 | Routing | Resolve `/reports` prefix strip conflict | Report routes 404 | Open |
+| FH-006 | Routing | Resolve the `/reports` prefix strip conflict | Report routes 404 | Superseded by FH-033 |
 | FH-007 | Security | Enforce JWT verification in History | Anonymous reads and forged tokens | Open |
 | FH-008 | Security | Scope History list and detail to the caller | Data disclosure and IDOR | Open |
 | FH-009 | Security | Add auth and ownership to Reports | Anyone can create/read/download reports | Open |
 | FH-010 | Security | Add auth and ownership to Notify | Anyone can read notifications | Open |
 | FH-011 | Security | Rotate exposed-looking keys and clean test data | Credential exposure | Open |
 | FH-012 | Frontend | Fix file-scan result mapping | Malicious files show as clean | Open |
+| FH-033 | Routing | Align all service routes with one gateway convention; add a route-contract test | History, Reports, and Notify 404 through Traefik | Open |
+| FH-034 | Security | Centralize JWT validation at the edge (ForwardAuth or BFF) | Four different auth postures; no single audit point | Open |
+| FH-035 | Build | Add `.dockerignore` and stop copying `.env` and keys into images | Secrets ship in build contexts and the Auth image | Open |
 
 ## P1 — Important before release
 
@@ -39,6 +42,9 @@ tags: [roadmap, backlog]
 | FH-021 | Architecture | Add Go scan orchestrator | Synchronous scans do not scale | Open |
 | FH-022 | Data | Add PostgreSQL for relational records | Ownership and filters are awkward in Mongo | Open |
 | FH-023 | Observability | Add request IDs and structured logs | Hard to debug across services | Open |
+| FH-036 | Messaging | Standardize the event envelope and add a dead-letter queue | Poison messages loop forever; events do not connect | Open |
+| FH-037 | Data | Define one scan result schema and add query indexes | Filters and history pagination are unreliable | Open |
+| FH-038 | Testing | Add OpenAPI contracts and schema validation for every service | Hand-written calls drift from behavior | Open |
 
 ## P2 — Hardening and polish
 
@@ -53,6 +59,7 @@ tags: [roadmap, backlog]
 | FH-030 | Testing | Add k6 load tests | Measure performance claims | Open |
 | FH-031 | Docs | Add demo video and screenshots | Portfolio presentation | Open |
 | FH-032 | Infra | Add Terraform or Kubernetes manifests | Deployment maturity | Open |
+| FH-039 | Security | Move the Gemini key out of the query string and tokens out of `localStorage` | Key leakage and XSS token theft | Open |
 
 ## Definition of ready
 

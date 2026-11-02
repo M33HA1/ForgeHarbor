@@ -35,6 +35,14 @@ The Compose stack reads `config/.env`. A clean clone should start from `config/.
 | `REPORT_PORT` | Reports | Default 8084 |
 | `NOTIFY_PORT` | Notify | Default 8085 |
 
+### Compose precedence
+
+`environment:` values override `env_file`. Compose currently sets `GEMINI_API_KEY=${GEMINI_API_KEY}` and `VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY}` from the host shell, so an unset host variable becomes a blank string even when `config/.env` has a value. Remove the overrides or export the variables before `docker compose up`.
+
+### Image build
+
+No `.dockerignore` exists. The Auth Dockerfile copies `./config` into the runtime image, including `.env` and `jwt-private.pem`; Notify's `COPY . .` copies `aws_creds.txt` and `config.txt`. See SEC-015 in [[Security-Review]].
+
 ## JWT key files
 
 | File | Purpose | Committed? |
@@ -78,6 +86,7 @@ Restart OpenCode after setting persistent user variables.
 
 ## Related notes
 
+- [[Architecture-Review]]
 - [[Build]]
 - [[Run]]
 - [[Security-Review]]
