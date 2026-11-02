@@ -1,0 +1,184 @@
+{
+  "nodes": [
+    {
+      "id": "browser",
+      "type": "text",
+      "text": "**Browser**\nReact + Vite\n:3000",
+      "x": -720,
+      "y": 0,
+      "width": 240,
+      "height": 120,
+      "color": "4"
+    },
+    {
+      "id": "traefik",
+      "type": "text",
+      "text": "**Traefik**\nEdge proxy\n:8088 / :8000",
+      "x": -360,
+      "y": 0,
+      "width": 240,
+      "height": 120,
+      "color": "6"
+    },
+    {
+      "id": "web",
+      "type": "text",
+      "text": "**Web**\nReact\n:3000",
+      "x": -720,
+      "y": 240,
+      "width": 240,
+      "height": 120,
+      "color": "4"
+    },
+    {
+      "id": "auth",
+      "type": "text",
+      "text": "**Auth**\nRust\n:8080",
+      "x": 0,
+      "y": -360,
+      "width": 220,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "phishing",
+      "type": "text",
+      "text": "**Phishing**\nRust\n:8081",
+      "x": 0,
+      "y": -220,
+      "width": 220,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "malware",
+      "type": "text",
+      "text": "**Malware**\nRust\n:8082",
+      "x": 0,
+      "y": -80,
+      "width": 220,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "history",
+      "type": "text",
+      "text": "**History**\nTypeScript\n:8083",
+      "x": 0,
+      "y": 60,
+      "width": 220,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "reports",
+      "type": "text",
+      "text": "**Reports**\nGo\n:8084",
+      "x": 0,
+      "y": 200,
+      "width": 220,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "notify",
+      "type": "text",
+      "text": "**Notify**\nPython\n:8085",
+      "x": 0,
+      "y": 340,
+      "width": 220,
+      "height": 100,
+      "color": "5"
+    },
+    {
+      "id": "mongo",
+      "type": "text",
+      "text": "**MongoDB**\n:27017",
+      "x": 420,
+      "y": -80,
+      "width": 220,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "redis",
+      "type": "text",
+      "text": "**Redis**\n:6379",
+      "x": 420,
+      "y": 60,
+      "width": 220,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "rabbit",
+      "type": "text",
+      "text": "**RabbitMQ**\n:5672 / :15672",
+      "x": 420,
+      "y": 200,
+      "width": 220,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "minio",
+      "type": "text",
+      "text": "**MinIO**\n:9000 / :9001",
+      "x": 420,
+      "y": 340,
+      "width": 220,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "gemini",
+      "type": "text",
+      "text": "**Gemini**\nExternal AI",
+      "x": -360,
+      "y": -220,
+      "width": 220,
+      "height": 100,
+      "color": "2"
+    },
+    {
+      "id": "virustotal",
+      "type": "text",
+      "text": "**VirusTotal**\nExternal threat intel",
+      "x": -360,
+      "y": -80,
+      "width": 220,
+      "height": 100,
+      "color": "2"
+    },
+    {
+      "id": "mcp",
+      "type": "text",
+      "text": "**MCP layer**\nContext7 · Playwright\nGitHub · Obsidian · MongoDB",
+      "x": -720,
+      "y": 480,
+      "width": 320,
+      "height": 140,
+      "color": "1"
+    }
+  ],
+  "edges": [
+    { "id": "e-browser-traefik", "fromNode": "browser", "fromSide": "right", "toNode": "traefik", "toSide": "left" },
+    { "id": "e-traefik-auth", "fromNode": "traefik", "fromSide": "right", "toNode": "auth", "toSide": "left" },
+    { "id": "e-traefik-phishing", "fromNode": "traefik", "fromSide": "right", "toNode": "phishing", "toSide": "left" },
+    { "id": "e-traefik-malware", "fromNode": "traefik", "fromSide": "right", "toNode": "malware", "toSide": "left" },
+    { "id": "e-traefik-history", "fromNode": "traefik", "fromSide": "right", "toNode": "history", "toSide": "left" },
+    { "id": "e-traefik-reports", "fromNode": "traefik", "fromSide": "right", "toNode": "reports", "toSide": "left" },
+    { "id": "e-traefik-notify", "fromNode": "traefik", "fromSide": "right", "toNode": "notify", "toSide": "left" },
+    { "id": "e-traefik-web", "fromNode": "traefik", "fromSide": "right", "toNode": "web", "toSide": "left" },
+    { "id": "e-phishing-gemini", "fromNode": "phishing", "fromSide": "left", "toNode": "gemini", "toSide": "right" },
+    { "id": "e-malware-vt", "fromNode": "malware", "fromSide": "left", "toNode": "virustotal", "toSide": "right" },
+    { "id": "e-auth-mongo", "fromNode": "auth", "fromSide": "right", "toNode": "mongo", "toSide": "left" },
+    { "id": "e-auth-redis", "fromNode": "auth", "fromSide": "right", "toNode": "redis", "toSide": "left" },
+    { "id": "e-history-mongo", "fromNode": "history", "fromSide": "right", "toNode": "mongo", "toSide": "left" },
+    { "id": "e-reports-mongo", "fromNode": "reports", "fromSide": "right", "toNode": "mongo", "toSide": "left" },
+    { "id": "e-reports-minio", "fromNode": "reports", "fromSide": "right", "toNode": "minio", "toSide": "left" },
+    { "id": "e-reports-rabbit", "fromNode": "reports", "fromSide": "right", "toNode": "rabbit", "toSide": "left" },
+    { "id": "e-notify-rabbit", "fromNode": "notify", "fromSide": "right", "toNode": "rabbit", "toSide": "left" },
+    { "id": "e-notify-redis", "fromNode": "notify", "fromSide": "right", "toNode": "redis", "toSide": "left" }
+  ]
+}

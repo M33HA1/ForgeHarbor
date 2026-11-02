@@ -1,0 +1,70 @@
+{
+  "nodes": [
+    {
+      "id": "phase0",
+      "type": "text",
+      "text": "**Phase 0 — Stabilize**\n\n- Fix auth build\n- Fix web Node version\n- Fix MinIO pull\n- Fix Traefik provider\n- Fix blank API keys\n- Fix gateway routing\n- Fix auth and ownership checks\n- Add smoke tests",
+      "x": 0,
+      "y": 0,
+      "width": 300,
+      "height": 260,
+      "color": "1"
+    },
+    {
+      "id": "phase1",
+      "type": "text",
+      "text": "**Phase 1 — Core product**\n\n- Add scan orchestrator\n- Add scan status and retries\n- Make reports and notifications work end to end\n- Move relational records to PostgreSQL",
+      "x": 380,
+      "y": 0,
+      "width": 300,
+      "height": 220,
+      "color": "2"
+    },
+    {
+      "id": "phase2",
+      "type": "text",
+      "text": "**Phase 2 — Intelligence**\n\n- Add Python threat-intelligence service\n- Add caching and rate limits\n- Add retry and backoff\n- Add ClamAV/YARA file analysis",
+      "x": 760,
+      "y": 0,
+      "width": 300,
+      "height": 220,
+      "color": "3"
+    },
+    {
+      "id": "phase3",
+      "type": "text",
+      "text": "**Phase 3 — Hardening**\n\n- OpenTelemetry tracing\n- CI matrix for four languages\n- Trivy, gitleaks, Semgrep\n- k6 load tests\n- Contract tests",
+      "x": 1140,
+      "y": 0,
+      "width": 300,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "phase4",
+      "type": "text",
+      "text": "**Phase 4 — Portfolio polish**\n\n- README architecture diagram\n- ADRs for language choices\n- Canvas diagrams\n- Demo video\n- Resume bullets and interview story",
+      "x": 1520,
+      "y": 0,
+      "width": 300,
+      "height": 220,
+      "color": "5"
+    },
+    {
+      "id": "guardrails",
+      "type": "text",
+      "text": "**Guardrails**\n\n- One command to start\n- Every service has a smoke test\n- No secrets in git\n- Docs and changelog updated with every change",
+      "x": 0,
+      "y": 360,
+      "width": 300,
+      "height": 180,
+      "color": "6"
+    }
+  ],
+  "edges": [
+    { "id": "e0-1", "fromNode": "phase0", "fromSide": "right", "toNode": "phase1", "toSide": "left" },
+    { "id": "e1-2", "fromNode": "phase1", "fromSide": "right", "toNode": "phase2", "toSide": "left" },
+    { "id": "e2-3", "fromNode": "phase2", "fromSide": "right", "toNode": "phase3", "toSide": "left" },
+    { "id": "e3-4", "fromNode": "phase3", "fromSide": "right", "toNode": "phase4", "toSide": "left" }
+  ]
+}

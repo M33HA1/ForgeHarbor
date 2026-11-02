@@ -1,0 +1,63 @@
+{
+  "collapse-filter": false,
+  "search": "",
+  "showTags": true,
+  "showAttachments": false,
+  "hideUnresolved": false,
+  "showOrphans": true,
+  "collapse-color-groups": false,
+  "colorGroups": [
+    {
+      "query": "path:\"01-Architecture\"",
+      "color": { "a": 1, "rgb": 48340 }
+    },
+    {
+      "query": "path:\"02-Services\"",
+      "color": { "a": 1, "rgb": 2201331 }
+    },
+    {
+      "query": "path:\"03-Runbooks\"",
+      "color": { "a": 1, "rgb": 5025616 }
+    },
+    {
+      "query": "path:\"04-Decisions\"",
+      "color": { "a": 1, "rgb": 10233776 }
+    },
+    {
+      "query": "path:\"05-Changes\"",
+      "color": { "a": 1, "rgb": 16750592 }
+    },
+    {
+      "query": "path:\"06-Roadmap\"",
+      "color": { "a": 1, "rgb": 16771899 }
+    },
+    {
+      "query": "path:\"07-Security\"",
+      "color": { "a": 1, "rgb": 16007990 }
+    },
+    {
+      "query": "path:\"08-Testing\"",
+      "color": { "a": 1, "rgb": 38536 }
+    },
+    {
+      "query": "path:\"09-Reference\"",
+      "color": { "a": 1, "rgb": 6323595 }
+    },
+    {
+      "query": "path:\"10-Templates\"",
+      "color": { "a": 1, "rgb": 15277667 }
+    }
+  ],
+  "collapse-display": false,
+  "showArrow": true,
+  "textFadeMultiplier": 0,
+  "nodeSizeMultiplier": 1.1,
+  "lineSizeMultiplier": 1,
+  "collapse-forces": false,
+  "centerStrength": 0.5,
+  "repelStrength": 10,
+  "linkStrength": 1,
+  "linkDistance": 250,
+  "scale": 0.8,
+  "close": false
+}

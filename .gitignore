@@ -25,3 +25,18 @@ jwt-public.pem
 
 #tree
 tree.txt
+
+# Obsidian workspace state and installed plugins
+docs/obsidian/.obsidian/workspace.json
+docs/obsidian/.obsidian/workspace-mobile.json
+docs/obsidian/.obsidian/plugins/
+docs/obsidian/.obsidian/cache/
+
+# Superpowers scratch workspace
+.superpowers/
+
+# Local test and coverage output
+coverage/
+.pytest_cache/
+__pycache__/
+*.pyc
