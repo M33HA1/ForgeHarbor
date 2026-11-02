@@ -44,45 +44,31 @@ flowchart LR
     Gateway -->|/| Web[Web :3000]
 ```
 
-## Route contract after prefix strip
+## Route contract after D1=B
 
-Traefik strips the public prefix, so the service must register the path that remains. Only three services currently match that rule.
+The gateway does not rewrite paths. Each service registers its full public prefix, so the public path, the direct-port path, and the service route are identical.
 
-| Service | Public path | Service receives | Service registers | State |
-|---|---|---|---|---|
-| Auth | `/auth/login` | `/login` | `/login` | Works |
-| Phishing | `/phishing/v1/url/check` | `/v1/url/check` | `/v1/url/check` | Works |
-| Malware | `/malware/v1/file/analyze` | `/v1/file/analyze` | `/v1/file/analyze` | Works |
-| History | `/history` | `/` | `/history` | **404** |
-| Reports | `/reports` | `/` | `/reports` | **404** |
-| Notify | `/notify` | `/` | `/notifications` | **404** |
+| Service | Public path | Service registers | State |
+|---|---|---|---|
+| Auth | `/auth/*` | `/auth/*` | Aligned |
+| Phishing | `/phishing/*` | `/phishing/*` | Aligned |
+| Malware | `/malware/*` | `/malware/*` | Aligned |
+| History | `/history/*` | `/history/*` | Aligned |
+| Reports | `/reports/*` | `/reports/*` | Aligned |
+| Notify | `/notify/*` | `/notify/*` | Aligned |
 
-Health checks still pass because `/history/health`, `/reports/health`, and `/notify/health` strip to `/health`, which every service exposes. That masks the defect: the smoke test is green while the data routes are unreachable.
+Health routes follow the same rule: `/auth/health`, `/phishing/health`, `/malware/health`, `/history/health`, `/reports/health`, and `/notify/health`. The earlier failure mode — health passing while data routes returned 404 — is now covered by `scripts/check-routes.mjs`, which probes every documented route through the gateway.
 
-The table assumes Traefik is routing; the Docker-provider failure below currently prevents any route from loading.
+## Remaining defects
 
-## Known defects
+1. **(Resolved) Traefik Docker provider.** `traefik:v2.10` and `v3.5` could not talk to Docker Engine 29 (API 1.41 minimum). Upgraded to `traefik:v3.7`, which loads all six service routers.
+2. **README drift.** The README says the app is at `http://localhost` and Traefik is at `:8080`; the Compose file maps the gateway to `8088` and the dashboard to `8000`.
+3. **Direct-port bypass.** Every service is published on the host, so clients can skip the gateway and its routing rules. This is acceptable for local debugging but not for a production-like setup.
+4. **The contract test skips when the gateway is down.** `scripts/check-routes.mjs` exits 0 with a skip message if `http://localhost:8088` is unreachable, so a broken gateway is not a test failure. Run `.\scripts\dev.ps1 health` to assert that the gateway is up.
 
-1. **Report prefix conflict.** The report service registers `/reports` and `/reports/:id`, but Traefik strips `/reports`. The service receives `/` and `/:id`, which do not match the intended routes.
-2. **History prefix conflict.** History registers `/history` and `/history/:scan_id`, but Traefik strips `/history`. Gateway requests reach `/` and `/:scan_id` and return 404.
-3. **Notify path mismatch.** The service registers `/notifications`, but Traefik strips `/notify`, and the frontend calls `/notify`. The request reaches `/` and returns 404.
-4. **Inconsistent convention.** Three services are written for a stripped prefix and three are written for a full prefix. The current mix guarantees that any new service is a coin flip.
-5. **Frontend path mismatch.** The frontend and README do not consistently use the gateway port or the `/notify` path.
-6. **Traefik Docker provider failure.** Traefik logs `Failed to retrieve information of the docker client and server host`, so no routes load.
-7. **README drift.** The README says the app is at `http://localhost` and Traefik is at `:8080`; the Compose file maps the gateway to `8088` and the dashboard to `8000`.
-8. **Direct-port bypass.** Every service is published on the host, so clients can skip the gateway and its routing rules. This is acceptable for local debugging but not for a production-like setup.
-9. **No data-route smoke test.** The existing probe checks `/health` only, so it cannot detect defects 1–3.
+## Decision — Option B (2026-11-02)
 
-## Decision required
-
-Two conventions are defensible; the current mix is not. See [[Architecture-Review]] (D1).
-
-| Option | Shape | Changes required |
-|---|---|---|
-| A (recommended) | Gateway strips; services own unprefixed routes | History, Reports, and Notify |
-| B | Gateway does not strip; services mount their full prefix | Auth, Phishing, Malware, and the Traefik labels |
-
-Record the choice in an ADR before changing any route.
+The public path is the service path; the gateway performs no rewrite. See [[ADR-0004-gateway-prefix-contract]] for the rationale and consequences.
 
 ## Verification
 
@@ -93,14 +79,21 @@ Test-NetConnection 127.0.0.1 -Port 8088
 # Traefik dashboard
 Invoke-WebRequest http://localhost:8000/api/rawdata -UseBasicParsing
 
-# Direct service probes
-8080..8085 | ForEach-Object {
-  try { (Invoke-WebRequest "http://localhost:$_/health" -UseBasicParsing -TimeoutSec 2).StatusCode }
-  catch { "port $_ unavailable" }
+# Direct service probes (paths include the public prefix)
+@{
+  8080 = '/auth/health'
+  8081 = '/phishing/health'
+  8082 = '/malware/health'
+  8083 = '/history/health'
+  8084 = '/reports/health'
+  8085 = '/notify/health'
+}.GetEnumerator() | ForEach-Object {
+  try { (Invoke-WebRequest "http://localhost:$($_.Key)$($_.Value)" -UseBasicParsing -TimeoutSec 2).StatusCode }
+  catch { "port $($_.Key) unavailable" }
 }
 
-# Data routes must be checked through the gateway, not only /health
-# Expect 401/200, never 404, once the route contract is fixed.
+# Every documented route through the gateway; fails on 404
+node scripts/check-routes.mjs
 ```
 
 ## Related notes

@@ -62,21 +62,24 @@ The polyglot split is intentional. The goal is credible specialty, not language 
 | Notifications | Queue consumer with auth and naming gaps | Authenticated consumer with retries and a dead-letter queue |
 | Observability | Logs only | OpenTelemetry traces and structured logs |
 | Contracts | Hand-written frontend calls | OpenAPI or protobuf contracts checked in |
-| Routing | Mixed prefix conventions; three data routes 404 | One gateway convention enforced by a contract test |
+| Routing | One prefix convention (D1=B); Traefik provider fixed | All 15 documented routes pass the contract test |
 | Auth boundary | Re-implemented in each service | Validated once at the edge; trusted identity downstream |
-| Secrets | `.env` and keys copied into images | Runtime secrets; `.dockerignore`; no key material in images |
+| Secrets | Rust images build on stable and carry no `.env`; Notify still copies the build context | Runtime secrets; `.dockerignore`; no key material in images |
 
 ## Known blockers
 
-- The Rust auth service fails to compile with `mongodb-3.2.5` and an async-drop cycle.
 - The web image uses Node 14, while Vite 7 requires Node 20.19+ or 22.12+.
 - The MinIO image reference does not pull.
-- Traefik cannot read the Docker provider and loads no routes.
 - Compose passes blank `GEMINI_API_KEY` and `VIRUSTOTAL_API_KEY` values.
 - History, Reports, and Notify do not enforce authentication and ownership consistently.
-- History, Reports, and Notify routes do not match the gateway's prefix strip.
 - Reports publishes to `report_events` while Notify consumes `notifications`.
-- No `.dockerignore` exists, and the Auth image copies `.env` and the private key.
+- Notify still uses `COPY . .`, and the infrastructure ports remain open.
+
+## Resolved in Phase 0
+
+- All three Rust services build on pinned stable Rust 1.90.0; the nightly async-drop cycle is gone.
+- The gateway prefix contract is decided and applied (D1=B); a route-contract test exists.
+- The Auth image no longer copies `config`; Phishing and Malware copy only the public key.
 
 ## Related notes
 

@@ -17,7 +17,7 @@ Use this runbook to build images, compile services locally, or reproduce a build
 |---|---|---|
 | Docker | 24+ with Compose v2 | 29.4.3 |
 | Node.js | 22.12+ for Vite 7 | 22.20.0 |
-| Rust | Stable; the Dockerfile currently uses nightly | 1.90.0 |
+| Rust | Stable 1.90.0, pinned in every Rust Dockerfile | 1.90.0 |
 | Go | 1.22+ for local Report builds | Not on PATH |
 | Python | 3.11 in the container | 3.13.7 locally |
 

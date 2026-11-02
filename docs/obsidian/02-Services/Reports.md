@@ -1,6 +1,6 @@
 ---
 type: service
-status: routing-and-auth-defects
+status: auth-defects
 priority: P0
 language: go
 updated: 2026-11-02
@@ -28,14 +28,14 @@ Creates JSON reports, stores them in S3-compatible object storage, records metad
 
 | Method | Path | Auth | Ownership | Notes |
 |---|---|---|---|---|
-| GET | `/health` | None | N/A | Returns service status |
+| GET | `/reports/health` | None | N/A | Returns service status |
 | POST | `/reports` | None | None | Body: `{ "scanId": "...", "content": "..." }` |
 | GET | `/reports/:id` | None | None | Returns report metadata |
 | GET | `/reports/:id/download` | None | None | Streams the stored JSON report |
 
-## Gateway conflict
+## Gateway contract
 
-Traefik strips `/reports` before forwarding. The service registers `/reports` and `/reports/:id`, so it receives `/` and `/:id` and does not match the intended routes. This must be resolved either by removing the strip middleware for this router or by changing the service's route registration.
+Reports registers `/reports` and `/reports/:id`, and the gateway does not rewrite the path (D1=B). The public and direct-port paths match. See [[ADR-0004-gateway-prefix-contract]].
 
 ## Configuration
 
@@ -71,7 +71,6 @@ docker compose -f deploy/compose/docker-compose.dev.yml build fh-report
 | Severity | Issue | Impact |
 |---|---|---|
 | P0 | No JWT authentication or ownership checks | Anyone can create, read, or download reports |
-| P0 | Gateway prefix stripping conflicts with `/reports` routes | 404s through the gateway |
 | P1 | `report_events` queue is not consumed by Notify | Report notifications never arrive |
 | P1 | One AMQP channel is shared across concurrent Gin handlers | Data race and connection corruption |
 | P1 | Bucket creation uses `log.Fatal` at startup; MinIO may not be ready | Crash loop on startup |

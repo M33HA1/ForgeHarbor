@@ -45,12 +45,12 @@ write_health() {
   local names=(gateway auth phishing malware history reports notify web)
   local urls=(
     "http://localhost:8088/auth/health"
-    "http://localhost:8080/health"
-    "http://localhost:8081/health"
-    "http://localhost:8082/health"
-    "http://localhost:8083/health"
-    "http://localhost:8084/health"
-    "http://localhost:8085/health"
+    "http://localhost:8080/auth/health"
+    "http://localhost:8081/phishing/health"
+    "http://localhost:8082/malware/health"
+    "http://localhost:8083/history/health"
+    "http://localhost:8084/reports/health"
+    "http://localhost:8085/notify/health"
     "http://localhost:3000/"
   )
   local i

@@ -28,8 +28,8 @@ Analyzes a URL for phishing indicators using Google Gemini and persists the resu
 
 | Method | Path | Auth | Notes |
 |---|---|---|---|
-| GET | `/health` | None | Returns `phishing-rs is healthy` |
-| POST | `/v1/url/check` | Bearer RS256 | Body: `{ "url": "https://..." }` |
+| GET | `/phishing/health` | None | Returns `phishing-rs is healthy` |
+| POST | `/phishing/v1/url/check` | Bearer RS256 | Body: `{ "url": "https://..." }` |
 
 ## Request and response shape
 
@@ -64,7 +64,7 @@ The service returns a Gemini-derived analysis with a phishing flag, confidence, 
 ```powershell
 docker compose -f deploy/compose/docker-compose.dev.yml build fh-phishing
 docker compose -f deploy/compose/docker-compose.dev.yml up -d fh-phishing
-Invoke-WebRequest http://localhost:8081/health -UseBasicParsing
+Invoke-WebRequest http://localhost:8081/phishing/health -UseBasicParsing
 ```
 
 ## Known issues

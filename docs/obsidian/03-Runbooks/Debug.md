@@ -27,13 +27,12 @@ Do not skip step 1. A fix based on a remembered error is a guess.
 
 | Symptom | Likely layer | First command |
 |---|---|---|
-| Auth image fails with `E0391` async-drop cycle | Rust dependency | `docker compose ... build fh-auth` |
+| Rust build fails with `E0391` async-drop cycle | Nightly toolchain | The Dockerfile must use `rust:1.90.0-bookworm`, not `rustlang/rust:nightly` |
 | Web build fails on `??=` | Node version | Check `apps/web/Dockerfile`; it must use Node 22 |
 | MinIO pull denied | Image reference/registry | `docker pull minio/minio:latest` |
 | Traefik logs Docker provider error | Docker socket/API | `docker compose ... logs traefik` |
 | Gateway returns 404 for every route | Traefik provider | `Invoke-WebRequest http://localhost:8000/api/rawdata` |
-| `/reports` returns 404 through gateway | Prefix strip mismatch | Compare Traefik middleware with `apps/report-go/routes/reports.go` |
-| `/notify` returns 404 | Route mismatch | Service exposes `/notifications`; frontend calls `/notify` |
+| A documented route returns 404 through the gateway | Route contract | `node scripts/check-routes.mjs`; compare the service route with [[API-Contracts]] |
 | History returns other users' scans | Missing auth/ownership | Test without a token and with a forged token |
 | File scan shows "Clean" for a malicious file | Frontend result shape | Inspect `apps/web/src/components/Scan/Result.jsx` |
 | `GEMINI_API_KEY`/`VIRUSTOTAL_API_KEY` warnings | Compose interpolation | Check `config/.env` and `docker compose config` |
@@ -52,7 +51,8 @@ docker inspect fh-auth --format '{{.State.Status}} {{.State.ExitCode}}'
 ```powershell
 Invoke-WebRequest http://localhost:8000/api/rawdata -UseBasicParsing
 Invoke-WebRequest http://localhost:8088/auth/health -UseBasicParsing
-Invoke-WebRequest http://localhost:8083/health -UseBasicParsing
+Invoke-WebRequest http://localhost:8083/history/health -UseBasicParsing
+node scripts/check-routes.mjs
 ```
 
 ## Data evidence

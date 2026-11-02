@@ -171,7 +171,7 @@ async fn check_phishing_with_gemini(
 }
 
 // ===== Handlers =====
-#[post("/v1/url/check")]
+#[post("/phishing/v1/url/check")]
 async fn check_url_handler(
     req: web::Json<CheckUrlRequest>,
     state: web::Data<AppState>,
@@ -208,7 +208,7 @@ async fn check_url_handler(
     }
 }
 
-#[get("/health")]
+#[get("/phishing/health")]
 async fn health() -> impl Responder {
     HttpResponse::Ok().body("phishing-rs is healthy")
 }

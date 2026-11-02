@@ -19,21 +19,26 @@ This is the vault view of the root [`CHANGELOG.md`](../../../CHANGELOG.md). The 
 - Hybrid MCP configuration: Context7 and Playwright global; GitHub, Obsidian, and MongoDB project-local.
 - Build and status scripts for PowerShell and POSIX shells.
 - Toolchain pinning and a safe environment example.
+- `scripts/check-routes.mjs`, a gateway route-contract test.
+- [[ADR-0004-gateway-prefix-contract]] and the Phase 0 route alignment.
 
 ### Changed
 
 - `.gitignore` now excludes Obsidian workspace state and Superpowers scratch files.
 - The README's setup and port guidance is tracked as stale and will be corrected in Phase 0.
 - Gateway routing now documents the History, Reports, and Notify prefix conflicts instead of treating Reports as the only case.
+- All Rust services build on pinned stable Rust 1.90.0; the nightly async-drop cycle is gone.
+- Every service registers its full public prefix, and the gateway no longer strips it (D1=B).
+- Health probes use the prefixed paths.
 
 ### Security
 
 - Documented the current auth, ownership, routing, and secret-management findings.
-- No application security fixes are included in this documentation/tooling change.
+- The Auth image no longer copies `config`; Phishing and Malware copy only the public key.
+- Added `.dockerignore` to the Rust apps.
 
 ### Known issues
 
-- Auth does not build.
 - Web uses Node 14 and cannot build Vite 7.
 - MinIO image pull fails.
 - Traefik cannot read the Docker provider.
@@ -45,6 +50,7 @@ This is the vault view of the root [`CHANGELOG.md`](../../../CHANGELOG.md). The 
 
 | Date | Note | Area |
 |---|---|---|
+| 2026-11-02 | [[2026-11-02-phase-0-auth-build-and-routes]] | Build, routing, security |
 | 2026-11-02 | [[2026-11-02-initial-audit]] | Audit, security, build |
 | 2026-11-02 | [[2026-11-02-architecture-review]] | Architecture, routing, contracts |
 | 2026-11-02 | [[2026-11-02-project-operating-system]] | Tooling, docs, MCP |

@@ -25,11 +25,11 @@ queue_name = os.getenv("NOTIFY_QUEUE", "notifications")
 # FastAPI app
 app = FastAPI()
 
-@app.get("/health")
+@app.get("/notify/health")
 def health():
     return {"status": "ok", "service": "notify-py"}
 
-@app.get("/notifications")
+@app.get("/notify")
 def get_notifications():
     """Get all notifications for the current user"""
     try:

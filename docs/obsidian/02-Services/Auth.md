@@ -1,6 +1,6 @@
 ---
 type: service
-status: broken
+status: build-fixed
 priority: P0
 language: rust
 updated: 2026-11-02
@@ -28,11 +28,11 @@ Registration, login, JWT issuance, JWKS exposure, and current-user lookup. This 
 
 | Method | Path | Auth | Notes |
 |---|---|---|---|
-| GET | `/health` | None | Returns `Service is Healthy!` |
-| POST | `/signup` | None | Creates a user; Argon2 password hash |
-| POST | `/login` | None | Returns `access_token` and `expires_in: 3600` |
-| GET | `/jwks` | None | Publishes the RSA public key |
-| GET | `/me` | Bearer RS256 | Returns the current user |
+| GET | `/auth/health` | None | Returns `Service is Healthy!` |
+| POST | `/auth/signup` | None | Creates a user; Argon2 password hash |
+| POST | `/auth/login` | None | Returns `access_token` and `expires_in: 3600` |
+| GET | `/auth/jwks` | None | Publishes the RSA public key |
+| GET | `/auth/me` | Bearer RS256 | Returns the current user |
 
 ## Configuration
 
@@ -50,10 +50,12 @@ Registration, login, JWT issuance, JWKS exposure, and current-user lookup. This 
 ```powershell
 docker compose -f deploy/compose/docker-compose.dev.yml build fh-auth
 docker compose -f deploy/compose/docker-compose.dev.yml up -d fh-auth
-Invoke-WebRequest http://localhost:8080/health -UseBasicParsing
+Invoke-WebRequest http://localhost:8080/auth/health -UseBasicParsing
 ```
 
-Local Rust test command, once the build is fixed:
+The image builds on pinned stable Rust 1.90.0. The nightly toolchain triggered an async-drop cycle in `mongodb` 3.2.5; the Dockerfile no longer uses nightly and builds with `--locked`.
+
+Local Rust check:
 
 ```powershell
 Push-Location apps/auth-rs
@@ -65,11 +67,7 @@ Pop-Location
 
 | Severity | Issue | Impact |
 |---|---|---|
-| P0 | `mongodb-3.2.5` fails with `error[E0391]: cycle detected when computing when error::GridFsErrorKind needs async drop` | Image does not build; login is unavailable |
-| P0 | Dockerfile copies `Cargo.toml` but the tracked file is `cargo.toml` | Case-sensitive Linux builds fail before compilation |
 | P0 | JWT key files are ignored by git and absent from a clean clone | Service exits at startup if keys are missing |
-| P1 | Dockerfile uses `rustlang/rust:nightly` and wildcard dependency versions | Non-reproducible builds |
-| P1 | The runtime image copies `./config`, including `.env` and `jwt-private.pem` | Key material ships in the image |
 | P1 | CORS allows any origin, method, and header | Broad browser exposure |
 | P2 | `/jwks` returns a PEM in a non-standard `pem` field instead of `n`, `e`, and `kid` | Standard JWT clients cannot consume it |
 | P2 | Email uniqueness relies on a find-then-insert check, not a unique index | Concurrent signups can create duplicates |

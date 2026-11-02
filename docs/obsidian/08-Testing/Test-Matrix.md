@@ -11,12 +11,12 @@ tags: [testing, matrix]
 
 | Service | Build | Unit | Integration | Security | Smoke | Current status |
 |---|---|---|---|---|---|---|
-| Auth | `cargo build --release` | Missing | Missing | JWT and password tests needed | `/health`, signup, login, `/me` | Build broken |
-| Phishing | `cargo build --release` | Missing | Missing | Token validation test needed | `/health`, URL scan | Unverified |
-| Malware | `cargo build --release` | Missing | Missing | Token and upload-limit tests needed | `/health`, file scan | Unverified |
-| History | `npm run build` | Missing | Missing | Anonymous, forged-token, IDOR tests needed | `/health`, list, detail | Security defects |
-| Reports | `go test ./...` | Missing | Missing | Auth and ownership tests needed | `/health`, create, download | Auth/routing defects |
-| Notify | `python -m compileall .` | Missing | Missing | Auth and ownership tests needed | `/health`, list | Auth/queue defects |
+| Auth | `cargo build --release` | Missing | Missing | JWT and password tests needed | `/auth/health`, signup, login, `/auth/me` | Build passes; runtime unverified |
+| Phishing | `cargo build --release` | Missing | Missing | Token validation test needed | `/phishing/health`, URL scan | Unverified |
+| Malware | `cargo build --release` | Missing | Missing | Token and upload-limit tests needed | `/malware/health`, file scan | Unverified |
+| History | `npm run build` | Missing | Missing | Anonymous, forged-token, IDOR tests needed | `/history/health`, list, detail | Security defects |
+| Reports | `go test ./...` | Missing | Missing | Auth and ownership tests needed | `/reports/health`, create, download | Auth defects |
+| Notify | `python -m compileall .` | Missing | Missing | Auth and ownership tests needed | `/notify/health`, list | Auth/queue defects |
 | Web | `npm run build` | Missing | Missing | Token storage and result-rendering tests needed | Login, scan, history, report | Build broken |
 
 ## Critical security cases
@@ -26,7 +26,7 @@ tags: [testing, matrix]
 | SEC-T01 | `GET /history` without a token | 401 | 200 with all scans |
 | SEC-T02 | `GET /history` with a forged unsigned JWT | 401 | Accepted when no public key is configured |
 | SEC-T03 | `GET /history/:id` for another user's scan | 403 or 404 | 200 |
-| SEC-T04 | `GET /notifications` without a token | 401 | 200 with notifications |
+| SEC-T04 | `GET /notify` without a token | 401 | 200 with notifications |
 | SEC-T05 | `POST /reports` without a token | 401 | 200 |
 | SEC-T06 | `GET /reports/:id` for another user's report | 403 or 404 | 200 |
 | SEC-T07 | Malformed scan ID | 400 | 500 |
@@ -46,12 +46,14 @@ tags: [testing, matrix]
 | FUN-T08 | Create report and download it | JSON file with expected content |
 | FUN-T09 | Report creation publishes an event | Notify consumes it |
 | FUN-T10 | File scan result renders correctly | Malicious/clean state matches API |
+| FUN-T11 | Every documented route through the gateway | No 404; `node scripts/check-routes.mjs` passes |
 
 ## Commands
 
 ```powershell
 .\scripts\dev.ps1 test
 .\scripts\dev.ps1 health
+node scripts/check-routes.mjs
 ```
 
 See [[Test]] for per-service commands and test-data hygiene.

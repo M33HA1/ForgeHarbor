@@ -56,15 +56,25 @@ Pop-Location
 ## Smoke tests
 
 ```powershell
-# Direct health endpoints
-8080..8085 | ForEach-Object {
+# Direct health endpoints (paths include the public prefix)
+@{
+  8080 = '/auth/health'
+  8081 = '/phishing/health'
+  8082 = '/malware/health'
+  8083 = '/history/health'
+  8084 = '/reports/health'
+  8085 = '/notify/health'
+}.GetEnumerator() | ForEach-Object {
   try {
-    $r = Invoke-WebRequest "http://localhost:$_/health" -UseBasicParsing -TimeoutSec 2
-    "port $_ -> $($r.StatusCode)"
+    $r = Invoke-WebRequest "http://localhost:$($_.Key)$($_.Value)" -UseBasicParsing -TimeoutSec 2
+    "port $($_.Key) -> $($r.StatusCode)"
   } catch {
-    "port $_ -> unavailable"
+    "port $($_.Key) -> unavailable"
   }
 }
+
+# Every documented route through the gateway
+node scripts/check-routes.mjs
 ```
 
 ## Security regression tests

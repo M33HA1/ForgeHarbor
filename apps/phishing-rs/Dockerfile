@@ -1,50 +1,35 @@
-# Stage 1: Build the application using the nightly Rust toolchain
-FROM rustlang/rust:nightly as builder
+# Stage 1: Build with a pinned stable toolchain.
+# The mongodb 3.2.x crate triggers a nightly-only async-drop cycle (E0391).
+FROM rust:1.90.0-bookworm AS builder
 
 WORKDIR /app
 
-# Copy the dependency manifests first
-# Using a wildcard to handle both "cargo.toml" and "Cargo.toml"
-COPY ./Cargo.toml ./
-COPY ./Cargo.lock ./
+COPY ./Cargo.toml ./Cargo.lock ./
 
-# Create a dummy main.rs file to build and cache only the dependencies
 RUN mkdir src && echo "fn main() {}" > src/main.rs
-RUN cargo build --release
+RUN cargo build --release --locked
 
-# Now, copy the actual application source code, replacing the dummy file
+# Touch main.rs so Cargo does not reuse the dummy binary from the cache layer.
 COPY ./src ./src
+RUN touch ./src/main.rs && cargo build --release --locked
 
-# Build the application for release, which will now use the cached dependencies
-RUN cargo build --release
-
-# Now, copy the config folder
-COPY ./config ./config
-
-# Stage 2: Create the final, minimal production image
+# Stage 2: Minimal runtime image.
 FROM debian:bookworm-slim
 
-# Install SSL libraries and CA certificates
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libssl3 \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-# Copy the JWT key to the final image
-COPY --from=builder /app/config/jwt-public.pem ./config/jwt-public.pem
 
-# Copy the compiled binary from the builder stage (FIXED: use correct binary name)
+# Only the public key is needed; the full config is mounted at runtime.
+COPY ./config/jwt-public.pem ./config/jwt-public.pem
 COPY --from=builder /app/target/release/phishing-rs /usr/local/bin/phishing-rs
 
- 
-
-# Expose the correct port for each service
-# For auth-rs: EXPOSE 8080
-# For phishing-rs: EXPOSE 8081
-# For malware-rs: EXPOSE 8082
 EXPOSE 8081
+
 ENV RUST_BACKTRACE=1 \
-    RUST_LOG=debug
+    RUST_LOG=info
 
 CMD ["/usr/local/bin/phishing-rs"]

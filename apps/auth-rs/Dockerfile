@@ -1,50 +1,37 @@
-# Stage 1: Build the application using the nightly Rust toolchain
-FROM rustlang/rust:nightly as builder
+# Stage 1: Build with a pinned stable toolchain.
+# The mongodb 3.2.x crate triggers a nightly-only async-drop cycle (E0391),
+# so this image must use stable Rust. The version is pinned for reproducibility.
+FROM rust:1.90.0-bookworm AS builder
 
 WORKDIR /app
 
-# Copy the dependency manifests first
-# Using a wildcard to handle both "cargo.toml" and "Cargo.toml"
-COPY ./Cargo.toml ./
-COPY ./Cargo.lock ./
+# Copy the dependency manifests first so the dependency layer is cached.
+COPY ./Cargo.toml ./Cargo.lock ./
 
-# Create a dummy main.rs file to build and cache only the dependencies
+# Build a dummy binary to cache the dependency graph.
 RUN mkdir src && echo "fn main() {}" > src/main.rs
-RUN cargo build --release
+RUN cargo build --release --locked
 
-# Now, copy the actual application source code, replacing the dummy file
+# Copy the real source and build the service.
+# Touch main.rs so Cargo does not reuse the dummy binary from the cache layer.
 COPY ./src ./src
+RUN touch ./src/main.rs && cargo build --release --locked
 
-# Now, copy the config folder
-COPY ./config ./config
-
-# Build the application for release, which will now use the cached dependencies
-RUN cargo build --release
-
-# Stage 2: Create the final, minimal production image
+# Stage 2: Minimal runtime image.
 FROM debian:bookworm-slim
 
-# Install SSL libraries and CA certificates
-RUN apt-get update && apt-get install -y \
-    libssl3 \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-# Copy the JWT key to the final image
-COPY --from=builder /app/config ./config
 
-# Copy the compiled binary from the builder stage (FIXED: use correct binary name)
+# JWT keys and configuration are mounted at runtime, never baked into the image.
 COPY --from=builder /app/target/release/auth-rs /usr/local/bin/auth-rs
 
-# Expose the correct port for each service
-# For auth-rs: EXPOSE 8080
-# For phishing-rs: EXPOSE 8081
-# For malware-rs: EXPOSE 8082
 EXPOSE 8080
 
-# Set the startup command to run the binary (FIXED: use correct binary name)
 ENV RUST_BACKTRACE=1 \
-    RUST_LOG=debug
+    RUST_LOG=info
 
 CMD ["/usr/local/bin/auth-rs"]

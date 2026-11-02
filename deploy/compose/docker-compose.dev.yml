@@ -7,7 +7,7 @@ services:
   # Traefik reverse proxy
   # -------------------------
   traefik:
-    image: traefik:v2.10
+    image: traefik:v3.7
     container_name: traefik
     command:
       - "--api.insecure=true"
@@ -50,8 +50,6 @@ services:
       - "traefik.http.routers.fh-auth.rule=Host(`localhost`) && PathPrefix(`/auth`)"
       - "traefik.http.routers.fh-auth.priority=100"
       - "traefik.http.services.fh-auth.loadbalancer.server.port=8080"
-      - "traefik.http.middlewares.fh-auth-stripprefix.stripprefix.prefixes=/auth"
-      - "traefik.http.routers.fh-auth.middlewares=fh-auth-stripprefix"
     volumes:
       - ../../apps/auth-rs/config:/app/config:ro
     ports:
@@ -83,8 +81,6 @@ services:
       - "traefik.http.routers.fh-phishing.rule=Host(`localhost`) && PathPrefix(`/phishing`)"
       - "traefik.http.routers.fh-phishing.priority=100"
       - "traefik.http.services.fh-phishing.loadbalancer.server.port=8081"
-      - "traefik.http.middlewares.fh-phishing-stripprefix.stripprefix.prefixes=/phishing"
-      - "traefik.http.routers.fh-phishing.middlewares=fh-phishing-stripprefix"
     volumes:
       - ../../apps/phishing-rs/config:/app/config:ro
     ports:
@@ -116,8 +112,6 @@ services:
       - "traefik.http.routers.fh-malware.rule=Host(`localhost`) && PathPrefix(`/malware`)"
       - "traefik.http.routers.fh-malware.priority=100"
       - "traefik.http.services.fh-malware.loadbalancer.server.port=8082"
-      - "traefik.http.middlewares.fh-malware-stripprefix.stripprefix.prefixes=/malware"
-      - "traefik.http.routers.fh-malware.middlewares=fh-malware-stripprefix"
     volumes:
       - ../../apps/malware-rs/config:/app/config:ro
     ports:
@@ -145,8 +139,6 @@ services:
       - "traefik.http.routers.fh-history.rule=Host(`localhost`) && PathPrefix(`/history`)"
       - "traefik.http.routers.fh-history.priority=100"
       - "traefik.http.services.fh-history.loadbalancer.server.port=8083"
-      - "traefik.http.middlewares.fh-history-stripprefix.stripprefix.prefixes=/history"
-      - "traefik.http.routers.fh-history.middlewares=fh-history-stripprefix"
     ports:
       - "8083:8083"
 
@@ -185,8 +177,6 @@ services:
       - "traefik.http.routers.fh-report.rule=Host(`localhost`) && PathPrefix(`/reports`)"
       - "traefik.http.routers.fh-report.priority=100"
       - "traefik.http.services.fh-report.loadbalancer.server.port=8084"
-      - "traefik.http.middlewares.fh-report-stripprefix.stripprefix.prefixes=/reports"
-      - "traefik.http.routers.fh-report.middlewares=fh-report-stripprefix"
     ports:
       - "8084:8084"
 
@@ -212,8 +202,6 @@ services:
       - "traefik.http.routers.fh-notify.rule=Host(`localhost`) && PathPrefix(`/notify`)"
       - "traefik.http.routers.fh-notify.priority=100"
       - "traefik.http.services.fh-notify.loadbalancer.server.port=8085"
-      - "traefik.http.middlewares.fh-notify-stripprefix.stripprefix.prefixes=/notify"
-      - "traefik.http.routers.fh-notify.middlewares=fh-notify-stripprefix"
     ports:
       - "8085:8085"
 

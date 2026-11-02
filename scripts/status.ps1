@@ -29,12 +29,12 @@ function Test-Endpoint {
 function Write-Health {
   $targets = @(
     [pscustomobject]@{ Name = 'gateway'; Url = 'http://localhost:8088/auth/health' },
-    [pscustomobject]@{ Name = 'auth'; Url = 'http://localhost:8080/health' },
-    [pscustomobject]@{ Name = 'phishing'; Url = 'http://localhost:8081/health' },
-    [pscustomobject]@{ Name = 'malware'; Url = 'http://localhost:8082/health' },
-    [pscustomobject]@{ Name = 'history'; Url = 'http://localhost:8083/health' },
-    [pscustomobject]@{ Name = 'reports'; Url = 'http://localhost:8084/health' },
-    [pscustomobject]@{ Name = 'notify'; Url = 'http://localhost:8085/health' },
+    [pscustomobject]@{ Name = 'auth'; Url = 'http://localhost:8080/auth/health' },
+    [pscustomobject]@{ Name = 'phishing'; Url = 'http://localhost:8081/phishing/health' },
+    [pscustomobject]@{ Name = 'malware'; Url = 'http://localhost:8082/malware/health' },
+    [pscustomobject]@{ Name = 'history'; Url = 'http://localhost:8083/history/health' },
+    [pscustomobject]@{ Name = 'reports'; Url = 'http://localhost:8084/reports/health' },
+    [pscustomobject]@{ Name = 'notify'; Url = 'http://localhost:8085/notify/health' },
     [pscustomobject]@{ Name = 'web'; Url = 'http://localhost:3000/' }
   )
 

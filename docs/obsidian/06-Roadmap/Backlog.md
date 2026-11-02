@@ -11,10 +11,10 @@ tags: [roadmap, backlog]
 
 | ID | Area | Item | Why | Status |
 |---|---|---|---|---|
-| FH-001 | Build | Fix Auth dependency resolution or replace Auth with Go | Login is unavailable | Open |
+| FH-001 | Build | Fix Auth dependency resolution or replace Auth with Go | Login is unavailable | Done — all Rust services build on pinned stable 1.90.0 |
 | FH-002 | Build | Move web Dockerfile to Node 22 | Vite 7 cannot build | Open |
 | FH-003 | Build | Use a pullable, pinned MinIO image | Reports cannot start | Open |
-| FH-004 | Routing | Fix Traefik Docker provider | No gateway routes load | Open |
+| FH-004 | Routing | Fix Traefik Docker provider | No gateway routes load; blocked end-to-end route verification | Done — upgraded to `traefik:v3.7`, which supports Docker Engine 29's API |
 | FH-005 | Config | Provide non-blank provider keys through local config | Scans fail at runtime | Open |
 | FH-006 | Routing | Resolve the `/reports` prefix strip conflict | Report routes 404 | Superseded by FH-033 |
 | FH-007 | Security | Enforce JWT verification in History | Anonymous reads and forged tokens | Open |
@@ -23,9 +23,9 @@ tags: [roadmap, backlog]
 | FH-010 | Security | Add auth and ownership to Notify | Anyone can read notifications | Open |
 | FH-011 | Security | Rotate exposed-looking keys and clean test data | Credential exposure | Open |
 | FH-012 | Frontend | Fix file-scan result mapping | Malicious files show as clean | Open |
-| FH-033 | Routing | Align all service routes with one gateway convention; add a route-contract test | History, Reports, and Notify 404 through Traefik | Open |
+| FH-033 | Routing | Align all service routes with one gateway convention; add a route-contract test | History, Reports, and Notify 404 through Traefik | Done — D1=B applied; `scripts/check-routes.mjs` added |
 | FH-034 | Security | Centralize JWT validation at the edge (ForwardAuth or BFF) | Four different auth postures; no single audit point | Open |
-| FH-035 | Build | Add `.dockerignore` and stop copying `.env` and keys into images | Secrets ship in build contexts and the Auth image | Open |
+| FH-035 | Build | Add `.dockerignore` and stop copying `.env` and keys into images | Secrets ship in build contexts and the Auth image | Partial — Rust apps done; Notify still copies the build context |
 
 ## P1 — Important before release
 

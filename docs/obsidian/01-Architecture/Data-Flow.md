@@ -57,7 +57,7 @@ sequenceDiagram
     participant Q as RabbitMQ
 
     U->>T: POST /reports
-    T->>R: POST / (after prefix strip)
+    T->>R: POST /reports
     R->>M: Read scan data
     R->>S: Store JSON report
     R->>Q: Publish report event

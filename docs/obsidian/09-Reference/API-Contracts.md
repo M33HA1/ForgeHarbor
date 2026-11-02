@@ -9,18 +9,18 @@ tags: [reference, api]
 
 ## Gateway behavior
 
-Public requests go to `http://localhost:8088`. Traefik strips the service prefix before forwarding:
+Public requests go to `http://localhost:8088`. The gateway does not rewrite paths; each service registers its full public prefix (D1=B, [[ADR-0004-gateway-prefix-contract]]):
 
 | Public path | Service path |
 |---|---|
-| `/auth/*` | `/*` |
-| `/phishing/*` | `/*` |
-| `/malware/*` | `/*` |
-| `/history/*` | `/*` |
-| `/reports/*` | `/*` |
-| `/notify/*` | `/*` |
+| `/auth/*` | `/auth/*` |
+| `/phishing/*` | `/phishing/*` |
+| `/malware/*` | `/malware/*` |
+| `/history/*` | `/history/*` |
+| `/reports/*` | `/reports/*` |
+| `/notify/*` | `/notify/*` |
 
-The table describes the gateway rule, not whether the service matches it. History, Reports, and Notify currently register the full prefix and therefore 404 through the gateway. See [[Gateway-Routing]].
+`scripts/check-routes.mjs` probes every route below through the gateway and fails on 404. See [[Gateway-Routing]].
 
 ## Auth
 
@@ -54,7 +54,7 @@ The table describes the gateway rule, not whether the service matches it. Histor
 | GET | `/history?limit=20&cursor=...&type=url&risk=high` | Should be Bearer | Current code allows anonymous access |
 | GET | `/history/:scan_id` | Should be Bearer | Current code has no ownership check |
 
-The gateway strips `/history`, but the service registers `/history` and `/history/:scan_id`, so these routes return 404 through the gateway.
+History registers `/history/*`, so the public and direct-port paths match. The open work is auth and ownership, not routing.
 
 ## Reports
 
@@ -65,21 +65,20 @@ The gateway strips `/history`, but the service registers `/history` and `/histor
 | GET | `/reports/:id` | Should be Bearer | — |
 | GET | `/reports/:id/download` | Should be Bearer | — |
 
-The gateway prefix strip currently prevents these routes from matching. See [[Gateway-Routing]].
+Reports registers `/reports/*`, so the public and direct-port paths match. The open work is auth and ownership.
 
 ## Notify
 
 | Method | Public path | Auth | Notes |
 |---|---|---|---|
 | GET | `/notify/health` | None | — |
-| GET | `/notify/notifications` | Should be Bearer | Frontend calls `/notify`; service exposes `/notifications` |
+| GET | `/notify` | Should be Bearer | Returns every notification; ownership is not enforced |
 
 ## Contract mismatches
 
 | Producer | Consumer | Mismatch |
 |---|---|---|
 | Malware result `{ status, result: { malicious, ... } }` | `Result.jsx` | Reads top-level `is_malicious` and `is_phishing` |
-| Notify `/notifications` | `api.js` | Calls `/notify` |
 | Reports `report_events` queue | Notify `notifications` queue | No consumer for report events |
 | History records `scan_type` | History query `type` | Filter uses the wrong field |
 | History records `result` shape | History query `result.risk_level` | Filter assumes a field that may not exist |

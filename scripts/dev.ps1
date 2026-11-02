@@ -27,7 +27,7 @@ Commands:
   status   Show branch, commit, containers, health, and MCP state
   health   Probe the gateway and every service; exit 1 if any probe fails
   logs     Follow logs; pass a service name to narrow, e.g. logs fh-auth
-  test     Validate Compose, vault JSON, shell scripts, and Python syntax
+  test     Validate Compose, vault, shell, Python, and gateway routes
   config   Validate the Compose file without starting anything
   mcp      Show MCP server connection state
   help     Show this message
@@ -184,11 +184,17 @@ switch ($Command) {
       Write-Host '  skipped: python not found'
     }
 
+    Write-Host '==> Gateway route contract'
+    if (Get-Command node -ErrorAction SilentlyContinue) {
+      & node (Join-Path $Root 'scripts/check-routes.mjs')
+      if ($LASTEXITCODE -ne 0) { $failed = $true }
+    } else {
+      Write-Host '  skipped: node not found'
+    }
+
     Write-Host '==> Known application blockers (tracked, not fixed here)'
-    Write-Host '  auth: Rust mongodb async-drop cycle'
     Write-Host '  web: Node 14 image with Vite 7'
     Write-Host '  minio: image pull failure'
-    Write-Host '  traefik: Docker provider failure'
 
     if ($failed) {
       Write-Error 'Tooling verification failed.'

@@ -137,7 +137,7 @@ func RegisterReportRoutes(r *gin.Engine, mongoClient *mongo.Client, rabbitConn *
 		c.JSON(http.StatusOK, report)
 	})
 	// Add to apps/report-go/routes/reports.go
-	r.GET("/health", func(c *gin.Context) {
+	r.GET("/reports/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status":    "healthy",
 			"service":   "report-go",

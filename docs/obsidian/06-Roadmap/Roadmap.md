@@ -25,19 +25,19 @@ tags: [roadmap, planning]
 
 ### Build and startup
 
-- [ ] Fix or replace the Rust Auth service.
+- [x] Fix the Rust Auth build (pinned stable 1.90.0; Phishing and Malware too).
 - [ ] Move the web image to Node 22.
 - [ ] Use a pullable, pinned MinIO image.
-- [ ] Fix the Traefik Docker provider.
+- [x] Fix the Traefik Docker provider (upgraded to `traefik:v3.7` for Docker Engine 29 compatibility).
 - [ ] Provide non-blank `GEMINI_API_KEY` and `VIRUSTOTAL_API_KEY` through local configuration.
 - [ ] Add a clean-clone bootstrap that generates or documents JWT keys.
 
 ### Routing and contracts
 
-- [ ] Choose the gateway convention (strip or no-strip) and record it in an ADR.
-- [ ] Align History, Reports, and Notify routes with that convention.
+- [x] Choose the gateway convention (D1=B) and record it in [[ADR-0004-gateway-prefix-contract]].
+- [x] Align every service route with that convention.
 - [ ] Correct README ports and entrypoints.
-- [ ] Add a gateway contract test for every documented route, not only `/health`.
+- [x] Add a gateway contract test for every documented route (`scripts/check-routes.mjs`).
 
 ### Security
 
@@ -46,7 +46,7 @@ tags: [roadmap, planning]
 - [ ] Add JWT auth and ownership checks to Reports.
 - [ ] Add JWT auth and ownership checks to Notify.
 - [ ] Centralize JWT validation at the edge (ForwardAuth or BFF).
-- [ ] Add `.dockerignore`; stop copying `.env` and key material into images.
+- [~] Add `.dockerignore`; stop copying `.env` and key material into images. Rust apps done; Notify remains.
 - [ ] Fix malformed-ID handling to return 400.
 - [ ] Fix History `type` and `risk` filters.
 - [ ] Rotate exposed-looking keys and remove test records.
@@ -57,7 +57,7 @@ tags: [roadmap, planning]
 - [ ] Fix file-scan result mapping.
 - [ ] Remove the `|| 85` confidence fallback.
 - [ ] Use report IDs and malware status in History.
-- [ ] Fix the notification path.
+- [x] Fix the notification path (service now registers `/notify`).
 
 ## Phase 1 — Core product
 

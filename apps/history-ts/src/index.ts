@@ -15,7 +15,7 @@ const app = Fastify();
 
 // Simple JWT auth parser: expects "Authorization: Bearer <token>"
 app.addHook('preHandler', async (req, reply) => {
-  if (req.routerPath && req.routerPath.startsWith('/health')) {
+  if (req.routerPath === '/history/health') {
     return; // no auth for health
   }
   const auth = req.headers['authorization'];
@@ -39,7 +39,7 @@ app.addHook('preHandler', async (req, reply) => {
 
 const mongo = new MongoClient(process.env.MONGO_URI || "mongodb://fh-mongo:27017");
 
-app.get("/health", async (req, reply) => {
+app.get("/history/health", async (req, reply) => {
   let mongodbStatus = "disconnected";
   try {
     await mongo.db(process.env.MONGO_DB || "forgeharbor").command({ ping: 1 });

@@ -73,7 +73,7 @@ Traefik strips the public prefix for every service, but only some services expec
 
 Health checks still pass because `/history/health`, `/reports/health`, and `/notify/health` strip to `/health`, which every service exposes. That masks the defect: the smoke tests are green while the data routes are unreachable.
 
-The table assumes Traefik is routing at all. The separate Docker-provider failure currently prevents any route from loading; fix that first, then the table becomes the routing contract.
+**Resolved (2026-11-02):** D1=B removes the strip middleware and makes every service own its full public prefix. `scripts/check-routes.mjs` now fails if a documented route returns 404 through the gateway. The separate Traefik Docker-provider failure (FH-004) still has to be fixed before the gateway can load any route.
 
 The frontend also calls `/notify` (`apps/web/src/services/api.js:134`) while the service exposes `/notifications`.
 
@@ -126,6 +126,8 @@ Direction: define one envelope — `{event_id, type, version, occurred_at, user_
 
 Direction: `.dockerignore` per app, runtime secrets instead of baked files, remove the blank `environment:` overrides, bind infrastructure ports to `127.0.0.1` or drop them, enable auth, and rotate the demo credentials.
 
+**Partially resolved (2026-11-02):** the Auth image no longer copies `config` at all; Phishing and Malware copy only `jwt-public.pem`; all three Rust apps have `.dockerignore` files. Notify still uses `COPY . .`, and the infrastructure ports remain open.
+
 ## AR-07 — No contracts, tests, or CI
 
 There is no OpenAPI or protobuf, no service test suite, and no CI workflow on `main`. Health endpoints return three different shapes: plain text from the Rust services, JSON from History and Reports, and a different JSON from Notify. A monitor cannot treat them uniformly.
@@ -160,16 +162,16 @@ flowchart LR
 
 The split keeps the credible specialties: Go owns the control plane and orchestration, Rust owns CPU-heavy analysis, Python owns enrichment and provider normalization, TypeScript owns the UI, and PostgreSQL owns relational and ownership-sensitive records.
 
-## Decisions required
+## Decisions
 
-### D1 — Routing convention
+### D1 — Routing convention — decided: B
 
 | Option | Shape | Tradeoff |
 |---|---|---|
-| A (recommended) | Gateway strips the prefix; every service owns unprefixed routes | Auth, Phishing, and Malware already work; History, Reports, and Notify change |
-| B | Gateway does not strip; every service mounts its full public prefix | Public path and direct-port path match; Auth, Phishing, and Malware change |
+| A | Gateway strips the prefix; every service owns unprefixed routes | Auth, Phishing, and Malware already work; History, Reports, and Notify change |
+| B (chosen) | Gateway does not strip; every service mounts its full public prefix | Public path and direct-port path match; Auth, Phishing, and Malware change |
 
-Either option is defensible. The unacceptable state is the current mix. Record the choice in an ADR before changing routes.
+**Decision (2026-11-02): Option B.** The public path is the service path. The gateway performs no rewrite, so a direct-port probe and a gateway probe exercise the same route. The frontend paths were already correct. The change adds the prefix to Auth, Phishing, and Malware, adds health routes under each prefix, and removes the strip middleware. See [[ADR-0004-gateway-prefix-contract]] and the route-contract test in `scripts/check-routes.mjs`.
 
 ### D2 — Auth boundary
 

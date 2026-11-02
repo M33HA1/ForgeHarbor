@@ -14,11 +14,12 @@ tags: [forgeharbor, dashboard, moc]
 
 | Area | State | Evidence |
 |---|---|---|
-| Repository | Active | Branch `devsecops-seed`, baseline commit `3f8aa80` |
+| Repository | Active | Branch `main` |
 | Knowledge base | In place | This vault, linked from this dashboard |
 | Developer tooling | In place | `scripts/dev.ps1`, `scripts/dev.sh`, `.tool-versions` |
-| Application stack | Partial | MongoDB, Redis, RabbitMQ, History, Notify, and Traefik are up; Auth, Web, and Reports are not |
+| Application stack | Partial | All Rust images build; all 15 documented routes pass through the gateway; Web and MinIO remain |
 | Architecture | Reviewed | [[Architecture-Review]] — contracts, routing, auth boundary, events, secrets |
+| Routing | Contract fixed | D1=B in [[ADR-0004-gateway-prefix-contract]]; `scripts/check-routes.mjs` |
 | Security | P0 open | [[Security-Review]] |
 | MCP tooling | Configured | Verify with `opencode mcp list`; see [[MCP]] |
 
@@ -26,20 +27,18 @@ tags: [forgeharbor, dashboard, moc]
 
 | Risk | Impact | Tracked in |
 |---|---|---|
-| Auth service does not compile | Blocks login and every protected flow | [[Auth]] |
-| Gateway routing and service auth are inconsistent | Unauthorized access and 404s | [[Gateway-Routing]], [[Security-Review]] |
+| MinIO image pull fails | Reports cannot store artifacts; the route still passes | [[Reports]] |
+| Service auth and ownership are inconsistent | Unauthorized access and IDOR | [[Gateway-Routing]], [[Security-Review]] |
 | Services share infrastructure but not contracts | Routing, data, and event drift | [[Architecture-Review]] |
 | Scans run synchronously in the request | Timeouts, duplicate cost, no retries | [[Architecture-Review]] |
 | Web Dockerfile uses Node 14 | Vite 7 cannot build | [[Web]] |
-| MinIO image pull fails | Reports cannot store artifacts | [[Reports]] |
-| Traefik cannot read the Docker provider | No gateway routes load | [[Gateway-Routing]] |
 | Live-looking API keys in local config | Credential exposure risk | [[Security-Review]] |
 
 ## Next three actions
 
-1. Fix the Rust auth build and add a compile smoke test.
-2. Move the web image to Node 22 and verify `npm run build`.
-3. Fix Traefik routing, then enforce JWT verification and ownership checks in History, Reports, and Notify.
+1. Use a pullable MinIO image and verify report storage end to end.
+2. Move the web image to Node 22 and use a pullable MinIO image.
+3. Add edge auth (ForwardAuth or the Go BFF) and enforce ownership in History, Reports, and Notify.
 
 See [[Roadmap]] for the full sequence.
 
@@ -75,10 +74,12 @@ See [[Roadmap]] for the full sequence.
 - [[ADR-0001-polyglot-boundaries]]
 - [[ADR-0002-go-control-plane]]
 - [[ADR-0003-postgres-for-history]]
+- [[ADR-0004-gateway-prefix-contract]]
 
 ## Changes
 
 - [[Change-Log]]
+- [[2026-11-02-phase-0-auth-build-and-routes]]
 - [[2026-11-02-initial-audit]]
 - [[2026-11-02-architecture-review]]
 - [[2026-11-02-project-operating-system]]

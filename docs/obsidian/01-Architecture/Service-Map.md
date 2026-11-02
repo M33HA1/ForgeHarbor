@@ -11,21 +11,21 @@ tags: [forgeharbor, architecture, services]
 
 | Service | Language | Direct port | Public route | Primary data | Status | Note |
 |---|---|---:|---|---|---|---|
-| Auth | Rust | 8080 | `/auth` | MongoDB | Broken build | [[Auth]] |
+| Auth | Rust | 8080 | `/auth` | MongoDB | Build fixed; runtime unverified | [[Auth]] |
 | Phishing | Rust | 8081 | `/phishing` | MongoDB | Unverified | [[Phishing]] |
 | Malware | Rust | 8082 | `/malware` | MongoDB | Unverified | [[Malware]] |
-| History | TypeScript | 8083 | `/history` | MongoDB | Routing and security defects | [[History]] |
-| Reports | Go | 8084 | `/reports` | MongoDB, MinIO, RabbitMQ | Routing and auth defects | [[Reports]] |
-| Notify | Python | 8085 | `/notify` | MongoDB, RabbitMQ | Routing, auth, and queue defects | [[Notify]] |
+| History | TypeScript | 8083 | `/history` | MongoDB | Security defects | [[History]] |
+| Reports | Go | 8084 | `/reports` | MongoDB, MinIO, RabbitMQ | Auth defects | [[Reports]] |
+| Notify | Python | 8085 | `/notify` | MongoDB, RabbitMQ | Auth and queue defects | [[Notify]] |
 | Web | React + Vite | 3000 | `/` | Browser storage | Build broken | [[Web]] |
 
-The public route and the service's registered route must agree after the gateway strips the prefix. History, Reports, and Notify currently do not; see [[Gateway-Routing]] and [[Architecture-Review]].
+Every service registers its full public prefix, and the gateway does not rewrite paths (D1=B, [[ADR-0004-gateway-prefix-contract]]). The public route, direct-port path, and service route are identical; `scripts/check-routes.mjs` enforces the contract.
 
 ## Infrastructure
 
 | Component | Image | Host port | Purpose |
 |---|---|---:|---|
-| Traefik | `traefik:v2.10` | 8088 (HTTP), 8000 (dashboard) | Edge proxy and path routing |
+| Traefik | `traefik:v3.7` | 8088 (HTTP), 8000 (dashboard) | Edge proxy and path routing |
 | MongoDB | `mongo:6.0` | 27017 | Primary document store |
 | Redis | `redis:7-alpine` | 6379 | Cache and session support |
 | RabbitMQ | `rabbitmq:3-management` | 5672, 15672 | Asynchronous events |
