@@ -56,7 +56,7 @@ tags: [roadmap, backlog]
 | FH-026 | Scanning | Add file-size and archive-bomb limits | DoS resistance | In progress — Malware rejects files over 32 MiB and limits concurrent scans to two; archive-bomb inspection and disk streaming remain |
 | FH-027 | Scanning | Add ClamAV and YARA | Deeper file analysis | Open |
 | FH-028 | Intelligence | Add Python threat-intelligence service | Better AI/feed integration | Open |
-| FH-029 | CI | Add language matrix and security scans | Prevent regressions | In progress: seven-service build/test matrix, strict API/browser runner, and HIGH/CRITICAL security gate implemented; first hosted run, finding triage, and required-check configuration remain |
+| FH-029 | CI | Add language matrix and security scans | Prevent regressions | In progress: seven-service build/test matrix, strict API/browser runner, and HIGH/CRITICAL security gate implemented; fixed an invalid job-level runner context; fresh hosted run, finding triage, and required-check configuration remain |
 | FH-030 | Testing | Add k6 load tests | Measure performance claims | Open |
 | FH-031 | Docs | Add demo video and screenshots | Portfolio presentation | Open |
 | FH-032 | Infra | Add Terraform or Kubernetes manifests | Deployment maturity | Open |

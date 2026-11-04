@@ -95,7 +95,6 @@ jobs:
       COMPOSE_PROJECT_NAME: forgeharbor-ci
       FH_REQUIRE_RUNNING: '1'
       PYTHON: ${{ github.workspace }}/.venv-ci/bin/python
-      PLAYWRIGHT_MODULE: ${{ runner.temp }}/forgeharbor-browser/node_modules/playwright/index.mjs
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
@@ -128,7 +127,7 @@ jobs:
       - name: Strict API and ownership regression suite
         run: bash scripts/ci/integration.sh
       - name: Mocked and real local browser journeys
-        run: node scripts/ci/browser.mjs
+        run: PLAYWRIGHT_MODULE="$RUNNER_TEMP/forgeharbor-browser/node_modules/playwright/index.mjs" node scripts/ci/browser.mjs
       - name: Remove ephemeral hosted-runner services and data
         if: always()
         run: docker compose -f deploy/compose/docker-compose.dev.yml down --volumes --remove-orphans

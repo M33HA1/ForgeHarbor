@@ -108,6 +108,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ### Fixed
 
+- Fixed the CI workflow validation error by resolving the Playwright module path from `RUNNER_TEMP` in the integration step instead of using the unavailable job-level `runner` context.
+
 - Reports list and metadata reads now have five-second deadlines; report downloads use a twenty-second end-to-end database/object deadline. Timeout and infrastructure errors return generic 503 responses, while missing or foreign reports remain 404.
 - Reports now verifies ambiguous MongoDB insert outcomes before cleanup and attempts a bounded RustFS delete only when metadata is confirmed absent; cleanup failure retains generic logging.
 - Auth, Phishing, and Malware images build; the `E0391` nightly async-drop cycle is gone.

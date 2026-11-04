@@ -17,7 +17,7 @@ tags: [forgeharbor, dashboard, moc]
 | Repository | Active | Branch `main` |
 | Knowledge base | In place | This vault, linked from this dashboard |
 | Developer tooling | In place | `scripts/dev.ps1`, `scripts/dev.sh`, `.tool-versions` |
-| CI | Implemented; hosted verification pending | Seven-service language matrix, strict stack/API/browser suite, and HIGH/CRITICAL security gate; [[2026-11-03-ci-matrix-and-strict-integration]] |
+| CI | Workflow parse error fixed; fresh hosted verification pending | Seven-service language matrix, strict stack/API/browser suite, and HIGH/CRITICAL security gate; the Playwright path now uses `RUNNER_TEMP` at step runtime; [[2026-11-05-ci-runner-context-fix]] |
 | Application stack | Running; locally verified, production gates remain | Seven images build; eight health probes, gateway route/CORS checks, Auth credential bounds and rate limits, History/Reports ownership, scanner JWT gates, Notify isolation, trusted report provenance (legacy downloads return 410), artifact storage, and dependency-aware Reports readiness pass; mocked and live browser/API journeys pass; provider and hosted CI coverage remain |
 | Architecture | Reviewed | [[Architecture-Review]] — contracts, routing, auth boundary, events, secrets |
 | Routing | Contract fixed | D1=B in [[ADR-0004-gateway-prefix-contract]]; `scripts/check-routes.mjs` |
@@ -87,6 +87,8 @@ See [[Roadmap]] for the full sequence.
 - [[ADR-0004-gateway-prefix-contract]]
 
 ## Changes
+
+- [[2026-11-05-ci-runner-context-fix]] — removed a disallowed job-level `runner.temp` expression that prevented CI checks from starting; fresh hosted verification pending.
 
 - [[2026-11-05-malware-scan-capacity]] — Malware now bounds in-memory scan uploads to two concurrent requests and returns retry guidance on overload.
 
