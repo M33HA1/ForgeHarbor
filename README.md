@@ -28,6 +28,7 @@ flowchart LR
     Reports --> RustFS[(RustFS)]
     Reports --> Queue[(RabbitMQ)]
     Queue --> Notify
+    Auth --> Redis[(Redis)]
 ```
 
 The development Compose file binds published ports to loopback. Service and infrastructure ports are for local debugging; production deployments should keep them internal and apply an edge authentication policy.
