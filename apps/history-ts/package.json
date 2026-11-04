@@ -18,6 +18,6 @@
     "@types/dotenv": "6.1.1",
     "@types/jsonwebtoken": "9.0.10",
     "tsx": "4.23.15",
-    "typescript": "5.9.2"
+    "typescript": "7.0.2"
   }
 }
