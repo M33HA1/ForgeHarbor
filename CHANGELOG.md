@@ -8,6 +8,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ### Added
 
+- Report-only Gitleaks, Semgrep, Trivy, and Syft workflow plus weekly Dependabot updates; Gitleaks is pinned to the verified v2.3.8 commit and the workflow runs on `main` and `devsecops-baseline`.
+
 - Auth rejects passwords found in HIBP Pwned Passwords using a padded five-character SHA-1 k-anonymity query, fails closed with a retryable response, and explains the privacy behavior on signup. See [the Auth screening change note](docs/obsidian/05-Changes/2026-11-03-auth-breached-password-screening.md).
 
 - Auth logout now revokes token IDs in Redis through expiry; Auth and ForwardAuth reject revoked tokens and fail closed if Redis is unavailable. See [session revocation](docs/obsidian/05-Changes/2026-11-03-auth-session-revocation.md).

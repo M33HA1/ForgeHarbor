@@ -1,0 +1,125 @@
+name: DevSecOps Baseline (Report Only)
+
+on:
+  push:
+    branches: [main, devsecops-baseline]
+  pull_request:
+    branches: [main, devsecops-baseline]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  secrets-gitleaks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+      - name: Gitleaks scan
+        uses: gitleaks/gitleaks-action@f586c14365d4643c6aa59d472ae6e984bf47bb34 # v2.3.8
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: 'false'
+      - name: Upload Gitleaks report
+        if: always()
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        with:
+          name: gitleaks-report
+          path: |
+            results.sarif
+            *.json
+          if-no-files-found: ignore
+
+  sast-semgrep:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Semgrep scan
+        uses: returntocorp/semgrep-action@713efdd345f3035192eaa63f56867b88e63e4e5d # v1
+        with:
+          config: auto
+      - name: Upload Semgrep SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@d39d31e687223d841ef683f52467bd88e9b21c14 # v3
+        with:
+          sarif_file: semgrep.sarif
+        continue-on-error: true
+
+  sca-trivy-fs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@b2933f565dbc598b29947660e66259e3c7bc8561 # v0.20.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-fs.sarif'
+          ignore-unfixed: true
+          severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+      - name: Upload Trivy FS SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@d39d31e687223d841ef683f52467bd88e9b21c14 # v3
+        with:
+          sarif_file: trivy-fs.sarif
+        continue-on-error: true
+      - name: Run Trivy filesystem scan (JSON)
+        uses: aquasecurity/trivy-action@b2933f565dbc598b29947660e66259e3c7bc8561 # v0.20.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'json'
+          output: 'trivy-fs.json'
+          ignore-unfixed: true
+      - name: Upload Trivy FS artifacts
+        if: always()
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        with:
+          name: trivy-fs-reports
+          path: |
+            trivy-fs.sarif
+            trivy-fs.json
+          if-no-files-found: ignore
+
+  sbom-syft:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Generate SBOM with Syft
+        uses: anchore/sbom-action@ab9d16d4b419c9d1a02df5213fa0ebe965ca5a57 # v0.16.0
+        with:
+          path: .
+          format: spdx-json
+          output-file: sbom.spdx.json
+      - name: Generate SBOM with Syft (CycloneDX)
+        uses: anchore/sbom-action@ab9d16d4b419c9d1a02df5213fa0ebe965ca5a57 # v0.16.0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+      - name: Upload SBOM artifacts
+        if: always()
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        with:
+          name: sbom-reports
+          path: |
+            sbom.spdx.json
+            sbom.cdx.json
+          if-no-files-found: ignore
