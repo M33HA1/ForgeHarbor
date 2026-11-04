@@ -1,23 +1,32 @@
 import React, { useState } from "react";
 // contexts/AuthContext.jsx is the correct path
 import { useAuth } from "../contexts/AuthContext"; 
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
     setError("");
     try {
       await login(email, password);
-      navigate("/");
+      const from = location.state?.from;
+      const destination = ["/app/dashboard", "/app/history", "/app/profile"].includes(from?.pathname)
+        ? from.pathname + (from.search || "") + (from.hash || "") : "/app/dashboard";
+      navigate(destination, { replace: true });
     } catch (err) {
       setError(err.message || "Failed to log in. Please check your credentials.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -25,11 +34,13 @@ const LoginPage = () => {
     <div className="max-w-md mx-auto">
       <div className="rounded-3xl p-10 shadow-2xl backdrop-blur-lg border bg-slate-800/40 border-slate-700/50">
         <h2 className="text-3xl font-bold text-center text-white mb-8">Login</h2>
-        {error && <p className="text-red-400 text-center mb-4">{error}</p>}
+        {error && <p role="alert" className="text-red-400 text-center mb-4">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="text-sm font-medium text-slate-300 mb-2 block">Email</label>
+            <label htmlFor="login-email" className="text-sm font-medium text-slate-300 mb-2 block">Email</label>
             <input
+              id="login-email"
+              autoComplete="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -39,8 +50,10 @@ const LoginPage = () => {
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-300 mb-2 block">Password</label>
+            <label htmlFor="login-password" className="text-sm font-medium text-slate-300 mb-2 block">Password</label>
             <input
+              id="login-password"
+              autoComplete="current-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -50,10 +63,11 @@ const LoginPage = () => {
             />
           </div>
           <button
+            disabled={submitting}
             type="submit"
             className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 transition-opacity"
           >
-            Login
+            {submitting ? 'Logging in...' : 'Login'}
           </button>
         </form>
         <p className="text-center text-slate-400 mt-6">

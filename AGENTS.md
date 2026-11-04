@@ -6,13 +6,14 @@ This file is the persistent source of truth for agents working in this repositor
 
 1. Read `docs/obsidian/00-Home.md`.
 2. Check `git status --short` and the current branch.
-3. Read the affected service note in `docs/obsidian/02-Services/`.
-4. Use the matching `forgeharbor-*` skill when the task fits.
-5. For any bug or failing command, use `systematic-debugging` before proposing a fix.
+3. Use `forgeharbor-context` to restore roadmap and working-tree context when continuing work.
+4. Read the affected service note in `docs/obsidian/02-Services/`.
+5. Use the matching `forgeharbor-*` skill when the task fits.
+6. For any bug or failing command, use `systematic-debugging` before proposing a fix.
 
 ## Project overview
 
-ForgeHarbor is a polyglot threat-detection platform. A React frontend talks to backend services through Traefik. The services use MongoDB, Redis, RabbitMQ, and MinIO, and call Gemini and VirusTotal.
+ForgeHarbor is a polyglot threat-detection platform. A React frontend talks to backend services through Traefik. The services use MongoDB, Redis, RabbitMQ, and RustFS (S3-compatible storage), and call Gemini and VirusTotal.
 
 The polyglot architecture is intentional. Each language must have a credible specialty; do not add a language just to increase the count.
 
@@ -20,15 +21,15 @@ The polyglot architecture is intentional. Each language must have a credible spe
 
 | Service | Language | Port | Public path | Status |
 |---|---|---:|---|---|
-| Auth | Rust | 8080 | `/auth` | Build broken |
+| Auth | Rust | 8080 | `/auth` | Build and health verified; security review remains |
 | Phishing | Rust | 8081 | `/phishing` | Unverified |
 | Malware | Rust | 8082 | `/malware` | Unverified |
-| History | TypeScript | 8083 | `/history` | Security defects |
-| Reports | Go | 8084 | `/reports` | Auth/routing defects |
-| Notify | Python | 8085 | `/notify` | Auth/queue defects |
-| Web | React + Vite | 3000 | `/` | Build broken |
+| History | TypeScript | 8083 | `/history` | RS256 auth/ownership enforced; risk filter and integration tests remain |
+| Reports | Go | 8084 | `/reports` | RS256 auth/ownership enforced; artifact flow unverified |
+| Notify | Python | 8085 | `/notify` | RS256 auth/ownership enforced; worker hardening remains |
+| Web | React + Vite | 3000 | `/` | Node 22 image builds; UI regression coverage remains |
 
-Infrastructure: Traefik on host port 8088 (dashboard 8000), MongoDB 27017, Redis 6379, RabbitMQ 5672/15672, MinIO 9000/9001.
+Infrastructure: Traefik on host port 8088 (dashboard 8000), MongoDB 27017, Redis 6379, RabbitMQ 5672/15672, RustFS S3 storage 9000/9001.
 
 ## Language boundaries
 
@@ -106,28 +107,28 @@ Use `docs/obsidian/10-Templates/Change.md` as the note template. Link the affect
 
 ## MCP
 
-The MCP layer is split by scope:
+Codex project MCP servers are configured in `.codex/config.toml`; Codex project settings load only for trusted projects. The previous OpenCode config is retained during migration.
 
-- Global: Context7, Playwright.
-- Project-local: GitHub, Obsidian, MongoDB.
+Project servers: Context7, Playwright, GitHub (read-only), Obsidian vault, scoped source filesystem, and MongoDB (read-only).
 
-Use the `forgeharbor-mcp` skill for setup, health checks, and key rotation. Never embed secrets in `.opencode/opencode.jsonc`; use environment variables.
+Use the `forgeharbor-mcp` skill for setup, health checks, and key rotation. Never embed secrets in `.codex/config.toml` or legacy `.opencode/opencode.jsonc`; use environment variables.
 
 ## Current blockers
 
-- Auth fails to compile with the current `mongodb` dependency.
-- Web Dockerfile uses Node 14; Vite 7 needs Node 20.19+ or 22.12+.
-- MinIO image pull fails.
-- Traefik cannot read the Docker provider.
-- Compose passes blank provider keys.
-- History, Reports, and Notify have auth and ownership defects.
-- The frontend misreads file-scan results and calls the wrong notification path.
+- Auth build is fixed; auth and ownership behavior still needs security review.
+- Local provider credentials must be verified and rotated before publication.
+- RustFS has been wired as the S3-compatible dev store; report artifact storage still needs end-to-end verification.
+- Centralized edge auth remains open; development ports are loopback-bound and production service ports should stay internal-only.
+- History's risk filter and the shared scan result schema still need alignment.
+- The frontend needs report/history state and auth-flow regression coverage.
+- Traefik Docker provider and gateway prefix contract are fixed and route-verified.
 
 Do not claim the stack is working while these are unresolved. Track progress in `docs/obsidian/06-Roadmap/Backlog.md`.
 
-## Useful skills
+## Project skills (`.agents/skills/`)
 
-- `forgeharbor-build` — build, run, test, clean.
+- `forgeharbor-dev` — implement or refactor service code consistently.
+- `forgeharbor-build` — build, run, and verify services.
 - `forgeharbor-debug` — triage failures with evidence.
 - `forgeharbor-architecture` — service map, data flow, routing.
 - `forgeharbor-change-tracker` — changelog, change note, dashboard.
@@ -137,3 +138,4 @@ Do not claim the stack is working while these are unresolved. Track progress in 
 - `forgeharbor-service-scaffold` — add a service consistently.
 - `forgeharbor-release` — release checklist.
 - `forgeharbor-mcp` — MCP configuration and health.
+- `forgeharbor-context` — restore roadmap, repository, and working-tree context across sessions.

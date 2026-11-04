@@ -29,7 +29,7 @@ Do not skip step 1. A fix based on a remembered error is a guess.
 |---|---|---|
 | Rust build fails with `E0391` async-drop cycle | Nightly toolchain | The Dockerfile must use `rust:1.90.0-bookworm`, not `rustlang/rust:nightly` |
 | Web build fails on `??=` | Node version | Check `apps/web/Dockerfile`; it must use Node 22 |
-| MinIO pull denied | Image reference/registry | `docker pull minio/minio:latest` |
+| RustFS image pull denied | Registry access or image digest | `docker pull ghcr.io/rustfs/rustfs:1.0.1-glibc` |
 | Traefik logs Docker provider error | Docker socket/API | `docker compose ... logs traefik` |
 | Gateway returns 404 for every route | Traefik provider | `Invoke-WebRequest http://localhost:8000/api/rawdata` |
 | A documented route returns 404 through the gateway | Route contract | `node scripts/check-routes.mjs`; compare the service route with [[API-Contracts]] |

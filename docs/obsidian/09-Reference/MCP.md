@@ -7,51 +7,43 @@ tags: [reference, mcp, tooling]
 
 # MCP
 
-ForgeHarbor uses a hybrid MCP layout: a small global set for tools that are useful in every project, and a project-local set for services that only make sense in this repository.
+ForgeHarbor now targets Codex. Project MCP servers live in `.codex/config.toml`; project skills already live in `.agents/skills/` and Codex discovers them there. The previous OpenCode config remains during the transition.
 
 ## Servers
 
 | Server | Scope | Transport | Purpose | Credential |
 |---|---|---|---|---|
-| Context7 | Global | Remote | Current library and framework documentation | None; optional `CONTEXT7_API_KEY` |
-| Playwright | Global | Local `npx` | Browser smoke tests, console/network capture, screenshots | None |
-| GitHub | Project | Remote, read-only | Repository metadata, issues, pull requests, Actions logs | OAuth through `/mcps` |
-| Obsidian | Project | Local REST API | Search, read, and update this vault | `OBSIDIAN_API_KEY` |
-| MongoDB | Project | Local `npx`, read-only | Inspect local `forgeharbor` data | `MDB_MCP_CONNECTION_STRING` |
+| Context7 | Codex project | Remote HTTP | Current library and framework documentation | Optional Context7 authentication |
+| Playwright | Codex project | Local `npx` | Browser automation for frontend smoke checks | None |
+| GitHub | Codex project | Remote HTTP, read-only endpoint | Repository metadata, issues, pull requests, Actions logs | Codex OAuth login |
+| Obsidian | Codex project | Local filesystem | Search, read, and update this vault | None |
+| MongoDB | Codex project | Local stdio, read-only | Inspect local `forgeharbor` data | `MDB_MCP_CONNECTION_STRING` |
+| Source | Codex project | Local filesystem | Read and edit code under `apps/`, `deploy/`, `scripts/`, and `pkg/` | None |
 
 ## Configuration files
 
 | Scope | Path | Contents |
 |---|---|---|
-| Global | `C:\Users\Meehal\.config\opencode\opencode.json` | Context7, Playwright, and the `superpowers` plugin |
-| Project | `.opencode/opencode.jsonc` | GitHub, Obsidian, MongoDB |
+| User | `C:\Users\Meehal\.codex\config.toml` | User-level Codex settings |
+| Project | `.codex/config.toml` | Context7, Playwright, GitHub, Obsidian, source filesystem, MongoDB |
+| Legacy | `.opencode/opencode.jsonc` | Previous OpenCode MCP config; retain during migration |
 
-Both files use the V2 shape `mcp.servers`. A project server with the same name replaces the global object entirely, so keep server names unique.
+Codex reads project configuration only for trusted projects. It shares MCP configuration across Codex CLI, IDE extension, and desktop app. See the [official Codex MCP guide](https://learn.chatgpt.com/docs/extend/mcp?surface=cli).
 
-Secrets are never written into either file. The config uses `{env:NAME}` substitution:
+Secrets are never written into either file. Codex forwards the MongoDB URI from the local environment using `env_vars`:
 
-```jsonc
-{
-  "mcp": {
-    "servers": {
-      "obsidian": {
-        "type": "remote",
-        "url": "http://127.0.0.1:27123/mcp/",
-        "oauth": false,
-        "headers": {
-          "Authorization": "Bearer {env:OBSIDIAN_API_KEY}"
-        }
-      }
-    }
-  }
-}
+```toml
+[mcp_servers.mongodb]
+command = "mongodb-mcp-server"
+args = ["--readOnly"]
+env_vars = ["MDB_MCP_CONNECTION_STRING"]
 ```
 
 ## Setup
 
 ### Context7 and Playwright
 
-Both are configured globally. Context7 works without a key; add `CONTEXT7_API_KEY` only if the public endpoint rate-limits you. Install the Playwright browser once:
+Both are configured in the project Codex config. Context7 uses its remote endpoint; browser setup may be needed the first time Playwright runs. Playwright MCP requires Node 20 or newer; the project pins Node 22.
 
 ```powershell
 npx playwright install chromium
@@ -66,31 +58,20 @@ https://api.githubcopilot.com/mcp/readonly
 X-MCP-Toolsets: repos,issues,pull_requests,actions
 ```
 
-Authenticate from the OpenCode interface:
+Authenticate with Codex after opening this repository as a trusted project:
 
-1. Run `/mcps`.
-2. Select `github`.
-3. Complete the browser sign-in.
+1. Run `codex mcp login github` from a terminal, or open `/mcp` in the Codex TUI.
+2. Complete the GitHub OAuth sign-in if prompted.
 
-Do not run `opencode mcp auth github` through an automated shell; the authorization link can be hidden in background output.
+Keep the configured endpoint read-only and retain its limited toolset header.
 
 ### Obsidian
 
-Obsidian must be installed and running with a local REST/MCP plugin that exposes port `27123`.
+Both filesystem servers use the official `@modelcontextprotocol/server-filesystem` package pinned at `2.1.0` and a Node 24 runtime fetched through `npx`. On Windows, `cmd.exe /c` launches `npx` to avoid PowerShell script-policy issues. This keeps the MCP runtime compatible without changing the app toolchain pinned in `.tool-versions`.
 
-1. Install Obsidian.
-2. Open `docs/obsidian/` as a vault.
-3. Install and enable the local REST API with MCP plugin.
-4. Enable the HTTP server on `127.0.0.1:27123`.
-5. Copy the plugin API key into the user environment:
+The `obsidian` server is scoped to `docs/obsidian/`. The `source` server is scoped to `apps/`, `deploy/`, `scripts/`, and `pkg/`. Keep those allowlists narrow; never add `config/` or the repository root. The source server can write within its allowed directories, so review changes with the normal diff workflow.
 
-   ```powershell
-   [Environment]::SetEnvironmentVariable('OBSIDIAN_API_KEY', '<key>', 'User')
-   ```
-
-6. Reload OpenCode and check `/mcps`.
-
-The vault is plain Markdown. If the MCP server is unavailable, edit files directly with the normal file tools; do not block documentation work on Obsidian.
+The vault is plain Markdown. If either server is unavailable, use the normal project file tools; do not block documentation or code work on MCP.
 
 ### MongoDB
 
@@ -102,42 +83,51 @@ The local Compose database listens on `localhost:27017`. Set the connection stri
 
 The server runs with `--readOnly`, which disables create, update, and delete tools. Do not remove that flag for routine debugging.
 
+### Source filesystem
+
+The `source` server is scoped to `apps/`, `deploy/`, `scripts/`, and `pkg/` so coding tools can inspect and edit implementation files without exposing root `config/`. Keep its allowed directories narrow and do not add `config/` or the repository root. The existing `obsidian` server remains scoped to `docs/obsidian/`.
+
 ## Health checks
 
 ```powershell
-opencode mcp list
+codex mcp list
 Test-NetConnection 127.0.0.1 -Port 27017
-Test-NetConnection 127.0.0.1 -Port 27123
 ```
+
+In the Codex TUI, `/mcp` shows active servers.
 
 Expected states:
 
 | Server | Expected when ready |
 |---|---|
-| context7 | connected |
-| playwright | connected |
+| context7 | connected when the project is trusted and outbound access is available |
+| playwright | connected when `npx` can resolve its package |
 | github | connected after OAuth |
-| obsidian | connected when Obsidian and the plugin are running |
+| obsidian | connected when its local filesystem server can start |
 | mongodb | connected when MongoDB and the connection string are available |
+| source | connected when its local filesystem server can start |
 
 A configured server that is not connected is not a working tool. Report the actual state, not the intended state.
+
+### Last checked (2026-11-02)
+
+`codex mcp list` loaded the project configuration. Context7 and GitHub were enabled but not logged in. Playwright, Obsidian, MongoDB, and source were enabled; the CLI displayed `Unsupported` in their Auth column, so verify their live transport state in `/mcp` in the trusted Codex project before relying on them.
 
 ## Troubleshooting
 
 | Symptom | Check |
 |---|---|
-| Obsidian connection refused | Obsidian running; plugin enabled; HTTP server on `127.0.0.1:27123` |
-| Obsidian returns 401 | `OBSIDIAN_API_KEY` matches the plugin key and is visible to OpenCode |
+| Filesystem server exits on startup | Node 24 available through `npx`; package install/network access works |
 | MongoDB cannot connect | `MDB_MCP_CONNECTION_STRING`; `fh-mongo` running; port 27017 |
-| GitHub needs authentication | `/mcps` → `github` → sign in |
+| GitHub needs authentication | Run `codex mcp login github` or use `/mcp` in the Codex TUI |
 | Playwright cannot launch | `npx playwright install chromium`; Node 22 |
-| Server configured but absent | Run `opencode mcp list` from the repository root |
-| Project server does not override global | Names must match exactly; the whole server object is replaced |
+| Server configured but absent | Trust the project, then run `codex mcp list` or `/mcp` |
+| Local server fails to start | Check the configured command, required runtime, and package access |
 
 ## Secret rules
 
 - Never put a token, key, or connection string with credentials in either config file.
-- Use `{env:NAME}` and set the value in the user environment or a password manager.
+- Use `env_vars` to forward names from the user environment; never copy the values into the Codex config or a password manager export.
 - Keep MongoDB read-only unless a task explicitly requires a write.
 - Keep GitHub on the read-only endpoint with a limited toolset.
 - Rotate any credential that appears in a note, log, issue, or chat transcript.
@@ -147,11 +137,8 @@ A configured server that is not connected is not a working tool. Report the actu
 
 | Server | State as of 2026-11-02 |
 |---|---|
-| Context7 | Configured globally |
-| Playwright | Configured globally; browser install may be needed |
-| GitHub | Configured; awaiting OAuth |
-| Obsidian | Configured; Obsidian is not installed yet |
-| MongoDB | Configured; awaiting `MDB_MCP_CONNECTION_STRING` |
+| Codex project MCPs | Configured in `.codex/config.toml`; live connection check pending in a trusted Codex project |
+| Legacy OpenCode | Previously verified: Context7, Playwright, Obsidian, source, and MongoDB connected; GitHub needed authentication |
 
 See [[Environment]] for application environment variables and [[Debug]] for the general evidence workflow.
 

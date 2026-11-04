@@ -8,7 +8,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/streadway/amqp"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -17,7 +16,6 @@ import (
 
 var (
 	mongoClient *mongo.Client
-	rabbitConn  *amqp.Connection
 )
 
 func main() {
@@ -38,17 +36,10 @@ func main() {
 	}
 	log.Println("Connected to MongoDB")
 
-	//RabbitMQ connection
-	rabbitURL := os.Getenv("RABBITMQ_URL")
-	rabbitConn, err = amqp.Dial(rabbitURL)
-	if err != nil {
-		log.Fatal("RabbitMQ connect error:", err)
-	}
-	log.Println("Connected to RabbitMQ")
-
 	//gin router
 	r := gin.Default()
-	routes.RegisterReportRoutes(r, mongoClient, rabbitConn)
+	routes.RegisterReportRoutes(r, mongoClient)
+	go routes.RunNotificationRelay(context.Background(), mongoClient, os.Getenv("RABBITMQ_URL"))
 
 	port := os.Getenv("REPORT_PORT")
 	if port == "" {

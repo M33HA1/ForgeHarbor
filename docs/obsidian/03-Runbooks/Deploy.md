@@ -1,7 +1,7 @@
 ---
 type: runbook
 status: draft
-updated: 2026-11-02
+updated: 2026-11-03
 tags: [runbook, deploy]
 ---
 
@@ -24,6 +24,7 @@ Use this runbook for a local demo or when preparing a production-like deployment
 - [ ] `docker compose config --quiet` passes.
 - [ ] Every service health endpoint returns success.
 - [ ] Auth signup, login, and `/me` work through the gateway.
+- [ ] Auth can reach `https://api.pwnedpasswords.com`; known compromised passwords are rejected and checker outages return retryable 503.
 - [ ] History is scoped to the authenticated user.
 - [ ] Reports require authentication and enforce ownership.
 - [ ] Notifications require authentication and enforce ownership.
@@ -60,6 +61,7 @@ Open `http://localhost:8088` and run the critical path:
 | No observability | Slow diagnosis | Add OpenTelemetry and structured logs |
 | No migrations | Schema drift | Add versioned database migrations |
 | No infrastructure-as-code | Manual drift | Add Terraform or Kubernetes manifests |
+| Auth password-screening egress is not configured | Signup fails closed if the external range service is unavailable | Allow outbound HTTPS to `api.pwnedpasswords.com` and monitor the dependency |
 
 ## Release note
 

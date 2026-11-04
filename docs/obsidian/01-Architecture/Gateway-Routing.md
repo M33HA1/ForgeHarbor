@@ -1,7 +1,7 @@
 ---
 type: architecture
 status: active
-updated: 2026-11-02
+updated: 2026-11-03
 tags: [forgeharbor, architecture, traefik, routing]
 ---
 
@@ -11,7 +11,7 @@ tags: [forgeharbor, architecture, traefik, routing]
 
 | URL | Target | Notes |
 |---|---|---|
-| `http://localhost:8088` | Traefik HTTP entrypoint | This is the real gateway port; the README currently says port 80 |
+| `http://localhost:8088` | Traefik HTTP entrypoint | Development gateway |
 | `http://localhost:8000` | Traefik dashboard | Insecure dashboard enabled in development |
 | `http://localhost:3000` | Web container directly | Useful for frontend debugging |
 | `http://localhost:8081` | Phishing directly | Bypasses the gateway |
@@ -22,13 +22,21 @@ tags: [forgeharbor, architecture, traefik, routing]
 
 | Path prefix | Router | Service port | Strip prefix | Priority |
 |---|---|---:|---|---:|
-| `/auth` | `fh-auth` | 8080 | `/auth` | 100 |
-| `/phishing` | `fh-phishing` | 8081 | `/phishing` | 100 |
-| `/malware` | `fh-malware` | 8082 | `/malware` | 100 |
-| `/history` | `fh-history` | 8083 | `/history` | 100 |
-| `/reports` | `fh-report` | 8084 | `/reports` | 100 |
-| `/notify` | `fh-notify` | 8085 | `/notify` | 100 |
+| `/auth` | `fh-auth` | 8080 | None | 100 |
+| `/phishing` | `fh-phishing` | 8081 | None | 100 |
+| `/malware` | `fh-malware` | 8082 | None | 100 |
+| `/history` | `fh-history` | 8083 | None | 100 |
+| `/reports` | `fh-report` | 8084 | None | 100 |
+| `/notify` | `fh-notify` | 8085 | None | 100 |
 | `/` | `fh-web` | 3000 | None | 1 |
+
+## Shared authentication
+
+Canonical protected browser pages are under `/app/...`; these return the React shell through the Web router. Data APIs keep their existing prefixes. Direct `/history` is an API request, while `/app/history` supports browser navigation and refresh. See [[ADR-0008-web-route-namespace]].
+
+Five protected service routers attach `fh-jwt@file`, which uses ForwardAuth against the internal Auth `/auth/me` endpoint and forwards the HttpOnly session cookie as well as Bearer credentials. Exact GET health routes and OPTIONS preflights have separate public routers at priority 110. Auth and Web public routes remain at their existing priorities. Service JWT verification and ownership remain active. See [[ADR-0005-shared-edge-auth]] and [[2026-11-03-shared-edge-auth]].
+
+Auth login throttling uses the TCP peer address by default. The dev Traefik/Auth pair shares the dedicated fixed-address `forgeharbor-auth-edge` network, and Auth trusts only its configured `AUTH_TRUSTED_PROXY_IPS`; the integration profile adds a loopback-only forwarding proxy to exercise this boundary. Production must supply its real, exact proxy peer addresses and keep Auth private.
 
 ## Routing flow
 
@@ -62,7 +70,7 @@ Health routes follow the same rule: `/auth/health`, `/phishing/health`, `/malwar
 ## Remaining defects
 
 1. **(Resolved) Traefik Docker provider.** `traefik:v2.10` and `v3.5` could not talk to Docker Engine 29 (API 1.41 minimum). Upgraded to `traefik:v3.7`, which loads all six service routers.
-2. **README drift.** The README says the app is at `http://localhost` and Traefik is at `:8080`; the Compose file maps the gateway to `8088` and the dashboard to `8000`.
+2. **Production boundary pending.** The shared edge gate is deployed in development; production TLS, upstream proxy trust, and internal-only service ports remain open. The Auth outage drill verified HTTP 500 rejection and recovery; see [[2026-11-03-edge-auth-outage-and-recovery]].
 3. **Direct-port bypass.** Every service is published on the host, so clients can skip the gateway and its routing rules. This is acceptable for local debugging but not for a production-like setup.
 4. **The contract test skips when the gateway is down.** `scripts/check-routes.mjs` exits 0 with a skip message if `http://localhost:8088` is unreachable, so a broken gateway is not a test failure. Run `.\scripts\dev.ps1 health` to assert that the gateway is up.
 

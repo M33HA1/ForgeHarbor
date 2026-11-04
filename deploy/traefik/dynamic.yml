@@ -1,0 +1,12 @@
+# Keep the edge gate registered even when the Auth container is unavailable.
+http:
+  middlewares:
+    fh-jwt:
+      forwardAuth:
+        address: http://fh-auth:8080/auth/me
+        authRequestHeaders:
+          - Authorization
+          - Cookie
+          - Origin
+        trustForwardHeader: false
+        forwardBody: false

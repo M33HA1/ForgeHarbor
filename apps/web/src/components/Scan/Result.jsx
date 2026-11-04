@@ -99,9 +99,13 @@ const Result = ({ result }) => {
                 </div>
                 <div className="text-center p-3 rounded-lg bg-slate-700/30">
                   <div className="text-lg font-bold text-white">
-                    {data.confidence_score || 85}%
+                    {result.type === 'file'
+                      ? `${data.vendor_positives}/${data.total_vendors}`
+                      : `${data.confidence_score ?? 'N/A'}${data.confidence_score == null ? '' : '%'}`}
                   </div>
-                  <div className="text-xs text-slate-400">Confidence</div>
+                  <div className="text-xs text-slate-400">
+                    {result.type === 'file' ? 'Vendors flagged' : 'Confidence'}
+                  </div>
                 </div>
               </div>
             </div>
@@ -155,6 +159,12 @@ const Result = ({ result }) => {
                 )}
               </div>
             </div>
+          )}
+
+          {data.report_url && (
+            <a href={data.report_url} target="_blank" rel="noreferrer" className="text-cyan-400 hover:underline">
+              View VirusTotal report
+            </a>
           )}
         </div>
       </div>

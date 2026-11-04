@@ -1,11 +1,33 @@
 ---
 type: runbook
 status: active
-updated: 2026-11-02
+updated: 2026-11-03
 tags: [runbook, test]
 ---
 
 # Test
+
+CI entry points: `bash scripts/ci/integration.sh` requires a running local stack and executes health, tooling, route/CORS, edge/scanner auth, Auth, History, Reports, and Notify integration checks. It starts the loopback-only Auth test proxy using the `integration` Compose profile and stops it on exit. Set `PYTHON` to an absolute interpreter path when using a virtual environment. `node scripts/ci/browser.mjs` runs both existing browser suites headlessly; install Playwright separately and set `PLAYWRIGHT_MODULE` to its absolute `index.mjs` path if it is outside the repository. Install Playwright Chromium, or use `PLAYWRIGHT_CHANNEL=chrome` / `msedge` for an existing local browser; CI uses its installed Chromium. The CLI cleans its disposable live fixtures in `finally`. See [[2026-11-03-ci-matrix-and-strict-integration]].
+
+`.github/workflows/ci.yml` adds a seven-service build/test matrix, provider-disabled ephemeral Compose environment, strict integration/browser job, and a separate HIGH/CRITICAL vulnerability/secret/configuration gate. All Actions references use immutable commit hashes. The first hosted workflow result and required-check setup are pending. CI reports finding IDs/counts without secret matches or source snippets. Only the ephemeral hosted workflow removes its volumes; the reusable local scripts preserve stack data.
+
+Offline route/CORS checks retain their local skip behavior. Set `FH_REQUIRE_RUNNING=1` (or `CI=true`) to make unreachable services fail; the integration runner always enables this requirement.
+
+Live local browser service journey: follow [[2026-11-03-live-browser-service-journey]] for `web-live-fixture.py` init, render-create, seed, render-verify, and cleanup actions. Pass rendered code to Playwright MCP. Always invoke cleanup in the orchestrator finally block, retaining the run ID for scoped recovery. This uses real disposable Auth accounts and seeded scans, not provider calls.
+
+Web browser regression: with the stack running, invoke Playwright MCP `browser_run_code_unsafe` with `filename: scripts/check-web-ui.js`. The script creates/closes an isolated context, loads built pages through the gateway, intercepts API data/mutations, and checks seven scenarios. Generated screenshots/downloads are ignored under `.playwright-mcp/`. API/provider browser integration remains separate. See [[2026-11-03-web-flow-regression-and-route-fixes]].
+
+Report outbox recovery: `python scripts/check-report-integrity.py` creates disposable owned scans/reports, verifies confirmation markers, replays an already-delivered pending record to exercise the confirmation/marker crash window, and checks notification idempotency plus cleanup. It does not stop infrastructure. See [[ADR-0007-report-notification-outbox]].
+
+Notification delivery: from `apps/notify-py`, run `python -m unittest test_worker.py` then `python scripts/check-delivery.py`. The integration check uses unique local queues and scoped Mongo fixtures and removes them after the run; it never purges the application queue. See [[ADR-0006-report-notification-events]].
+
+Report evidence integrity: `python scripts/check-report-integrity.py` uses local MongoDB and development RustFS credentials, creates disposable scan/report fixtures, checks downloaded evidence and owner boundaries, observes notifications, and removes test objects/records. See [[2026-11-03-trusted-scan-reports]].
+
+Auth credential boundaries: `python scripts/check-auth-inputs.py` verifies signup email/password limits, Unicode length accounting, the 8 KiB JSON cap, redacted body errors, Argon2id storage, and short-password login compatibility using disposable accounts and scoped rate keys. The image build runs `cargo test --release --locked` before compiling its Auth binary. See [[2026-11-03-auth-credential-boundaries-and-password-capacity]].
+
+Local outage drill: `powershell -ExecutionPolicy Bypass -File scripts/check-edge-auth-outage.ps1`. This intentionally stops only local Auth, asserts protected HTTP failures and public health, then restores Auth in `finally` and verifies recovery. It requires local Docker engine access, a running Auth service, and the default local URLs. Do not interrupt it while Auth is stopped. Evidence: [[2026-11-03-edge-auth-outage-and-recovery]].
+
+Shared edge authentication (running stack and Traefik API required): `node scripts/check-edge-auth.mjs`. This strict check covers loaded router attachments and token/health/preflight boundaries. See [[ADR-0005-shared-edge-auth]].
 
 ## When to use
 
@@ -16,10 +38,10 @@ Use this runbook before claiming a change works, before a release, or when addin
 | Layer | Purpose | Current state |
 |---|---|---|
 | Unit | Pure functions and handlers | Missing in most services |
-| Integration | Service with MongoDB/Redis/RabbitMQ | Partial manual testing only |
+| Integration | Service with MongoDB/Redis/RabbitMQ | Automated disposable Auth/History/Reports/Notify fixtures; first hosted run pending |
 | Contract | Frontend and service request/response shapes | Missing |
-| Smoke | Health and critical user path | Manual only |
-| Security | Auth bypass, IDOR, secrets | Manual findings in [[Security-Review]] |
+| Smoke | Health and critical user path | Automated health/routes and mocked/live local browser suites; provider paths pending |
+| Security | Auth bypass, IDOR, secrets | Automated auth/owner checks plus CI scanner gate; hosted scan result pending; findings in [[Security-Review]] |
 
 ## Commands
 
@@ -37,6 +59,14 @@ Push-Location apps/history-ts
 npm run build
 Pop-Location
 
+# History risk filter (requires the local Compose stack and Auth key pair)
+Push-Location apps/history-ts
+npm run test:integration
+Pop-Location
+
+# Notify ownership check (requires local Compose stack and Auth key pair)
+python apps/notify-py/scripts/check-ownership.py
+
 # Reports
 Push-Location apps/report-go
 go test ./...
@@ -51,7 +81,18 @@ Pop-Location
 Push-Location apps/auth-rs
 cargo test
 Pop-Location
+Push-Location apps/phishing-rs
+cargo test
+Pop-Location
+Push-Location apps/malware-rs
+cargo test
+Pop-Location
+
+# Exact-origin CORS contract (part of dev.ps1 test)
+node scripts/check-cors.mjs
 ```
+
+The History integration check uses a unique synthetic subject and tagged MongoDB fixtures; it removes those fixtures after the run. It does not call Gemini or VirusTotal.
 
 ## Smoke tests
 
@@ -75,6 +116,7 @@ Pop-Location
 
 # Every documented route through the gateway
 node scripts/check-routes.mjs
+node scripts/check-cors.mjs
 ```
 
 ## Security regression tests

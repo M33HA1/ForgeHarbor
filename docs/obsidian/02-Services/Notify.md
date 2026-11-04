@@ -1,13 +1,15 @@
 ---
 type: service
-status: auth-and-queue-defects
-priority: P0
+status: protected
+priority: P1
 language: python
-updated: 2026-11-02
+updated: 2026-11-03
 tags: [service/notify, status/p0, area/security, language/python]
 ---
 
 # Notify
+
+Protected gateway requests use the shared Auth ForwardAuth gate; service JWT and ownership checks remain active. Exact GET health paths and CORS preflights remain public. See [[ADR-0005-shared-edge-auth]] and [[2026-11-03-shared-edge-auth]].
 
 ## Responsibility
 
@@ -22,14 +24,14 @@ Consumes RabbitMQ messages, stores notifications in MongoDB, and exposes a read 
 | Public route | `/notify` through Traefik |
 | Data store | MongoDB (`forgeharbor.notifications`) |
 | Message broker | RabbitMQ, queue `notifications` |
-| Auth | None in the current code |
+| Auth | Required RS256 JWT; Auth public key mounted read-only |
 
 ## Endpoints
 
 | Method | Path | Auth | Ownership | Notes |
 |---|---|---|---|---|
-| GET | `/notify/health` | None | N/A | Returns service status |
-| GET | `/notify` | None | None | Returns every notification in the database |
+| GET | `/notify/health` | None | N/A | 200 only when MongoDB responds and the consumer is connected; otherwise 503 |
+| GET | `/notify` | Required | Filtered by JWT `sub` | Returns at most 100 notifications |
 
 The frontend calls `/notify`, and the service now registers `/notify`; the gateway does not rewrite the path (D1=B). See [[ADR-0004-gateway-prefix-contract]].
 
@@ -42,26 +44,35 @@ The frontend calls `/notify`, and the service now registers `/notify`; the gatew
 | `RABBITMQ_URL` | Yes | RabbitMQ connection string |
 | `NOTIFY_QUEUE` | No | Defaults to `notifications` |
 | `NOTIFY_PORT` | No | Defaults to 8085 |
+| `JWT_PUBLIC_KEY_PATH` | No | Defaults to `/app/config/jwt-public.pem` |
+| `JWT_ISSUER` | No | Defaults to `forgeharbor` |
+| `JWT_AUDIENCE` | No | Defaults to `forgeharbor-users` |
 
 ## Build and test
 
 ```powershell
 Push-Location apps/notify-py
 python -m compileall .
+python -m unittest test_worker.py
+python scripts/check-delivery.py
+python scripts/check-ownership.py
 Pop-Location
 ```
+
+The integration check signs disposable RS256 tokens, inserts uniquely tagged records for two synthetic owners, verifies the gateway returns only the caller's record, and removes the fixtures.
 
 ## Known issues
 
 | Severity | Issue | Impact |
 |---|---|---|
-| P0 | No authentication and no user filter | Every caller can read every notification |
-| P0 | Queue name mismatch: Reports publishes to `report_events`, Notify consumes `notifications` | Report notifications are never processed |
-| P1 | Notification `user` field is stored as a raw value and never scoped to a caller | Cannot enforce ownership |
-| P1 | The error path returns a tuple, which FastAPI serializes as an array instead of a 500 response | Clients receive a malformed body |
-| P1 | The consumer has no reconnect or backoff after a broker restart | The worker stops silently |
-| P1 | No dead-letter queue or retry policy | Failed messages are lost or stuck |
-| P2 | `pyyaml==5.3.1` is pinned despite being old | Dependency risk; remove if unused |
+| P1 | Existing records without a matching `user` subject are not visible to callers | Legacy data may need a controlled ownership backfill |
+| P1 | Live broker restart and reconnect still need an operational drill | Reconnect/backoff is implemented and unit-tested; broker failure evidence is still needed |
+| P1 | Classic retry redrive and unverified broker-failure behavior still limit end-to-end durability | Consumer confirms, three bounded retries, and dead storage are implemented; Reports outbox is implemented; quorum redrive policy remains |
+| P1 | Dead-message retention, monitoring, and reviewed replay are not configured | Operations need a safe recovery workflow |
+
+## Delivery behavior
+
+See [[ADR-0006-report-notification-events]] for the event contract, legacy compatibility, insert-only idempotency, five-second retries (three retries maximum), and confirmed dead-letter handoff. The original queue is unchanged; new durable `.retry` and `.dead` queues preserve failed messages. See [[2026-11-03-notification-delivery-hardening]].
 
 ## Related notes
 

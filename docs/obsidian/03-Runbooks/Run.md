@@ -1,7 +1,7 @@
 ---
 type: runbook
 status: active
-updated: 2026-11-02
+updated: 2026-11-03
 tags: [runbook, run]
 ---
 
@@ -42,9 +42,9 @@ docker compose -f deploy/compose/docker-compose.dev.yml up -d --build
 | `http://localhost:8084` | Reports direct |
 | `http://localhost:8085` | Notify direct |
 | `http://localhost:15672` | RabbitMQ management, `guest` / `guest` |
-| `http://localhost:9001` | MinIO console |
+| `http://localhost:9001` | RustFS console |
 
-The README currently says port 80 and 8080 for the gateway; those values are stale. Use 8088 and 8000.
+The README documents the same gateway and dashboard ports. Use `http://localhost:8088` as the application entrypoint.
 
 ## Status
 
@@ -81,14 +81,9 @@ This stops containers but keeps named volumes. To remove volumes as well, use th
 docker compose -f deploy/compose/docker-compose.dev.yml down -v
 ```
 
-## Current expected state
+## Last recorded verification (2026-11-02)
 
-As of 2026-11-02:
-
-- `fh-mongo`, `fh-redis`, `fh-rabbit`, `fh-history`, `fh-notify`, and `traefik` are up.
-- `fh-auth`, `fh-web`, and `fh-report` are not healthy.
-- The gateway has no working routes because Traefik cannot read the Docker provider.
-- Do not describe the stack as "running" until all seven services and the gateway pass health checks.
+The change record [[2026-11-02-phase-0-core-security]] reports all eight health probes and 20 gateway route/auth probes passing. The report artifact E2E is recorded in [[2026-11-02-report-download-e2e]]. This is historical evidence; check the live stack with `dev.ps1 health` before relying on its current state.
 
 ## Related notes
 

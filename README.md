@@ -1,181 +1,125 @@
-# ⚓ ForgeHarbor: Advanced Threat Detection Platform
+# ForgeHarbor
 
-ForgeHarbor is a sophisticated, microservice-based application designed to provide robust security analysis of files and URLs. Built with a modern, polyglot technology stack, it leverages the strengths of Rust, Go, Python, and TypeScript to deliver a fast, reliable, and scalable threat detection solution.
+ForgeHarbor is a local threat-detection platform with a React web client and Rust, Go, TypeScript, and Python services. Traefik routes browser and API traffic. The development stack uses MongoDB, Redis, RabbitMQ, and RustFS for S3-compatible report storage.
 
-## ✨ Features
+## Current capabilities
 
-- **Secure User Authentication**: JWT-based user registration and login system
-- **Phishing URL Detection**: Real-time analysis of URLs for phishing threats using Google's Gemini API
-- **Malware File Scanning**: Upload and scan files for malware and viruses using the VirusTotal API
-- **Comprehensive Scan History**: Access a detailed history of all past analysis requests
-- **Downloadable Reports**: Generate and download detailed JSON reports for each scan
-- **Real-time Notifications**: Asynchronous notifications on scan completion via a message queue
-- **Service Health Monitoring**: A dedicated dashboard to monitor the status of all backend services
+- User signup and login with RS256 JWTs.
+- URL analysis through the Phishing service and Gemini.
+- File analysis through the Malware service and VirusTotal.
+- Owner-scoped scan history, report metadata/downloads, and notifications.
+- A browser client served through the Traefik gateway.
 
-## 🏗️ Architecture
+Scans currently run synchronously. The project roadmap tracks asynchronous orchestration, a shared scan schema, edge authentication, and broader regression coverage as open work. See the [architecture review](docs/obsidian/01-Architecture/Architecture-Review.md) and [backlog](docs/obsidian/06-Roadmap/Backlog.md).
 
-ForgeHarbor utilizes a distributed microservices architecture. Each service is independently deployable and responsible for a distinct business capability. Services are containerized with Docker and orchestrated via Docker Compose. All external traffic is routed through a Traefik API Gateway, which handles load balancing, path-based routing, and service discovery.
+## Architecture
 
-```
-+----------------+      +----------------+      +---------------------+
-|   Web Client   |----->| Traefik Gateway|----->| Backend Services    |
-| (React/Vite)   |      | (Port 80)      |      | (Rust, Go, TS, Py)  |
-+----------------+      +----------------+      +----------+----------+
-                                                           |
-               +----------------+   +----------------+   +-----------+
-               |   MongoDB      |<--|   RabbitMQ     |<--|   Redis   |
-               | (Data Store)   |   | (Message Bus)  |   | (Cache)   |
-               +----------------+   +----------------+   +-----------+
-```
-
-## 🚀 Technology Stack
-
-| Component | Technology |
-|-----------|------------|
-| Frontend | React.js, Vite, Tailwind CSS, lucide-react |
-| Backend Services | Rust (Actix Web), TypeScript (Fastify), Go (Gin), Python (FastAPI) |
-| API Gateway | Traefik |
-| Databases | MongoDB (Primary Data), Redis (Caching/Sessions) |
-| Message Broker | RabbitMQ (for asynchronous notifications) |
-| Object Storage | Minio (for storing generated reports) |
-| Containerization | Docker, Docker Compose |
-
-## 🏁 Getting Started
-
-Follow these instructions to get the ForgeHarbor platform running locally for development.
-
-### Prerequisites
-
-- Docker & Docker Compose
-- Git for cloning the repository
-
-### Installation & Setup
-
-#### 1. Clone the Repository
-
-```bash
-git clone https://github.com/m33ha1/forgeharbor.git
-cd forgeharbor
+```mermaid
+flowchart LR
+    Browser[Web client] --> Gateway[Traefik :8088]
+    Gateway --> Auth[Auth - Rust]
+    Gateway --> Phishing[Phishing - Rust]
+    Gateway --> Malware[Malware - Rust]
+    Gateway --> History[History - TypeScript]
+    Gateway --> Reports[Reports - Go]
+    Gateway --> Notify[Notify - Python]
+    History --> Mongo[(MongoDB)]
+    Reports --> Mongo
+    Reports --> RustFS[(RustFS)]
+    Reports --> Queue[(RabbitMQ)]
+    Queue --> Notify
 ```
 
-#### 2. Create Configuration File
+The development Compose file binds published ports to loopback. Service and infrastructure ports are for local debugging; production deployments should keep them internal and apply an edge authentication policy.
 
-Create a file named `.env` inside the `apps/config/` directory. Paste the following content into it, replacing the placeholder API keys with your actual credentials.
+## Prerequisites
 
-```bash
-# apps/config/.env
+- Docker Desktop with Docker Compose v2
+- Git
+- Node.js 22 for local JWT key setup
+- Gemini and VirusTotal API credentials for live scans
 
-# API Keys (Replace with your actual keys)
-GEMINI_API_KEY=YOUR_GEMINI_API_KEY
-VIRUSTOTAL_API_KEY=YOUR_VIRUSTOTAL_API_KEY
+## Local setup
 
-# Database
-MONGO_URI=mongodb://root:password123@fh-mongo:27017/forgeharbor?authSource=admin
-REDIS_URL=redis://fh-redis:6379
+1. Clone the repository and enter its directory.
 
-# Object Storage
-S3_ENDPOINT=http://fh-minio:9000
-S3_ACCESS_KEY=minioadmin
-S3_SECRET_KEY=minioadmin
-S3_BUCKET=reports
-MINIO_ENDPOINT=fh-minio:9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
+   ```powershell
+   git clone https://github.com/m33ha1/forgeharbor.git
+   cd forgeharbor
+   ```
 
-# Message Queue
-RABBITMQ_URL=amqp://guest:guest@fh-rabbit:5672/
+2. Create the local environment file and replace provider placeholders in `config/.env`. Set storage credentials to match the RustFS configuration in the development Compose file. Do not commit this file.
 
-# JWT
-JWT_SECRET=your-super-secret-jwt-key-here-must-be-at-least-32-characters-long
-JWT_ISSUER=forgeharbor
-JWT_AUDIENCE=forgeharbor-users
+   ```powershell
+   Copy-Item config/.env.example config/.env
+   ```
 
-# Service ports
-AUTH_PORT=8080
-PHISHING_PORT=8081
-MALWARE_PORT=8082
-HISTORY_PORT=8083
-REPORT_PORT=8084
-NOTIFY_PORT=8085
-SERVICE_PORT=8080
+3. Generate the Auth RSA key pair and copy its public key to the Rust services that verify tokens. The setup command refuses to replace existing keys and checks that all copies match.
 
-# Logging
-RUST_LOG=debug
-NODE_ENV=development
+   ```powershell
+   node scripts/setup-jwt-keys.mjs
+   ```
+
+   Keep the private key and `config/.env` local. Reports, History, and Notify mount the Auth public key from Compose.
+
+4. Build and start the stack.
+
+   ```powershell
+   .\scripts\dev.ps1 build
+   .\scripts\dev.ps1 up
+   .\scripts\dev.ps1 health
+   ```
+
+To start with a rebuild, run `docker compose -f deploy/compose/docker-compose.dev.yml up -d --build`.
+
+## Local URLs
+
+Open the web client through the gateway. Signed-in pages are `/app/dashboard`, `/app/history`, and `/app/profile`; `/history` is the authenticated History API, not a browser page. Login returns to the requested protected page.
+
+| URL | Service |
+|---|---|
+| `http://localhost:8088` | Traefik gateway and web client |
+| `http://localhost:8000` | Traefik dashboard |
+| `http://localhost:3000` | Web container direct access |
+| `http://localhost:8080`–`8085` | Auth, Phishing, Malware, History, Reports, Notify direct ports |
+| `http://localhost:15672` | RabbitMQ management UI |
+| `http://localhost:9001` | RustFS console |
+
+Published ports are bound to `127.0.0.1`. The gateway listens on host port `8088`; host port `80` is not used.
+
+## API routes
+
+Use `http://localhost:8088` as the API base. Browser login sets a one-hour HttpOnly, SameSite=Strict session cookie; the Web app never stores JWTs in browser storage. Protected routes accept that cookie or a valid RS256 bearer token. Keep `AUTH_COOKIE_SECURE` enabled behind production HTTPS; only the local Compose gateway disables it for loopback HTTP. Each service keeps its public prefix; Traefik does not strip or rewrite it.
+
+| Service | Routes |
+|---|---|
+| Auth | `POST /auth/signup`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`, `GET /auth/jwks`, `GET /auth/health` |
+| Phishing | `POST /phishing/v1/url/check`, `GET /phishing/health` |
+| Malware | `POST /malware/v1/file/analyze`, `GET /malware/health` |
+| History | `GET /history`, `GET /history/{scan_id}`, `GET /history/health` |
+| Reports | `POST /reports`, `GET /reports/{id}`, `GET /reports/{id}/download`, `GET /reports/health` |
+| Notify | `GET /notify`, `GET /notify/health` |
+
+The gateway route/auth contract is documented in [`scripts/check-routes.mjs`](scripts/check-routes.mjs). Full request details and service status are in [API Contracts](docs/obsidian/09-Reference/API-Contracts.md).
+
+## Development commands
+
+```powershell
+.\scripts\dev.ps1 status
+.\scripts\dev.ps1 logs
+.\scripts\dev.ps1 test
+.\scripts\dev.ps1 down
 ```
 
-#### 3. Run the Application
+See the [Build](docs/obsidian/03-Runbooks/Build.md) and [Run](docs/obsidian/03-Runbooks/Run.md) runbooks for service-specific commands and troubleshooting.
 
-You can start the application in two ways:
+## Project documentation
 
-**Option 1: Using the start script (Recommended)**
-```bash
-chmod +x start.sh
-./start.sh
-```
+- [Project home](docs/obsidian/00-Home.md)
+- [Roadmap](docs/obsidian/06-Roadmap/Roadmap.md)
+- [Security review](docs/obsidian/07-Security/Security-Review.md)
+- [API contracts](docs/obsidian/09-Reference/API-Contracts.md)
 
-**Option 2: Manual Docker Compose**
-```bash
-cd deploy/compose
-docker-compose -f docker-compose.dev.yml up -d --build
-```
+## License
 
-This command will build the images for all custom services and start them in the background. It may take several minutes the first time you run it.
-
-### Accessing the Services
-
-- **Web Application**: http://localhost (main entry point)
-- **Traefik Dashboard**: http://localhost:8080
-- **RabbitMQ Management**: http://localhost:15672 (user: `guest`, pass: `guest`)
-- **MinIO Console**: http://localhost:9001 (user: `minioadmin`, pass: `minioadmin`)
-
-### API Endpoints
-
-All backend services are accessible through the Traefik API Gateway at http://localhost:
-
-- **Authentication**: http://localhost/auth/*
-- **Phishing Detection**: http://localhost/phishing/*
-- **Malware Scanning**: http://localhost/malware/*
-- **Scan History**: http://localhost/history/*
-- **Report Generation**: http://localhost/reports/*
-- **Notifications**: http://localhost/notify/*
-
-## 🔧 Usage
-
-Once the application is running, you can:
-
-1. Navigate to http://localhost
-2. Sign up for a new account and log in
-3. Use the dashboard to analyze URLs or upload files for scanning
-4. View results and previous scans in the "History" section
-5. Check the status of all microservices on your "Profile" page
-
-## ↔️ API Endpoints
-
-All backend services are exposed through the Traefik API Gateway at http://localhost.
-
-### Authentication
-- `POST /auth/signup`
-- `POST /auth/login`
-- `GET /auth/me` (Protected)
-
-### Phishing Detection
-- `POST /phishing/scan` (Protected)
-
-### Malware Scanning
-- `POST /malware/scan` (Protected)
-
-### History
-- `GET /history` (Protected)
-- `GET /history/:scan_id` (Protected)
-
-### Reports
-- `POST /reports` (Protected)
-- `GET /reports/:id/download` (Protected)
-
-### Notifications
-- `GET /notify/status` (Protected)
-
-## 📜 License
-
-This project is licensed under the MIT License. See the LICENSE file for more details.
+A `LICENSE` file is not present in the repository yet.

@@ -7,13 +7,13 @@ tags: [forgeharbor, architecture, overview]
 
 # System Overview
 
-ForgeHarbor is a polyglot threat-detection platform. A React frontend talks to backend services through Traefik. The services use MongoDB, Redis, RabbitMQ, and MinIO, and call external threat-intelligence providers.
+ForgeHarbor is a polyglot threat-detection platform. A React frontend talks to backend services through Traefik. The services use MongoDB, Redis, RabbitMQ, and RustFS, and call external threat-intelligence providers.
 
 ## Current shape
 
 ```mermaid
 flowchart LR
-    Browser[React + Vite] --> Traefik[Traefik v2.10]
+    Browser[React + Vite] --> Traefik[Traefik v3.7]
     Traefik --> Auth[Auth<br/>Rust]
     Traefik --> Phishing[Phishing<br/>Rust]
     Traefik --> Malware[Malware<br/>Rust]
@@ -28,7 +28,7 @@ flowchart LR
     Auth --> Mongo[(MongoDB)]
     History --> Mongo
     Reports --> Mongo
-    Reports --> MinIO[(MinIO)]
+    Reports --> RustFS[(RustFS S3 API)]
     Reports --> Rabbit[(RabbitMQ)]
     Notify --> Rabbit
     Notify --> Mongo
@@ -62,18 +62,16 @@ The polyglot split is intentional. The goal is credible specialty, not language 
 | Notifications | Queue consumer with auth and naming gaps | Authenticated consumer with retries and a dead-letter queue |
 | Observability | Logs only | OpenTelemetry traces and structured logs |
 | Contracts | Hand-written frontend calls | OpenAPI or protobuf contracts checked in |
-| Routing | One prefix convention (D1=B); Traefik provider fixed | All 15 documented routes pass the contract test |
+| Routing | One prefix convention (D1=B); Traefik provider fixed | All documented routes and anonymous-auth checks pass the contract test |
 | Auth boundary | Re-implemented in each service | Validated once at the edge; trusted identity downstream |
-| Secrets | Rust images build on stable and carry no `.env`; Notify still copies the build context | Runtime secrets; `.dockerignore`; no key material in images |
+| Secrets | Every application context excludes `.env` and PEMs; public JWT key is mounted read-only; provider credential validity is unverified | Runtime secrets, rotated local credentials, and closed infrastructure ports |
 
 ## Known blockers
 
-- The web image uses Node 14, while Vite 7 requires Node 20.19+ or 22.12+.
-- The MinIO image reference does not pull.
-- Compose passes blank `GEMINI_API_KEY` and `VIRUSTOTAL_API_KEY` values.
-- History, Reports, and Notify do not enforce authentication and ownership consistently.
-- Reports publishes to `report_events` while Notify consumes `notifications`.
-- Notify still uses `COPY . .`, and the infrastructure ports remain open.
+- Reports uses the pinned RustFS S3-compatible development image; authenticated artifact create/download has been verified end to end.
+- History, Reports, and Notify verify RS256 tokens and scope reads to the token subject; edge validation is not centralized. Development host ports are loopback-only; production deployment exposure is not defined.
+- Compose no longer overrides provider keys with blanks; local credential validity has not been checked.
+- Reports and Notify share the `notifications` queue, but a versioned event envelope and retry/dead-letter policy remain future work.
 
 ## Resolved in Phase 0
 

@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 html {
-  font-size: 75%;
+  font-size: 100%;
 }
 
 body {
@@ -12,13 +12,54 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background: linear-gradient(135deg, #020617 0%, #030712 25%, #0f172a 50%, #1e293b 75%, #0c4a6e 100%);
+  background: radial-gradient(ellipse at 50% -18%, rgba(31, 70, 97, .32), transparent 42%), #080b10;
   color: #f1f5f9;
-  background-size: 400% 400%;
-  animation: ocean-wave 20s ease-in-out infinite;
+  background-size: auto;
+  animation: none;
   overflow-x: hidden;
   background-color: #0f172a;
   color: #e2e8f0;
+}
+
+.scanner-page { color: #f4f5f6; padding: .25rem 0 3rem; }
+.scanner-topline { display:flex; align-items:center; justify-content:space-between; padding: .7rem 0 1.2rem; border-bottom:1px solid rgba(148,163,184,.12); color:#929ba8; font-size:.75rem; letter-spacing:.04em; }
+.scanner-mark,.scanner-status { display:inline-flex; align-items:center; gap:.55rem; }
+.scanner-mark { color:#d7dde5; font-weight:600; letter-spacing:.01em; }
+.scanner-mark svg { color:#8ad8d1; }
+.scanner-status-dot { width:7px; height:7px; border-radius:50%; background:#64d5a6; box-shadow:0 0 12px rgba(100,213,166,.5); }
+.scanner-intro { min-height:280px; display:flex; align-items:center; justify-content:space-between; gap:2rem; padding:3.25rem 0 2.7rem; }
+.scanner-intro-copy { max-width:620px; }
+.scanner-eyebrow,.scanner-section-kicker { display:flex; align-items:center; gap:.5rem; color:#94d8d2; font-size:.7rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
+.scanner-intro h1 { margin:.9rem 0 .85rem; color:#f5f7f8; font-size:clamp(2.35rem,5vw,4rem); line-height:1.04; letter-spacing:-.055em; font-weight:600; }
+.scanner-intro-copy p { max-width:520px; margin:0; color:#9aa5b2; font-size:1rem; line-height:1.7; }
+.scanner-intro-badge { width:190px; height:190px; margin-right:4rem; position:relative; display:grid; place-items:center; }
+.scanner-shield { width:72px; height:72px; display:grid; place-items:center; color:#a6e7df; border:1px solid rgba(120,220,210,.3); border-radius:24px; background:linear-gradient(145deg,rgba(79,180,174,.2),rgba(20,35,45,.5)); box-shadow:0 0 60px rgba(57,193,180,.12), inset 0 1px rgba(255,255,255,.1); transform:rotate(-8deg); }
+.scanner-orbit { position:absolute; border:1px solid rgba(128,174,182,.14); border-radius:50%; }
+.scanner-orbit-one { inset:7px; }
+.scanner-orbit-two { inset:24px; border-style:dashed; }
+.scanner-orbit-label { position:absolute; bottom:3px; color:#74818f; font-size:.65rem; letter-spacing:.12em; text-transform:uppercase; }
+.scanner-workspace { overflow:hidden; border:1px solid rgba(148,163,184,.16); border-radius:22px; background:linear-gradient(145deg,rgba(19,25,33,.96),rgba(13,17,23,.96)); box-shadow:0 24px 80px rgba(0,0,0,.25), inset 0 1px rgba(255,255,255,.035); }
+.scanner-workspace-heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1.5rem 1.75rem 1.15rem; }
+.scanner-section-kicker { font-size:.65rem; color:#8995a2; }
+.scanner-section-kicker span { color:#596573; }
+.scanner-workspace-heading h2 { margin:.45rem 0 0; color:#f0f3f5; font-size:1.15rem; font-weight:600; letter-spacing:-.02em; }
+.scanner-private { display:flex; align-items:center; gap:.45rem; color:#91a39f; font-size:.72rem; }
+.scanner-private svg { color:#76cabb; }
+.scanner-input-panel { margin:0 1.75rem 1.75rem; padding:1.4rem; border:1px solid rgba(148,163,184,.12); border-radius:16px; background:rgba(8,12,17,.5); }
+.scanner-footnote { display:flex; align-items:center; gap:.8rem; max-width:620px; margin:1.15rem auto 0; padding:.85rem 1rem; color:#8793a0; font-size:.78rem; }
+.scanner-footnote p { margin:0; flex:1; }
+.scanner-footnote strong { color:#c9d0d7; font-weight:600; }
+.scanner-footnote-icon { display:grid; place-items:center; width:30px; height:30px; flex:none; border:1px solid rgba(133,198,190,.18); border-radius:10px; color:#8bd2c8; background:rgba(75,151,145,.1); }
+.scanner-footnote-arrow { color:#64717e; }
+.scanner-page input:focus { border-color:#6fbcb3; box-shadow:0 0 0 3px rgba(91,180,170,.12); }
+@media (max-width: 640px) {
+  .scanner-topline { font-size:.65rem; }
+  .scanner-intro { min-height:0; padding:2.5rem 0 2rem; }
+  .scanner-intro-badge { display:none; }
+  .scanner-intro h1 { font-size:2.45rem; }
+  .scanner-workspace-heading { padding:1.25rem 1rem 1rem; }
+  .scanner-private { font-size:0; gap:0; }
+  .scanner-input-panel { margin:0 .75rem .75rem; padding:1rem; }
 }
 
 /* Ocean wave animation */

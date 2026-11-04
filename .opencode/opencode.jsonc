@@ -10,16 +10,16 @@
         }
       },
       "obsidian": {
-        "type": "remote",
-        "url": "http://127.0.0.1:27123/mcp/",
-        "oauth": false,
-        "headers": {
-          "Authorization": "Bearer {env:OBSIDIAN_API_KEY}"
-        }
+        "type": "local",
+        "command": ["cmd", "/c", "npx", "-y", "--package=node@24", "--package=@modelcontextprotocol/server-filesystem@2.1.0", "mcp-server-filesystem", "docs/obsidian"]
+      },
+      "source": {
+        "type": "local",
+        "command": ["cmd", "/c", "npx", "-y", "--package=node@24", "--package=@modelcontextprotocol/server-filesystem@2.1.0", "mcp-server-filesystem", "apps", "deploy", "scripts", "pkg"]
       },
       "mongodb": {
         "type": "local",
-        "command": ["npx", "-y", "mongodb-mcp-server@latest", "--readOnly"],
+        "command": ["mongodb-mcp-server", "--readOnly"],
         "environment": {
           "MDB_MCP_CONNECTION_STRING": "{env:MDB_MCP_CONNECTION_STRING}"
         }

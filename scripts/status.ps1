@@ -11,8 +11,16 @@ $ComposeFile = Join-Path $Root 'deploy/compose/docker-compose.dev.yml'
 function Test-Endpoint {
   param([string]$Url)
   try {
-    $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 2 -ErrorAction Stop
-    $code = [int]$response.StatusCode
+    if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
+      $statusText = & curl.exe --silent --show-error --output NUL --write-out '%{http_code}' --max-time 3 $Url 2>$null
+      if ($LASTEXITCODE -ne 0) {
+        return [pscustomobject]@{ Ok = $false; Detail = 'unreachable' }
+      }
+      $code = [int]$statusText
+    } else {
+      $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 3 -ErrorAction Stop
+      $code = [int]$response.StatusCode
+    }
     return [pscustomobject]@{ Ok = ($code -ge 200 -and $code -lt 400); Detail = "HTTP $code" }
   } catch {
     $code = $null
@@ -90,16 +98,16 @@ Write-Health | Out-Null
 if (-not $NoMcp) {
   Write-Host ''
   Write-Host 'MCP'
-  if (Get-Command opencode -ErrorAction SilentlyContinue) {
-    $mcpOutput = & opencode mcp list 2>&1
+  if (Get-Command codex -ErrorAction SilentlyContinue) {
+    $mcpOutput = & codex mcp list 2>&1
     if ($LASTEXITCODE -eq 0) {
       $mcpOutput | ForEach-Object { Write-Host "  $_" }
     } else {
-      Write-Host '  opencode mcp list failed:'
+      Write-Host '  codex mcp list failed:'
       $mcpOutput | ForEach-Object { Write-Host "  $_" }
     }
   } else {
-    Write-Host '  opencode not found on PATH'
+    Write-Host '  codex not found on PATH; project MCP state is unverified'
   }
 }
 

@@ -1,13 +1,15 @@
 ---
 type: service
-status: security-defects
-priority: P0
+status: protected
+priority: P1
 language: typescript
-updated: 2026-11-02
+updated: 2026-11-03
 tags: [service/history, status/p0, area/security, language/typescript]
 ---
 
 # History
+
+Protected gateway requests use the shared Auth ForwardAuth gate; service JWT and ownership checks remain active. Exact GET health paths and CORS preflights remain public. See [[ADR-0005-shared-edge-auth]] and [[2026-11-03-shared-edge-auth]].
 
 ## Responsibility
 
@@ -21,15 +23,15 @@ Reads scan records from MongoDB and exposes a paginated history API.
 | Direct port | 8083 |
 | Public route | `/history` through Traefik |
 | Data store | MongoDB (`forgeharbor.scans`) |
-| Auth | Optional parser; not enforced |
+| Auth | Required RS256 JWT; Auth public key mounted read-only |
 
 ## Endpoints
 
 | Method | Path | Auth | Ownership | Notes |
 |---|---|---|---|---|
 | GET | `/history/health` | None | N/A | Includes MongoDB ping status |
-| GET | `/history` | Optional | Broken | Returns all users' scans when no token is present |
-| GET | `/history/:scan_id` | Optional | Broken | No owner check; invalid ID returns 500 |
+| GET | `/history` | Required | Scoped to JWT `sub` | Page size capped at 100; malformed cursors return 400 |
+| GET | `/history/:scan_id` | Required | Scoped to JWT `sub` | Invalid IDs return 400; other users' records appear not found |
 
 ## Gateway contract
 
@@ -39,18 +41,14 @@ History registers `/history` and `/history/:scan_id`, and the gateway does not r
 
 | Parameter | Current behavior | Problem |
 |---|---|---|
-| `limit` | Applied | No maximum; a large value can return everything |
-| `cursor` | Base64 ObjectId cursor | Invalid cursor is silently ignored |
-| `type` | Filters `q.type` | Records use `scan_type`, so the filter returns nothing |
-| `risk` | Filters `result.risk_level` | Does not match the stored result shape reliably |
+| `limit` | Defaults to 20 and is clamped to 1–100 | None |
+| `cursor` | Base64-encoded ObjectId; filters `_id < cursor` | Malformed cursors return 400 |
+| `type` | Filters `scan_type` | Matches the stored field |
+| `risk` | `high` or `low`; filters canonical `result.risk_level` and falls back to legacy phishing/malware booleans | Other values return 400; scanner writers now persist the canonical field |
 
 ## Security findings
 
-1. The `preHandler` hook returns without error when the `Authorization` header is missing. The route then runs unauthenticated.
-2. If `JWT_PUBLIC_KEY` is not set, the service calls `jwt.decode` instead of `jwt.verify`. A forged unsigned token with `sub: user-a` was accepted in testing.
-3. The user filter is only applied when a decoded user exists. Unauthenticated requests therefore return all scans.
-4. `GET /history/:scan_id` fetches by `_id` only. It does not compare the record's `user_id` with the caller.
-5. `new ObjectId(scan_id)` throws on malformed input, producing HTTP 500 instead of 400.
+Data routes require a valid RS256 JWT with issuer, audience, subject, and expiration claims. List and detail queries always include the authenticated subject as `user_id`; missing or invalid tokens return 401. The public key is mounted from Auth's config, and the service fails to start if it is unavailable. Gateway probes for missing and forged tokens are recorded in [[2026-11-02-phase-0-core-security]].
 
 ## Configuration
 
@@ -58,29 +56,26 @@ History registers `/history` and `/history/:scan_id`, and the gateway does not r
 |---|---|---|
 | `MONGO_URI` | Yes | MongoDB connection string |
 | `MONGO_DB` | No | Defaults to `forgeharbor` |
-| `JWT_PUBLIC_KEY` | Yes | RSA public key for verification; without it, tokens are only decoded |
+| `JWT_PUBLIC_KEY_PATH` | No | Defaults to `/app/config/jwt-public.pem`; Compose mounts the required key read-only |
+| `JWT_ISSUER` | No | Defaults to `forgeharbor` |
+| `JWT_AUDIENCE` | No | Defaults to `forgeharbor-users` |
 | `HISTORY_PORT` | No | Defaults to 8083 |
 
 ## Build and test
 
 ```powershell
 Push-Location apps/history-ts
-npm install
+npm ci
 npm run build
-npm test
+npm run test:integration
 Pop-Location
 ```
 
-## Known issues
+## Recent changes
 
-| Severity | Issue | Impact |
-|---|---|---|
-| P0 | Unauthenticated history returns all users' scans | Data disclosure |
-| P0 | Unsigned or forged JWT is accepted when `JWT_PUBLIC_KEY` is absent | Identity spoofing |
-| P0 | Detail route has no ownership check | IDOR |
-| P1 | `type` and `risk` filters do not match stored fields | Broken filters |
-| P1 | Invalid scan ID returns 500 | Error handling and log noise |
-| P2 | No maximum page size | Resource exhaustion |
+- [[2026-11-03-live-browser-service-journey]]: real Auth-issued browser sessions verify two-user list/detail isolation and refresh.
+
+- [[2026-11-03-scanner-and-owner-regression-coverage]] — persistent owner, malformed-ID, and scanner-auth checks.
 
 ## Related notes
 

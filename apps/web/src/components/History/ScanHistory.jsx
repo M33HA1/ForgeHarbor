@@ -6,55 +6,109 @@ const ScanHistory = () => {
     const [history, setHistory] = useState([]);
     const [nextCursor, setNextCursor] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [error, setError] = useState('');
+    const [actionMessage, setActionMessage] = useState('');
+    const [reportIds, setReportIds] = useState({});
+    const [typeFilter, setTypeFilter] = useState('');
+    const [riskFilter, setRiskFilter] = useState('');
     const [actionLoadingId, setActionLoadingId] = useState(null);
 
+    const restoreReportIds = async (items) => {
+        const scanIds = [...new Set(items
+            .map((item) => item._id?.$oid || item._id || item.id)
+            .filter(Boolean)
+            .map(String))];
+        if (scanIds.length === 0) return;
+        try {
+            const reports = await api.getReportsForScans(scanIds);
+            const restored = {};
+            reports.forEach((report) => {
+                const scanId = report.scanId || report.scan_id;
+                const reportId = report.id || report.reportId || report.report_id;
+                if (scanId && reportId && !restored[String(scanId)]) {
+                    restored[String(scanId)] = String(reportId);
+                }
+            });
+            setReportIds((current) => ({ ...current, ...restored }));
+        } catch {
+            setActionMessage('Saved report links could not be loaded.');
+        }
+    };
+
     useEffect(() => {
-        const fetchHistory = async (cursor) => {
+        let isCurrentRequest = true;
+        const fetchHistory = async () => {
             setLoading(true);
+            setError('');
             try {
-                const data = await api.getScanHistory(cursor ? { cursor } : {});
+                const params = {
+                    ...(typeFilter && { type: typeFilter }),
+                    ...(riskFilter && { risk: riskFilter }),
+                };
+                const data = await api.getScanHistory(params);
+                if (!isCurrentRequest) return;
                 const items = Array.isArray(data) ? data : (data?.items || []);
                 setHistory(items);
                 setNextCursor(data?.next_cursor || null);
+                void restoreReportIds(items);
             } catch (error) {
+                if (!isCurrentRequest) return;
+                setHistory([]);
+                setNextCursor(null);
+                setError(error.message || 'Unable to load scan history.');
                 console.error("Failed to fetch scan history:", error);
             } finally {
-                setLoading(false);
+                if (isCurrentRequest) setLoading(false);
             }
         };
         fetchHistory();
-    }, []);
+        return () => { isCurrentRequest = false; };
+    }, [typeFilter, riskFilter]);
 
     const loadMore = async () => {
-        if (!nextCursor) return;
+        if (!nextCursor || loadingMore) return;
+        setLoadingMore(true);
+        setError('');
         try {
-            const data = await api.getScanHistory({ cursor: nextCursor });
+            const data = await api.getScanHistory({
+                cursor: nextCursor,
+                ...(typeFilter && { type: typeFilter }),
+                ...(riskFilter && { risk: riskFilter }),
+            });
             const items = Array.isArray(data) ? data : (data?.items || []);
             setHistory(prev => [...prev, ...items]);
             setNextCursor(data?.next_cursor || null);
+            void restoreReportIds(items);
         } catch (error) {
+            setError(error.message || 'Unable to load more scan history.');
             console.error('Failed to load more history:', error);
+        } finally {
+            setLoadingMore(false);
         }
     };
 
     const handleGenerateReport = async (item) => {
+        const scanId = (item._id?.$oid) || item._id || item.id;
+        setActionMessage('');
         try {
-            setActionLoadingId(item._id || item.id);
-            const scanId = (item._id?.$oid) || item._id || item.id;
-            const content = JSON.stringify(item);
-            await api.generateReport(String(scanId), content);
-            // Optionally give user feedback; for brevity we console.log
-            console.log('Report generated for scan', scanId);
+            setActionLoadingId(String(scanId));
+            const report = await api.generateReport(String(scanId));
+            const reportId = report?.id || report?.reportId;
+            if (!reportId) throw new Error('The report was created but no download ID was returned.');
+            setReportIds((current) => ({ ...current, [String(scanId)]: String(reportId) }));
+            setActionMessage('Report created. Download is ready for this scan.');
         } catch (error) {
-            console.error('Failed to generate report:', error);
+            setActionMessage(error.message || 'Failed to generate the report.');
         } finally {
             setActionLoadingId(null);
         }
     };
 
     const handleDownloadReport = async (reportId) => {
+        setActionMessage('');
         try {
-            setActionLoadingId(reportId);
+            setActionLoadingId(String(reportId));
             const blob = await api.downloadReport(reportId);
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -62,36 +116,52 @@ const ScanHistory = () => {
             a.download = `report-${reportId}.json`;
             a.click();
             window.URL.revokeObjectURL(url);
+            setActionMessage('Report download started.');
         } catch (error) {
-            console.error('Failed to download report:', error);
+            setActionMessage(error.message || 'Failed to download the report.');
         } finally {
             setActionLoadingId(null);
         }
     };
 
-    if (loading) {
-        return <p className="text-center">Loading scan history...</p>;
-    }
-
-    if (!history || history.length === 0) {
-        return (
-            <div className="text-center rounded-3xl p-8 shadow-2xl backdrop-blur-lg border bg-slate-800/40 border-slate-700/50">
-                <p className="text-slate-300">No scan history found.</p>
-            </div>
-        );
-    }
-
     return (
         <div className="rounded-3xl p-8 shadow-2xl backdrop-blur-lg border bg-slate-800/40 border-slate-700/50">
+            <div className="mb-6 flex flex-col gap-4 border-b border-slate-700/70 pb-5 sm:flex-row sm:items-end">
+                <label className="flex flex-1 flex-col gap-2 text-xs font-medium uppercase tracking-wider text-slate-400">
+                    Scan type
+                    <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)} className="rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2.5 text-sm normal-case tracking-normal text-slate-100 focus:border-teal-300">
+                        <option value="">All types</option>
+                        <option value="url">URL scans</option>
+                        <option value="file">File scans</option>
+                    </select>
+                </label>
+                <label className="flex flex-1 flex-col gap-2 text-xs font-medium uppercase tracking-wider text-slate-400">
+                    Risk level
+                    <select value={riskFilter} onChange={(event) => setRiskFilter(event.target.value)} className="rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2.5 text-sm normal-case tracking-normal text-slate-100 focus:border-teal-300">
+                        <option value="">All risk levels</option>
+                        <option value="high">High risk</option>
+                        <option value="low">Low risk</option>
+                    </select>
+                </label>
+            </div>
+
+            {error && <p role="alert" className="mb-4 rounded-xl border border-red-400/20 bg-red-400/10 p-3 text-sm text-red-200">{error}</p>}
+            {actionMessage && <p role="status" aria-live="polite" className="mb-4 rounded-xl border border-teal-300/20 bg-teal-300/10 p-3 text-sm text-teal-100">{actionMessage}</p>}
+            {loading ? (
+                <p className="py-8 text-center text-slate-400" role="status">Loading scan history...</p>
+            ) : error && history.length === 0 ? null : history.length === 0 ? (
+                <p className="py-8 text-center text-slate-400">No scans match these filters.</p>
+            ) : (
             <div className="space-y-4">
                 {history.map((item) => {
                     const id = item._id?.$oid || item._id || item.id;
+                    const reportId = reportIds[String(id)] || item.reportId || item.report_id;
                     const type = item.type || item.scan_type;
                     const rawTarget = item.target || item.url || item.filename || item.name || item.input || 'Unknown';
                     const target = typeof rawTarget === 'string' ? rawTarget.trim() : String(rawTarget);
                     const createdAt = item.created_at || item.createdAt || item.timestamp || item.time || item.date;
                     const isMalicious = Boolean(
-                        item.is_malicious || item.is_phishing || item?.result?.risk_level === 'high' || item?.result?.phishing === true
+                        item.is_malicious || item.is_phishing || item?.result?.risk_level === 'high' || item?.result?.malicious === true || item?.result?.phishing === true
                     );
                     const isUrl = type === 'url' || (/^https?:\/\//i.test(String(target)) || String(target).startsWith('www.'));
                     return (
@@ -113,19 +183,19 @@ const ScanHistory = () => {
                                 {createdAt && (
                                     <span className="text-sm text-slate-400 hidden sm:block">{new Date(createdAt).toLocaleDateString()}</span>
                                 )}
-                                <button
+            <button
                                     className="px-2 py-1 text-xs rounded bg-slate-600 hover:bg-slate-500 text-white"
                                     onClick={() => handleGenerateReport(item)}
-                                    disabled={actionLoadingId === id}
+                                    disabled={actionLoadingId !== null}
                                 >
-                                    {actionLoadingId === id ? 'Generating…' : 'Generate Report'}
+                                    {actionLoadingId === String(id) ? 'Generating…' : 'Generate report'}
                                 </button>
-                                {item.reportId && (
+                                {reportId && (
                                     <button
                                         className="p-2 rounded bg-slate-600 hover:bg-slate-500 text-white"
                                         title="Download Report"
-                                        onClick={() => handleDownloadReport(item.reportId)}
-                                        disabled={actionLoadingId === item.reportId}
+                                        onClick={() => handleDownloadReport(reportId)}
+                                        disabled={actionLoadingId !== null}
                                     >
                                         <DownloadIcon className="w-4 h-4" />
                                     </button>
@@ -135,13 +205,15 @@ const ScanHistory = () => {
                     );
                 })}
             </div>
+            )}
             {nextCursor && (
                 <div className="mt-6 text-center">
                     <button
                         className="px-4 py-2 rounded bg-slate-600 hover:bg-slate-500 text-white"
                         onClick={loadMore}
+                        disabled={loadingMore}
                     >
-                        Load More
+                        {loadingMore ? 'Loading…' : 'Load More'}
                     </button>
                 </div>
             )}

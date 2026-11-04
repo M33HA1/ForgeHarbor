@@ -1,0 +1,134 @@
+name: ForgeHarbor CI
+
+'on':
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: forgeharbor-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  language:
+    name: Build and test ${{ matrix.service }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - { service: auth, kind: rust, path: apps/auth-rs, image: 'rust:1.90.0-bookworm' }
+          - { service: phishing, kind: rust, path: apps/phishing-rs, image: 'rust:1.90.0-bookworm' }
+          - { service: malware, kind: rust, path: apps/malware-rs, image: 'rust:1.90.0-bookworm' }
+          - { service: history, kind: node, path: apps/history-ts, image: 'node:22.12-bookworm' }
+          - { service: web, kind: node, path: apps/web, image: 'node:22.12-bookworm' }
+          - { service: reports, kind: go, path: apps/report-go, image: 'golang:1.22-bookworm' }
+          - { service: notify, kind: python, path: apps/notify-py, image: 'python:3.11-bookworm' }
+    container:
+      image: ${{ matrix.image }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ matrix.path }}
+    env:
+      KIND: ${{ matrix.kind }}
+      CARGO_BUILD_JOBS: '2'
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Build and run focused tests
+        run: |
+          set -euo pipefail
+          case "$KIND" in
+            rust) cargo test --locked; cargo build --locked ;;
+            node) npm ci; npm run build ;;
+            go) go test ./...; go build ./... ;;
+            python)
+              python -m pip install --disable-pip-version-check -r requirements.txt
+              python -m unittest test_worker.py
+              python -m compileall -q .
+              ;;
+            *) exit 2 ;;
+          esac
+
+  security:
+    name: High and critical security gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Scan dependencies, secrets, and configuration
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          version: v0.76.1
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: '1'
+          format: json
+          output: ${{ runner.temp }}/forgeharbor-security.json
+          cache: false
+          timeout: 15m
+      - name: Summarize finding IDs without secret matches or source snippets
+        if: always()
+        env:
+          REPORT: ${{ runner.temp }}/forgeharbor-security.json
+        run: python3 scripts/ci/security-summary.py "$REPORT"
+
+  integration:
+    name: Local stack and browser integration
+    needs: language
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      COMPOSE_PROJECT_NAME: forgeharbor-ci
+      FH_REQUIRE_RUNNING: '1'
+      PYTHON: ${{ github.workspace }}/.venv-ci/bin/python
+      PLAYWRIGHT_MODULE: ${{ runner.temp }}/forgeharbor-browser/node_modules/playwright/index.mjs
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22.20.0'
+      - name: Prepare isolated CI dependencies and settings
+        run: |
+          python3 scripts/ci/prepare.py
+          node scripts/setup-jwt-keys.mjs
+          python3 -m venv .venv-ci
+          "$PYTHON" -m pip install --disable-pip-version-check -r apps/notify-py/requirements.txt
+          npm --prefix apps/history-ts ci
+          npm install --prefix "$RUNNER_TEMP/forgeharbor-browser" --no-package-lock --no-save playwright@1.64.1
+          node "$RUNNER_TEMP/forgeharbor-browser/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Build service images sequentially to bound memory usage
+        run: |
+          for service in fh-auth fh-phishing fh-malware fh-history fh-report fh-notify fh-web; do
+            docker compose -f deploy/compose/docker-compose.dev.yml build "$service"
+          done
+      - name: Start and require healthy services
+        run: |
+          docker compose -f deploy/compose/docker-compose.dev.yml up -d
+          for attempt in $(seq 1 60); do
+            if bash scripts/dev.sh health; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+      - name: Strict API and ownership regression suite
+        run: bash scripts/ci/integration.sh
+      - name: Mocked and real local browser journeys
+        run: node scripts/ci/browser.mjs
+      - name: Remove ephemeral hosted-runner services and data
+        if: always()
+        run: docker compose -f deploy/compose/docker-compose.dev.yml down --volumes --remove-orphans

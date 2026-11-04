@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, FileText, X, Search, Loader2, Fish, Waves } from 'lucide-react';
+import { Upload, FileText, X, Search, Loader2 } from 'lucide-react';
 
 const UploadSection = ({
   file,
@@ -30,8 +30,8 @@ const UploadSection = ({
     <div className="space-y-6">
       <div>
         <h3 className="text-xl font-semibold mb-2 flex items-center text-white">
-          <Fish className="w-6 h-6 text-cyan-400 mr-3" />
-          <span>Drop Your Catch for Analysis</span>
+          <Upload className="w-5 h-5 text-teal-300 mr-3" />
+          <span>Scan a file</span>
         </h3>
         <p className="text-sm text-slate-400">
           Upload a file to analyze for potential security threats
@@ -39,10 +39,19 @@ const UploadSection = ({
       </div>
 
       <div
+        role="button"
+        tabIndex={0}
+        aria-label="Choose a file"
+        onKeyDown={(event) => {
+          if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
         className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer ${
           dragActive
             ? 'border-cyan-400 bg-cyan-400/10 scale-105'
-            : 'border-slate-600 hover:border-cyan-400 hover:bg-slate-700/50'
+            : 'border-slate-700 hover:border-teal-300/70 hover:bg-teal-300/[.03]'
         }`}
         onClick={() => fileInputRef.current?.click()}
         onDragEnter={(e) => {
@@ -57,6 +66,7 @@ const UploadSection = ({
         onDrop={handleDrop}
       >
         <input
+          aria-label="Upload file"
           ref={fileInputRef}
           type="file"
           accept=".pdf,.txt,.doc,.docx"
@@ -66,15 +76,15 @@ const UploadSection = ({
         <div className="space-y-4">
           <div className="flex justify-center">
             <div className="p-4 rounded-full bg-slate-700/50 backdrop-blur-sm">
-              <Upload className="w-8 h-8 text-cyan-400 animate-bounce" />
+              <Upload className="w-8 h-8 text-teal-300" />
             </div>
           </div>
           <div>
             <p className="text-lg font-medium mb-2 text-white">
               {file ? (
                 <span className="flex items-center justify-center">
-                  <Fish className="w-5 h-5 mr-2 text-green-500" />
-                  Hooked: {file.name}
+                  <FileText className="w-5 h-5 mr-2 text-teal-300" />
+                  {file.name}
                 </span>
               ) : (
                 <span className="flex items-center justify-center">
@@ -107,6 +117,7 @@ const UploadSection = ({
               </div>
             </div>
             <button
+              aria-label="Remove file"
               onClick={() => setFile(null)}
               className="p-2 rounded-lg transition-colors hover:bg-slate-600 text-slate-400 hover:text-red-400"
             >
@@ -122,18 +133,18 @@ const UploadSection = ({
         className={`w-full py-4 px-6 rounded-xl font-medium transition-all duration-300 flex items-center justify-center space-x-2 ${
           !file || isAnalyzing
             ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-            : 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
+            : 'bg-teal-200 hover:bg-teal-100 text-slate-950 shadow-[0_8px_24px_rgba(94,234,212,.12)] hover:-translate-y-0.5'
         }`}
       >
         {isAnalyzing ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span>Analyzing the catch...</span>
+            <span>Analyzing file…</span>
           </>
         ) : (
           <>
             <Search className="w-5 h-5" />
-            <span>Examine This Catch</span>
+            <span>Analyze file</span>
           </>
         )}
       </button>

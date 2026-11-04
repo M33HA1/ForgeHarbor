@@ -1,7 +1,7 @@
 ---
 type: reference
 status: active
-updated: 2026-11-02
+updated: 2026-11-03
 tags: [reference, ports]
 ---
 
@@ -9,34 +9,34 @@ tags: [reference, ports]
 
 ## Application ports
 
-| Host port | Container port | Service | Public path | Notes |
+| Local host port | Container port | Service | Public path | Notes |
 |---:|---:|---|---|---|
-| 8088 | 80 | Traefik | `/` | Real gateway entrypoint |
-| 8000 | 8000 | Traefik dashboard | N/A | Insecure dashboard in dev |
-| 3000 | 3000 | Web | `/` | Direct frontend access |
-| 8080 | 8080 | Auth | `/auth` | Also published directly |
-| 8081 | 8081 | Phishing | `/phishing` | Also published directly |
-| 8082 | 8082 | Malware | `/malware` | Also published directly |
-| 8083 | 8083 | History | `/history` | Also published directly |
-| 8084 | 8084 | Reports | `/reports` | Also published directly |
-| 8085 | 8085 | Notify | `/notify` | Service route is `/notifications` |
+| 127.0.0.1:8088 | 80 | Traefik | `/` | Real gateway; loopback only |
+| 127.0.0.1:8000 | 8000 | Traefik dashboard | N/A | Insecure dashboard in dev; loopback only |
+| 127.0.0.1:3000 | 3000 | Web | `/` | Direct frontend access; loopback only |
+| 127.0.0.1:8080 | 8080 | Auth | `/auth` | Direct debug access; loopback only |
+| 127.0.0.1:8081 | 8081 | Phishing | `/phishing` | Direct debug access; loopback only |
+| 127.0.0.1:8082 | 8082 | Malware | `/malware` | Direct debug access; loopback only |
+| 127.0.0.1:8083 | 8083 | History | `/history` | Direct debug access; loopback only |
+| 127.0.0.1:8084 | 8084 | Reports | `/reports` | Direct debug access; loopback only |
+| 127.0.0.1:8085 | 8085 | Notify | `/notify` | Direct debug access; loopback only |
 
 ## Infrastructure ports
 
-| Host port | Component | Purpose |
+| Local host port | Component | Purpose |
 |---:|---|---|
-| 27017 | MongoDB | Database |
-| 6379 | Redis | Provisioned cache; currently unused by service code |
-| 5672 | RabbitMQ | AMQP |
-| 15672 | RabbitMQ management | Web UI, `guest` / `guest` |
-| 9000 | MinIO API | S3-compatible endpoint |
-| 9001 | MinIO console | Web UI |
+| 127.0.0.1:27017 | MongoDB | Database |
+| 127.0.0.1:6379 | Redis | Provisioned cache; currently unused by service code |
+| 127.0.0.1:5672 | RabbitMQ | AMQP |
+| 127.0.0.1:15672 | RabbitMQ management | Web UI, `guest` / `guest` |
+| 127.0.0.1:9000 | RustFS API | S3-compatible endpoint |
+| 127.0.0.1:9001 | RustFS console | Web UI |
 | 27123 | Obsidian Local REST API | MCP endpoint when the plugin is enabled |
 
 ## Conflicts and drift
 
-- The README says the gateway is port 80 and Traefik is 8080. The Compose file maps 8088 and 8000.
-- Every service is published on the host, which bypasses the gateway. This is convenient for local debugging but weakens the production-like boundary.
+- The README now documents gateway port 8088 and Traefik dashboard port 8000 (FH-019).
+- All development host bindings are restricted to loopback. Direct local service ports still bypass Traefik; production deployments should keep services internal-only.
 - `fh-web` is reachable at `http://localhost:3000` but the intended public entrypoint is `http://localhost:8088`.
 
 ## Related notes

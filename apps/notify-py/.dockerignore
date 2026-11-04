@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.env
+*.pem
+aws_creds.txt
+config.txt
+.git/

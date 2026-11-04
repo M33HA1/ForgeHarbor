@@ -1,0 +1,36 @@
+# Project MCP configuration for Codex. Codex loads project settings only after
+# this repository is trusted. Secrets are inherited from the user's environment.
+
+[mcp_servers.context7]
+url = "https://mcp.context7.com/mcp"
+startup_timeout_sec = 20
+
+[mcp_servers.playwright]
+command = "cmd.exe"
+args = ["/c", "npx", "--yes", "@playwright/mcp@latest"]
+startup_timeout_sec = 30
+tool_timeout_sec = 120
+default_tools_approval_mode = "prompt"
+
+[mcp_servers.github]
+url = "https://api.githubcopilot.com/mcp/readonly"
+http_headers = { "X-MCP-Toolsets" = "repos,issues,pull_requests,actions" }
+startup_timeout_sec = 30
+
+[mcp_servers.obsidian]
+command = "cmd.exe"
+args = ["/c", "npx", "--yes", "--package=node@24", "--package=@modelcontextprotocol/server-filesystem@2.1.0", "mcp-server-filesystem", "docs/obsidian"]
+startup_timeout_sec = 30
+default_tools_approval_mode = "writes"
+
+[mcp_servers.source]
+command = "cmd.exe"
+args = ["/c", "npx", "--yes", "--package=node@24", "--package=@modelcontextprotocol/server-filesystem@2.1.0", "mcp-server-filesystem", "apps", "deploy", "scripts", "pkg"]
+startup_timeout_sec = 30
+default_tools_approval_mode = "writes"
+
+[mcp_servers.mongodb]
+command = "mongodb-mcp-server"
+args = ["--readOnly"]
+env_vars = ["MDB_MCP_CONNECTION_STRING"]
+startup_timeout_sec = 20

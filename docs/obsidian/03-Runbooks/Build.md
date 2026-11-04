@@ -38,17 +38,11 @@ Tool versions are pinned in `.tool-versions` for asdf or mise users. The Dockerf
    Copy-Item config/.env.example config/.env
    ```
 2. Fill in `GEMINI_API_KEY`, `VIRUSTOTAL_API_KEY`, and a strong `JWT_SECRET`.
-3. Generate RSA keys if they are missing:
+3. Generate the local RSA keys and verifier copies. The command keeps matching keys unchanged, refuses incomplete or mismatched pairs, and never overwrites an existing key:
    ```powershell
-   openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out apps/auth-rs/config/jwt-private.pem
-   openssl rsa -pubout -in apps/auth-rs/config/jwt-private.pem -out apps/auth-rs/config/jwt-public.pem
+   node scripts/setup-jwt-keys.mjs
    ```
-4. Copy the public key to the services that verify tokens:
-   ```powershell
-   Copy-Item apps/auth-rs/config/jwt-public.pem apps/phishing-rs/config/jwt-public.pem -Force
-   Copy-Item apps/auth-rs/config/jwt-public.pem apps/malware-rs/config/jwt-public.pem -Force
-   ```
-5. Never commit the generated keys or `config/.env`.
+4. Never commit the generated keys or `config/.env`.
 
 ## Build the stack
 
@@ -106,7 +100,7 @@ Pop-Location
 |---|---|---|
 | `cycle detected when computing when error::GridFsErrorKind needs async drop` | `mongodb-3.2.5` with the current dependency resolution | Pin a compatible `mongodb` version or move Auth to Go |
 | `UnhandledPromiseRejectionWarning: SyntaxError: Unexpected token '??='` | Node 14 running Vite 7 | Change the web Dockerfile to `node:22` |
-| `pull access denied for minio/minio` | Image reference or registry access | Use a pinned, pullable MinIO image or skip MinIO until Reports is fixed |
+| `pull access denied for minio/minio` | The old MinIO image is no longer available | The development Compose stack now pins RustFS; verify report artifact operations separately |
 | `Failed to retrieve information of the docker client and server host` | Traefik cannot reach the Docker socket/API | Recreate the Traefik container and verify the socket mount |
 | `The "GEMINI_API_KEY" variable is not set` | Compose interpolation cannot see the key | Put the key in `config/.env` and recreate the containers |
 

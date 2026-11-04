@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link as LinkIcon, Search, Loader2, Waves, Anchor } from 'lucide-react';
+import { Link as LinkIcon, Search, Loader2 } from 'lucide-react';
 
 const URLSection = ({ 
   url, 
@@ -11,8 +11,8 @@ const URLSection = ({
     <div className="space-y-6">
       <div>
         <h3 className="text-xl font-semibold mb-2 flex items-center text-white">
-          <Waves className="w-6 h-6 text-blue-500 mr-3" />
-          <span>Test These Waters</span>
+          <LinkIcon className="w-5 h-5 text-teal-300 mr-3" />
+          <span>Scan a website</span>
         </h3>
         <p className="text-sm text-slate-400">
           Enter a URL to check for potential security threats
@@ -20,12 +20,13 @@ const URLSection = ({
       </div>
 
       <div className="space-y-4">
-        <label className="block text-sm font-medium text-slate-300">
+        <label htmlFor="scan-url" className="block text-sm font-medium text-slate-300">
           <LinkIcon className="inline-block mr-1 w-4 h-4" />
           <span>Enter URL to check:</span>
         </label>
         <div className="relative">
           <input
+            id="scan-url"
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
@@ -42,18 +43,18 @@ const URLSection = ({
         className={`w-full py-4 px-6 rounded-xl font-medium transition-all duration-300 flex items-center justify-center space-x-2 ${
           !url.trim() || isAnalyzing
             ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-            : 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
+            : 'bg-teal-200 hover:bg-teal-100 text-slate-950 shadow-[0_8px_24px_rgba(94,234,212,.12)] hover:-translate-y-0.5'
         }`}
       >
         {isAnalyzing ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span>Testing the waters...</span>
+            <span>Checking URL…</span>
           </>
         ) : (
           <>
             <Search className="w-5 h-5" />
-            <span>Dive Deep & Analyze</span>
+            <span>Analyze website</span>
           </>
         )}
       </button>

@@ -1,9 +1,9 @@
 ---
 type: service
-status: broken-build
+status: partially-verified
 priority: P0
 language: typescript
-updated: 2026-11-02
+updated: 2026-11-05
 tags: [service/web, status/p0, area/frontend, language/typescript]
 ---
 
@@ -21,7 +21,7 @@ React single-page application for signup, login, URL scans, file scans, history,
 | Direct port | 3000 |
 | Public route | `/` through Traefik |
 | API base | `VITE_API_BASE_URL` or `window.location.origin` |
-| Auth storage | `localStorage` key `access_token` |
+| Auth storage | HttpOnly `fh_access` cookie set by Auth; no JWT in Web storage |
 
 ## API calls
 
@@ -35,30 +35,59 @@ React single-page application for signup, login, URL scans, file scans, history,
 | History | `GET /history` | Matches History |
 | Scan detail | `GET /history/:id` | Matches History |
 | Create report | `POST /reports` | Matches Reports |
+| Restore reports for history | `GET /reports?scan_id=...` | Returns only caller-owned reports for the requested scans |
 | Report metadata | `GET /reports/:id` | Matches Reports |
 | Report download | `GET /reports/:id/download` | Matches Reports |
-| Notifications | `GET /notify` | Does not match Notify's `/notifications` |
+| Notifications | `GET /notify` | Matches Notify's authenticated `/notify` route |
 | Health checks | `/auth/health`, `/phishing/health`, etc. | Depends on gateway routing |
 
 ## Known issues
 
 | Severity | Issue | Impact |
 |---|---|---|
-| P0 | Dockerfile uses `node:14` while Vite 7 requires Node 20.19+ or 22.12+ | Image build fails |
-| P0 | File scan result reads top-level `is_malicious` and `is_phishing`; API returns nested `status` and `result` | Malicious files render as clean |
-| P0 | History, Reports, and Notify data calls return 404 through the gateway | History, reports, and notifications do not load |
-| P1 | Confidence fallback uses `|| 85`, so a real `0` becomes 85 | Misleading scores |
-| P1 | History ignores report IDs and malware status | Incomplete UI state |
-| P1 | Notification path is `/notify` but the service exposes `/notifications` | Notifications do not load |
+| P1 | Data views require a valid browser session or API bearer token | Expired or missing sessions receive 401 and need reauthentication |
 | P1 | API base defaults to the current origin, which is correct only when served through Traefik | Direct-port development breaks |
-| P2 | The JWT is stored in `localStorage` | XSS can steal the session |
-| P2 | No frontend tests | Regressions are easy |
+| P2 | Hosted browser CI and provider-backed scan UI coverage remain incomplete | Seven deterministic flows and a real local backend journey pass; headless CI runner implemented; first hosted run and provider/deployment coverage remain open |
+
+## Browser routes and regression coverage
+
+Canonical protected pages are `/app/dashboard`, `/app/history`, and `/app/profile`. `/history` remains the authenticated API at the gateway. Login returns to an allowlisted requested protected page. See [[ADR-0008-web-route-namespace]].
+
+Run Playwright MCP `browser_run_code_unsafe` with `filename: scripts/check-web-ui.js` against the running gateway. The script creates/closes its own isolated browser context, uses deterministic API fixtures, and blocks unknown data/mutation requests. No test packages or backend/provider writes are required. See [[2026-11-03-web-flow-regression-and-route-fixes]].
+
+## Current UI
+
+- Signup explains that Auth checks a partial password hash against known breach data and never sends the password itself.
+- The dashboard presents URL and file analysis in a shared, task-first workspace with responsive layouts and accessible input focus styling.
+- Scan submission and result mapping remain connected to the existing API service; seven fixture-driven browser scenarios cover auth, scan-result rendering, report actions, filters, and mobile controls; real local backend journey coverage now passes; provider-backed scans and production deployment coverage remain open.
+- History restores caller-owned report IDs from Reports and shows creation/download feedback; fixture and real local browser coverage now pass; production deployment and CI coverage remain open.
+- Visual direction draws on Watermelon UI's component hierarchy, Manus's task-first workspace, Cult UI's restrained dark surfaces, and Refero's interface references.
+
+## Recent changes
+
+- [[2026-11-04-legacy-report-download-provenance]]: History displays the Reports service's regeneration guidance when a legacy artifact download returns 410.
+
+- [[2026-11-03-auth-breached-password-screening]]: signup explains the privacy-preserving breached-password check before account creation.
+
+- [[2026-11-03-ci-matrix-and-strict-integration]]: headless CLI runs the existing mock and live local browser suites with fixture cleanup; first hosted workflow run pending.
+
+- [[2026-11-03-http-only-browser-sessions]]: browser JWTs moved from localStorage to a Strict HttpOnly cookie; protected routes and cross-service ownership work with cookies.
+
+- [[2026-11-03-live-browser-service-journey]]: real UI account/session, History/report/download, Notify delivery, ownership denials, and verified cleanup.
+
+- [[2026-11-03-web-flow-regression-and-route-fixes]]: protected page namespace, auth cleanup/return, accessible controls, strict result handling, and seven browser scenarios.
+
+- [[2026-11-03-trusted-scan-reports]]: History sends only the stored scan ID for server-generated reports.
+
+- [[2026-11-03-scanner-dashboard-visual-refresh]]
+- [[2026-11-03-history-report-actions]]
+- Removed unused Firebase, upgraded React Router to v7, and cleared npm audit findings; production build passes with `npm ci`.
 
 ## Build and test
 
 ```powershell
 Push-Location apps/web
-npm install
+npm ci
 npm run build
 npm run dev
 Pop-Location

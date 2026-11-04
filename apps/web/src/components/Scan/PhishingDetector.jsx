@@ -3,14 +3,14 @@ import { Upload, Link } from 'lucide-react';
 
 const PhishingDetector = ({ activeTab, setActiveTab }) => {
   return (
-    <div className="mb-8">
-      <div className="inline-flex rounded-xl p-1 backdrop-blur-sm border bg-slate-700/30 border-slate-600/50">
+    <div className="mb-4 px-7">
+      <div className="inline-flex rounded-xl p-1 border border-slate-700/70 bg-slate-950/70">
         <button
           onClick={() => setActiveTab('url')}
           className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 ${
             activeTab === 'url'
-              ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg transform scale-105'
-              : 'text-slate-300 hover:text-white hover:bg-slate-600/50'
+              ? 'bg-slate-700/80 text-white shadow-sm ring-1 ring-white/10'
+              : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/70'
           }`}
         >
           <Link className="w-4 h-4" />
@@ -20,8 +20,8 @@ const PhishingDetector = ({ activeTab, setActiveTab }) => {
           onClick={() => setActiveTab('file')}
           className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 ${
             activeTab === 'file'
-              ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg transform scale-105'
-              : 'text-slate-300 hover:text-white hover:bg-slate-600/50'
+              ? 'bg-slate-700/80 text-white shadow-sm ring-1 ring-white/10'
+              : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/70'
           }`}
         >
           <Upload className="w-4 h-4" />

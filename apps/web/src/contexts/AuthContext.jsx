@@ -22,16 +22,10 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        apiService.setAuthToken(token); 
-        const userData = await apiService.getProfile();
-        setUser(userData);
-      }
-    } catch (err) {
-      console.log('Auth check failed:', err);
-      localStorage.removeItem('access_token');
-      apiService.setAuthToken(null);
+      const userData = await apiService.getProfile();
+      setUser(userData);
+    } catch {
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -45,6 +39,8 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       return response;
     } catch (err) {
+      await apiService.logout().catch(() => {});
+      setUser(null);
       setError(err.message);
       throw err;
     }
@@ -60,9 +56,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    apiService.logout();
-    setUser(null);
+  const logout = async () => {
+    try {
+      await apiService.logout();
+    } finally {
+      setUser(null);
+    }
   };
 
   return (

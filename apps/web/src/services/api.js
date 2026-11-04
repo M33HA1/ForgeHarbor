@@ -1,24 +1,8 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
 
 class ApiService {
-  constructor() {
-    this.token = localStorage.getItem('access_token');
-  }
-
-  setAuthToken(token) {
-    this.token = token;
-    if (token) {
-      localStorage.setItem('access_token', token);
-    } else {
-      localStorage.removeItem('access_token');
-    }
-  }
-
   getAuthHeaders() {
-    return {
-      'Content-Type': 'application/json',
-      ...(this.token && { 'Authorization': `Bearer ${this.token}` })
-    };
+    return { 'Content-Type': 'application/json' };
   }
 
   async handleResponse(response) {
@@ -46,10 +30,7 @@ class ApiService {
       body: JSON.stringify({ email, password })
     });
     const data = await this.handleResponse(response);
-    if (data.access_token) {
-      this.setAuthToken(data.access_token);
-    }
-    return data;
+    return { expires_in: data.expires_in };
   }
 
   async getProfile() {
@@ -60,7 +41,10 @@ class ApiService {
   }
 
   async logout() {
-    this.setAuthToken(null);
+    const response = await fetch(`${API_BASE_URL}/auth/logout`, { method: 'POST' });
+    if (!response.ok && response.status !== 401) {
+      throw new Error('Could not end the current session');
+    }
   }
 
   // URL Scanning Service (Phishing Detection)
@@ -80,9 +64,6 @@ class ApiService {
     
     const response = await fetch(`${API_BASE_URL}/malware/v1/file/analyze`, {
       method: 'POST',
-      headers: {
-        ...(this.token && { 'Authorization': `Bearer ${this.token}` })
-      },
       body: formData
     });
     return this.handleResponse(response);
@@ -105,11 +86,20 @@ class ApiService {
   }
 
   // Reports Service
-  async generateReport(scanId, content) {
+  async generateReport(scanId) {
     const response = await fetch(`${API_BASE_URL}/reports`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
-      body: JSON.stringify({ scanId, content })
+      body: JSON.stringify({ scanId })
+    });
+    return this.handleResponse(response);
+  }
+
+  async getReportsForScans(scanIds = []) {
+    const params = new URLSearchParams();
+    scanIds.forEach((scanId) => params.append('scan_id', String(scanId)));
+    const response = await fetch(`${API_BASE_URL}/reports?${params.toString()}`, {
+      headers: this.getAuthHeaders()
     });
     return this.handleResponse(response);
   }
@@ -125,7 +115,16 @@ class ApiService {
     const response = await fetch(`${API_BASE_URL}/reports/${reportId}/download`, {
       headers: this.getAuthHeaders()
     });
-    if (!response.ok) throw new Error('Download failed');
+    if (!response.ok) {
+      let message = 'Download failed';
+      try {
+        const body = await response.json();
+        if (typeof body?.error === 'string' && body.error.trim()) message = body.error;
+      } catch {
+        // Keep a generic error when the gateway did not return JSON.
+      }
+      throw new Error(message);
+    }
     return response.blob();
   }
 

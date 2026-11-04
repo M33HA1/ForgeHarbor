@@ -11,13 +11,13 @@ tags: [forgeharbor, architecture, services]
 
 | Service | Language | Direct port | Public route | Primary data | Status | Note |
 |---|---|---:|---|---|---|---|
-| Auth | Rust | 8080 | `/auth` | MongoDB | Build fixed; runtime unverified | [[Auth]] |
+| Auth | Rust | 8080 | `/auth` | MongoDB | Build and health verified | [[Auth]] |
 | Phishing | Rust | 8081 | `/phishing` | MongoDB | Unverified | [[Phishing]] |
 | Malware | Rust | 8082 | `/malware` | MongoDB | Unverified | [[Malware]] |
-| History | TypeScript | 8083 | `/history` | MongoDB | Security defects | [[History]] |
-| Reports | Go | 8084 | `/reports` | MongoDB, MinIO, RabbitMQ | Auth defects | [[Reports]] |
-| Notify | Python | 8085 | `/notify` | MongoDB, RabbitMQ | Auth and queue defects | [[Notify]] |
-| Web | React + Vite | 3000 | `/` | Browser storage | Build broken | [[Web]] |
+| History | TypeScript | 8083 | `/history` | MongoDB | RS256 auth and ownership enforced; risk filter remains | [[History]] |
+| Reports | Go | 8084 | `/reports` | MongoDB, RustFS, RabbitMQ | RS256 auth and ownership verified; artifact create/download verified | [[Reports]] |
+| Notify | Python | 8085 | `/notify` | MongoDB, RabbitMQ | RS256 auth and owner filtering enforced; worker hardening remains | [[Notify]] |
+| Web | React + Vite | 3000 | `/` | Browser storage | Node 22 image builds; frontend regression coverage absent | [[Web]] |
 
 Every service registers its full public prefix, and the gateway does not rewrite paths (D1=B, [[ADR-0004-gateway-prefix-contract]]). The public route, direct-port path, and service route are identical; `scripts/check-routes.mjs` enforces the contract.
 
@@ -29,7 +29,7 @@ Every service registers its full public prefix, and the gateway does not rewrite
 | MongoDB | `mongo:6.0` | 27017 | Primary document store |
 | Redis | `redis:7-alpine` | 6379 | Cache and session support |
 | RabbitMQ | `rabbitmq:3-management` | 5672, 15672 | Asynchronous events |
-| MinIO | `minio/minio:latest` | 9000, 9001 | Report object storage |
+| RustFS | `ghcr.io/rustfs/rustfs:1.0.1-glibc` (AMD64 digest pinned in Compose) | 9000, 9001 | S3-compatible report object storage |
 
 ## Dependency direction
 

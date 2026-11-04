@@ -7,8 +7,8 @@ const Header = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/");
   };
 
@@ -29,27 +29,31 @@ const Header = () => {
             {user ? (
               <>
                 <Link
-                  to="/dashboard" 
+                  to="/app/dashboard"
+                  aria-label="Dashboard"
                   className="px-3 py-2 rounded-md font-medium bg-slate-800/60 text-slate-300 hover:bg-slate-700/60 hover:text-white transition-colors flex items-center space-x-2"
                 >
                   <BarChart3 className="w-4 h-4" />
                   <span className="hidden sm:inline">Dashboard</span>
                 </Link>
                 <Link
-                  to="/history" 
+                  to="/app/history"
+                  aria-label="History"
                   className="px-3 py-2 rounded-md font-medium bg-slate-800/60 text-slate-300 hover:bg-slate-700/60 hover:text-white transition-colors flex items-center space-x-2"
                 >
                   <History className="w-4 h-4" />
                   <span className="hidden sm:inline">History</span>
                 </Link>
                 <Link
-                  to="/profile" 
+                  to="/app/profile"
+                  aria-label="Profile"
                   className="px-3 py-2 rounded-md font-medium bg-slate-800/60 text-slate-300 hover:bg-slate-700/60 hover:text-white transition-colors flex items-center space-x-2"
                 >
                   <User className="w-4 h-4" />
                   <span className="hidden sm:inline">{user.email?.split('@')[0] || 'Profile'}</span>
                 </Link>
                 <button 
+                  aria-label="Logout"
                   onClick={handleLogout} 
                   className="px-3 py-2 rounded-md font-medium bg-red-600/90 text-white hover:bg-red-600 transition-colors flex items-center space-x-2"
                 >

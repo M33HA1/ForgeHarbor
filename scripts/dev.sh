@@ -86,10 +86,10 @@ case "$cmd" in
     compose down "$@"
     ;;
   status)
-    exec "$ROOT/scripts/status.sh" "$@"
+    exec bash "$ROOT/scripts/status.sh" "$@"
     ;;
   health)
-    exec "$ROOT/scripts/status.sh" --health-only "$@"
+    exec bash "$ROOT/scripts/status.sh" --health-only "$@"
     ;;
   logs)
     require_docker
@@ -101,11 +101,11 @@ case "$cmd" in
     echo "Compose configuration is valid."
     ;;
   mcp)
-    if ! command -v opencode >/dev/null 2>&1; then
-      echo "error: opencode was not found on PATH." >&2
+    if ! command -v codex >/dev/null 2>&1; then
+      echo "error: codex was not found on PATH; open this trusted repository in Codex to inspect project MCP servers." >&2
       exit 1
     fi
-    exec opencode mcp list
+    exec codex mcp list
     ;;
   test)
     failed=0
@@ -135,7 +135,7 @@ case "$cmd" in
     fi
 
     echo "==> Shell script syntax"
-    for script in "$ROOT/scripts/dev.sh" "$ROOT/scripts/status.sh"; do
+    for script in "$ROOT/scripts/dev.sh" "$ROOT/scripts/status.sh" "$ROOT/scripts/ci/integration.sh"; do
       if [ -f "$script" ]; then
         if bash -n "$script"; then
           echo "  ok  $(basename "$script")"
@@ -153,6 +153,11 @@ case "$cmd" in
       else
         failed=1
       fi
+      if python -c 'import pathlib,sys; [compile(pathlib.Path(p).read_text(encoding="utf-8"),p,"exec") for p in sys.argv[1:]]' "$ROOT/scripts/check-auth-inputs.py" "$ROOT/scripts/ci/prepare.py" "$ROOT/scripts/ci/security-summary.py"; then
+        echo "  ok  Auth and CI Python scripts"
+      else
+        failed=1
+      fi
     else
       echo "  skipped: python not found"
     fi
@@ -162,13 +167,15 @@ case "$cmd" in
       if ! node "$ROOT/scripts/check-routes.mjs"; then
         failed=1
       fi
+      if ! node "$ROOT/scripts/check-cors.mjs"; then
+        failed=1
+      fi
     else
       echo "  skipped: node not found"
     fi
 
     echo "==> Known application blockers (tracked, not fixed here)"
-    echo "  web: Node 14 image with Vite 7"
-    echo "  minio: image pull failure"
+    echo "  security: production TLS/exposure, proxy trust, and provider configuration remain open"
 
     if [ "$failed" -ne 0 ]; then
       echo "error: tooling verification failed." >&2

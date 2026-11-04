@@ -85,13 +85,21 @@ switch ($Command) {
   }
 
   'status' {
-    & (Join-Path $PSScriptRoot 'status.ps1') @Rest
+    if ($Rest) {
+      & (Join-Path $PSScriptRoot 'status.ps1') @Rest
+    } else {
+      & (Join-Path $PSScriptRoot 'status.ps1')
+    }
     if (-not $?) { exit 1 }
     exit 0
   }
 
   'health' {
-    & (Join-Path $PSScriptRoot 'status.ps1') -HealthOnly @Rest
+    if ($Rest) {
+      & (Join-Path $PSScriptRoot 'status.ps1') -HealthOnly @Rest
+    } else {
+      & (Join-Path $PSScriptRoot 'status.ps1') -HealthOnly
+    }
     if (-not $?) { exit 1 }
     exit 0
   }
@@ -110,11 +118,11 @@ switch ($Command) {
   }
 
   'mcp' {
-    if (-not (Get-Command opencode -ErrorAction SilentlyContinue)) {
-      Write-Error 'opencode was not found on PATH.'
+    if (-not (Get-Command codex -ErrorAction SilentlyContinue)) {
+      Write-Error 'codex was not found on PATH; open this trusted repository in Codex to inspect project MCP servers.'
       exit 1
     }
-    & opencode mcp list
+    & codex mcp list
     exit $LASTEXITCODE
   }
 
@@ -153,7 +161,7 @@ switch ($Command) {
     if (Test-Path -LiteralPath $gitBash) {
       Push-Location $Root
       try {
-        foreach ($script in @('scripts/dev.sh', 'scripts/status.sh')) {
+        foreach ($script in @('scripts/dev.sh', 'scripts/status.sh', 'scripts/ci/integration.sh')) {
           if (Test-Path -LiteralPath (Join-Path $Root $script)) {
             & $gitBash -n $script
             if ($LASTEXITCODE -ne 0) {
@@ -180,6 +188,8 @@ switch ($Command) {
       } finally {
         Pop-Location
       }
+      & python -c 'import pathlib,sys; [compile(pathlib.Path(p).read_text(encoding="utf-8"),p,"exec") for p in sys.argv[1:]]' (Join-Path $Root 'scripts/check-auth-inputs.py') (Join-Path $Root 'scripts/ci/prepare.py') (Join-Path $Root 'scripts/ci/security-summary.py')
+      if ($LASTEXITCODE -ne 0) { $failed = $true }
     } else {
       Write-Host '  skipped: python not found'
     }
@@ -188,13 +198,14 @@ switch ($Command) {
     if (Get-Command node -ErrorAction SilentlyContinue) {
       & node (Join-Path $Root 'scripts/check-routes.mjs')
       if ($LASTEXITCODE -ne 0) { $failed = $true }
+      & node (Join-Path $Root 'scripts/check-cors.mjs')
+      if ($LASTEXITCODE -ne 0) { $failed = $true }
     } else {
       Write-Host '  skipped: node not found'
     }
 
     Write-Host '==> Known application blockers (tracked, not fixed here)'
-    Write-Host '  web: Node 14 image with Vite 7'
-    Write-Host '  minio: image pull failure'
+    Write-Host '  security: production TLS/exposure, proxy trust, and provider configuration remain open'
 
     if ($failed) {
       Write-Error 'Tooling verification failed.'

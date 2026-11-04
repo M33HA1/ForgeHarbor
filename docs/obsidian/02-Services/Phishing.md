@@ -1,13 +1,15 @@
 ---
 type: service
-status: unverified
+status: partially-verified
 priority: P1
 language: rust
-updated: 2026-11-02
+updated: 2026-11-03
 tags: [service/phishing, status/p1, area/scanning, language/rust]
 ---
 
 # Phishing
+
+Protected gateway requests use the shared Auth ForwardAuth gate; service JWT and ownership checks remain active. Exact GET health paths and CORS preflights remain public. See [[ADR-0005-shared-edge-auth]] and [[2026-11-03-shared-edge-auth]].
 
 ## Responsibility
 
@@ -22,14 +24,14 @@ Analyzes a URL for phishing indicators using Google Gemini and persists the resu
 | Public route | `/phishing` through Traefik |
 | Data store | MongoDB (`forgeharbor.scans`) |
 | External dependency | Google Gemini |
-| Auth | Bearer RS256 on `/v1/url/check` |
+| Auth | HttpOnly browser session cookie or Bearer RS256 on `/v1/url/check` |
 
 ## Endpoints
 
 | Method | Path | Auth | Notes |
 |---|---|---|---|
 | GET | `/phishing/health` | None | Returns `phishing-rs is healthy` |
-| POST | `/phishing/v1/url/check` | Bearer RS256 | Body: `{ "url": "https://..." }` |
+| POST | `/phishing/v1/url/check` | HttpOnly cookie or Bearer RS256 | Body: `{ "url": "https://..." }` |
 
 ## Request and response shape
 
@@ -71,15 +73,19 @@ Invoke-WebRequest http://localhost:8081/phishing/health -UseBasicParsing
 
 | Severity | Issue | Impact |
 |---|---|---|
-| P1 | Compose passes a blank `GEMINI_API_KEY` when the variable is not set | Service starts but analysis fails |
+| P1 | A valid `GEMINI_API_KEY` must be configured in the local env file | Provider analysis fails when credentials are missing or invalid |
 | P1 | No timeout, retry, or circuit breaker around Gemini | Slow or failed provider calls block the request |
-| P1 | The Gemini API key is passed in the URL query string | The key can leak through logs and proxies |
+| P1 | Rotate the Gemini key if previous request URLs were captured in logs | The API key is now sent in `x-goog-api-key`; credential rotation is not locally verified |
 | P1 | The URL is interpolated directly into the model prompt | Prompt-injection risk |
 | P1 | The error path returns `phishing: true` with confidence `0` | A failure is indistinguishable from a verdict |
 | P1 | No cache of repeated URLs | Duplicate provider cost and latency |
-| P2 | No unit or integration tests in the repository | Behavior is unverified |
-| P2 | CORS allows any origin | Broad browser exposure |
+| P1 | Production CORS origin still needs deployment configuration | Browser requests from the deployed web origin will be denied until `CORS_ALLOWED_ORIGINS` is set |
 | P2 | Redis is provisioned in Compose but not used by this service | Unused infrastructure in the current path |
+
+## Recent changes
+
+- [[2026-11-03-configured-cors-origins]]
+- [[2026-11-03-scanner-and-owner-regression-coverage]]
 
 ## Related notes
 
@@ -89,3 +95,4 @@ Invoke-WebRequest http://localhost:8081/phishing/health -UseBasicParsing
 - [[Test]]
 - [[Security-Review]]
 - [[ADR-0001-polyglot-boundaries]]
+- [[2026-11-03-gemini-key-header]]

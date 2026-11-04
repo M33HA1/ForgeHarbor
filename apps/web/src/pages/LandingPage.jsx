@@ -207,7 +207,7 @@ const LandingPage = () => {
                 </Link>
                 
                 <Link
-                  to="/dashboard"
+                  to="/app/dashboard"
                   className="px-8 py-4 border-2 border-cyan-400 rounded-full text-cyan-400 font-semibold text-lg hover:bg-cyan-400 hover:text-white transition-all duration-300 flex items-center justify-center"
                 >
                   <Waves className="mr-2 w-5 h-5" />

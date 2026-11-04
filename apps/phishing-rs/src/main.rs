@@ -1,5 +1,5 @@
 use actix_cors::Cors;
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Error, HttpMessage};
+use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Error, HttpMessage, body::MessageBody, dev::ServiceResponse, middleware::{Next, from_fn}};
 use actix_web::dev::{ServiceRequest, Payload};
 use actix_web::FromRequest;
 use actix_web_httpauth::extractors::bearer::BearerAuth;
@@ -11,6 +11,20 @@ use mongodb::{bson::doc, Client, Collection, Database};
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use chrono::Utc;
 use std::{env, fs};
+
+async fn cookie_bearer_middleware(
+    mut req: ServiceRequest,
+    next: Next<impl MessageBody>,
+) -> Result<ServiceResponse<impl MessageBody>, Error> {
+    if !req.headers().contains_key("authorization") {
+        if let Some(cookie) = req.request().cookie("fh_access") {
+            let value = actix_web::http::header::HeaderValue::from_str(&format!("Bearer {}", cookie.value()))
+                .map_err(actix_web::error::ErrorBadRequest)?;
+            req.headers_mut().insert(actix_web::http::header::AUTHORIZATION, value);
+        }
+    }
+    next.call(req).await
+}
 
 // ===== Models =====
 
@@ -24,6 +38,8 @@ pub struct AnalysisResult {
     pub phishing: bool,
     pub confidence: f32,
     pub reason: String,
+    #[serde(default)]
+    pub risk_level: String,
 }
 
 #[derive(Serialize)]
@@ -120,11 +136,6 @@ async fn check_phishing_with_gemini(
     url: &str,
     api_key: &str,
 ) -> Result<AnalysisResult, Box<dyn std::error::Error>> {
-    let endpoint = format!(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={}",
-        api_key
-    );
-
     let prompt = format!(
         "Analyze this URL for phishing. Respond ONLY with JSON: {{\"phishing\": bool, \"confidence\": float, \"reason\": string}}. URL: {}",
         url
@@ -132,7 +143,8 @@ async fn check_phishing_with_gemini(
 
     let body = json!({ "contents": [{ "parts": [{ "text": prompt }] }] });
     let client = reqwest::Client::new();
-    let res = client.post(&endpoint).json(&body).send().await?;
+    let request = build_gemini_request(&client, api_key, &body)?;
+    let res = client.execute(request).await?;
     let status = res.status();
     let raw_text = res.text().await?;
 
@@ -170,6 +182,18 @@ async fn check_phishing_with_gemini(
     }
 }
 
+fn build_gemini_request(
+    client: &reqwest::Client,
+    api_key: &str,
+    body: &serde_json::Value,
+) -> Result<reqwest::Request, reqwest::Error> {
+    client
+        .post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent")
+        .header("x-goog-api-key", api_key)
+        .json(body)
+        .build()
+}
+
 // ===== Handlers =====
 #[post("/phishing/v1/url/check")]
 async fn check_url_handler(
@@ -178,7 +202,8 @@ async fn check_url_handler(
     user: AuthUser,
 ) -> impl Responder {
     match check_phishing_with_gemini(&req.url, &state.gemini_key).await {
-        Ok(analysis) => {
+        Ok(mut analysis) => {
+            analysis.risk_level = if analysis.phishing { "high" } else { "low" }.to_string();
             // save to DB
             let record = ScanRecord {
                 id: None,
@@ -203,6 +228,7 @@ async fn check_url_handler(
                 phishing: true,
                 confidence: 0.0,
                 reason: e.to_string(),
+                risk_level: "unknown".to_string(),
             },
         }),
     }
@@ -275,7 +301,7 @@ async fn main() -> std::io::Result<()> {
     println!("phishing-rs running at http://localhost:8081");
 
     HttpServer::new(move || {
-        let cors = Cors::default().allow_any_origin().allow_any_method().allow_any_header();
+        let cors = build_cors();
 
         App::new()
             .app_data(state.clone())
@@ -284,10 +310,36 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("")
                     .wrap(actix_web_httpauth::middleware::HttpAuthentication::bearer(jwt_middleware))
+                    .wrap(from_fn(cookie_bearer_middleware))
                     .service(check_url_handler)
             )
     })
     .bind(("0.0.0.0", 8081))?
     .run()
     .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::build_gemini_request;
+
+    #[test]
+    fn gemini_api_key_is_sent_in_header_not_url() {
+        let client = reqwest::Client::new();
+        let request = build_gemini_request(&client, "test-key", &serde_json::json!({})).unwrap();
+        assert_eq!(request.url().query(), None);
+        assert_eq!(request.headers().get("x-goog-api-key").unwrap(), "test-key");
+    }
+}
+
+fn build_cors() -> Cors {
+    let configured = env::var("CORS_ALLOWED_ORIGINS")
+        .unwrap_or_else(|_| "http://localhost:8088,http://localhost:3000".to_string());
+    let mut cors = Cors::default()
+        .allowed_methods(["GET", "POST", "OPTIONS"])
+        .allowed_headers(["authorization", "content-type"]);
+    for origin in configured.split(',').map(str::trim).filter(|origin| !origin.is_empty()) {
+        cors = cors.allowed_origin(origin);
+    }
+    cors
 }

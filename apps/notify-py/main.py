@@ -1,9 +1,11 @@
 import os
-import json
-import pika
 import pymongo
 import threading
-from fastapi import FastAPI
+import jwt
+from worker import consume_forever, connected
+from fastapi.responses import JSONResponse
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -14,7 +16,7 @@ load_dotenv()
 # MongoDB setup
 mongo_uri = os.getenv("MONGO_URI", "mongodb://fh-mongo:27017")
 mongo_db = os.getenv("MONGO_DB", "forgeharbor")
-client = pymongo.MongoClient(mongo_uri)
+client = pymongo.MongoClient(mongo_uri, serverSelectionTimeoutMS=5000, connectTimeoutMS=5000, socketTimeoutMS=5000)
 db = client[mongo_db]
 notifications_col = db["notifications"]
 
@@ -24,44 +26,58 @@ queue_name = os.getenv("NOTIFY_QUEUE", "notifications")
 
 # FastAPI app
 app = FastAPI()
+bearer_scheme = HTTPBearer(auto_error=False)
+public_key_path = os.getenv("JWT_PUBLIC_KEY_PATH", "/app/config/jwt-public.pem")
+with open(public_key_path, encoding="utf-8") as key_file:
+    jwt_public_key = key_file.read()
+
+def current_user(request: Request, credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme)):
+    token = credentials.credentials if credentials is not None and credentials.scheme.lower() == "bearer" else request.cookies.get("fh_access")
+    if not token:
+        raise HTTPException(status_code=401, detail="authentication required")
+    try:
+        claims = jwt.decode(
+            token,
+            jwt_public_key,
+            algorithms=["RS256"],
+            issuer=os.getenv("JWT_ISSUER", "forgeharbor"),
+            audience=os.getenv("JWT_AUDIENCE", "forgeharbor-users"),
+            options={"require": ["sub", "exp", "iss", "aud"]},
+        )
+        if not isinstance(claims.get("sub"), str) or not claims["sub"]:
+            raise HTTPException(status_code=401, detail="invalid token claims")
+        return claims
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="invalid token")
 
 @app.get("/notify/health")
 def health():
-    return {"status": "ok", "service": "notify-py"}
+    try:
+        db.command("ping")
+        mongo_ready = True
+    except pymongo.errors.PyMongoError:
+        mongo_ready = False
+    ready = mongo_ready and connected.is_set()
+    return JSONResponse(status_code=200 if ready else 503, content={
+        "status": "ok" if ready else "degraded", "service": "notify-py",
+        "dependencies": {"mongo": mongo_ready, "consumer": connected.is_set()}})
 
 @app.get("/notify")
-def get_notifications():
+def get_notifications(user=Depends(current_user)):
     """Get all notifications for the current user"""
     try:
-        # In a real app, you'd get the user from JWT token
-        # For now, return all notifications
-        notifications = list(notifications_col.find({}, {"_id": 0}).sort("timestamp", -1))
+        notifications = list(
+            notifications_col.find({"user": user["sub"]}, {"_id": 0})
+            .sort("timestamp", -1)
+            .limit(100)
+        )
         return {"notifications": notifications}
-    except Exception as e:
-        return {"error": str(e)}, 500
+    except Exception:
+        raise HTTPException(status_code=500, detail="failed to load notifications")
 
 # Worker to consume messages
 def consume_notifications():
-    connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_url))
-    channel = connection.channel()
-    channel.queue_declare(queue=queue_name, durable=True)
-
-    def callback(ch, method, properties, body):
-        try:
-            data = json.loads(body)
-            notifications_col.insert_one({
-                "message": data.get("message", ""),
-                "user": data.get("user", "unknown"),
-                "timestamp": data.get("timestamp")
-            })
-            print(f"[notify-py] Saved notification: {data}")
-            ch.basic_ack(delivery_tag=method.delivery_tag)
-        except Exception as e:
-            print(f"[notify-py] Failed to process message: {e}")
-
-    channel.basic_consume(queue=queue_name, on_message_callback=callback)
-    print("[notify-py] Waiting for messages in RabbitMQ...")
-    channel.start_consuming()
+    consume_forever(rabbitmq_url, queue_name, notifications_col)
 
 # Start RabbitMQ worker in background
 def start_worker():

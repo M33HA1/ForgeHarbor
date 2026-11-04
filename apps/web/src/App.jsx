@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import LandingPage from "./pages/LandingPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -23,17 +23,20 @@ const App = () => {
             <main className="relative z-10 container mx-auto px-6 py-12 flex-grow">
               <Routes>
                 <Route path="/" element={<LandingPage />} />
-                <Route path="/dashboard" element={
+                <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+                <Route path="/profile" element={<Navigate to="/app/profile" replace />} />
+                <Route path="/history" element={<Navigate to="/app/history" replace />} />
+                <Route path="/app/dashboard" element={
                   <ProtectedRoute>
                     <DashboardPage />
                   </ProtectedRoute>
                 } />
-                <Route path="/history" element={
+                <Route path="/app/history" element={
                   <ProtectedRoute>
                     <HistoryPage />
                   </ProtectedRoute>
                 } />
-                <Route path="/profile" element={
+                <Route path="/app/profile" element={
                   <ProtectedRoute>
                     <ProfilePage />
                   </ProtectedRoute>

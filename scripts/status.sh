@@ -97,15 +97,15 @@ write_health
 if [ "$NO_MCP" -eq 0 ]; then
   echo ""
   echo "MCP"
-  if command -v opencode >/dev/null 2>&1; then
-    if output="$(opencode mcp list 2>&1)"; then
+  if command -v codex >/dev/null 2>&1; then
+    if output="$(codex mcp list 2>&1)"; then
       printf '%s\n' "$output" | sed 's/^/  /'
     else
-      echo "  opencode mcp list failed:"
+      echo "  codex mcp list failed:"
       printf '%s\n' "$output" | sed 's/^/  /'
     fi
   else
-    echo "  opencode not found on PATH"
+    echo "  codex not found on PATH; project MCP state is unverified"
   fi
 fi
 

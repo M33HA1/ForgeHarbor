@@ -14,6 +14,10 @@ The architecture has a clear intent and unusually good documentation, but the se
 
 Most of the defects in [[Backlog]] are symptoms of the findings below, not independent bugs. Fixing the contracts is higher leverage than fixing each symptom.
 
+## Follow-up status (2026-11-02)
+
+This review is a static snapshot against the commit listed below. Since that review, D1=B routing is live, the Web image builds on Node 22, the frontend maps file results, and History, Reports, and Notify verify RS256 tokens and scope reads to the caller. Reports and Notify now share a queue. Shared edge ForwardAuth is now deployed under [[ADR-0005-shared-edge-auth]], report storage is verified end to end, and development ports are loopback-bound. Auth outage rejection/recovery are verified; production exposure and scan/event schema drift remain active risks in [[Backlog]].
+
 ## Scope and method
 
 Reviewed on 2026-11-02 against commit `441ccdd`:

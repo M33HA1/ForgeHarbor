@@ -1,11 +1,11 @@
 # Stage 1: Build the TypeScript application
-FROM node:20-alpine as builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
 # Copy package files and install dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 # Copy the rest of the source code
 COPY . .
@@ -14,7 +14,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Create the final production image
-FROM node:20-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
@@ -23,7 +23,7 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
 
 # Install production dependencies
-RUN npm install --production
+RUN npm ci --omit=dev
 
 # Expose the port the app runs on
 EXPOSE 8083

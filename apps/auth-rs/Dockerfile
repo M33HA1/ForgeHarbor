@@ -15,7 +15,7 @@ RUN cargo build --release --locked
 # Copy the real source and build the service.
 # Touch main.rs so Cargo does not reuse the dummy binary from the cache layer.
 COPY ./src ./src
-RUN touch ./src/main.rs && cargo build --release --locked
+RUN touch ./src/main.rs && cargo test --release --locked && cargo build --release --locked
 
 # Stage 2: Minimal runtime image.
 FROM debian:bookworm-slim

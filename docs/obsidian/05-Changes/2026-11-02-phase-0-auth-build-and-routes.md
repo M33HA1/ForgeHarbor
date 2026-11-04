@@ -58,7 +58,7 @@ The gateway stripped prefixes for six services while only three services expecte
 
 - Add edge authentication (ForwardAuth or the Go BFF) and stop publishing service ports; D1=B makes the direct-port bypass less confusing but does not secure it.
 - Add ownership checks to History, Reports, and Notify.
-- Fix the web Dockerfile (Node 22) and the MinIO image.
+- Fix the web Dockerfile (Node 22) and verify report artifact storage against RustFS.
 - Add `.dockerignore` and runtime secrets to Notify (SEC-015 remains partial).
 
 ## Related notes
