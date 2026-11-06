@@ -6,6 +6,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ## [Unreleased]
 
+### Fixed
+
+- CI gives the generated ephemeral Auth signing key read-only group access to the non-root Auth container, allowing the full stack health checks to start Auth without loosening the private-key mode.
+
+
 ### Added
 
 - The CI security summary now prints affected package versions, available fixes, and misconfiguration resources for HIGH/CRITICAL findings while omitting secret values and source snippets.
