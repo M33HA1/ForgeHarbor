@@ -11,6 +11,10 @@ tags: [service/reports, status/p0, area/security, language/go]
 
 Protected gateway requests use the shared Auth ForwardAuth gate; service JWT and ownership checks remain active. Exact GET health paths and CORS preflights remain public. See [[ADR-0005-shared-edge-auth]] and [[2026-11-03-shared-edge-auth]].
 
+## Runtime hardening
+
+The scratch runtime container uses unprivileged UID 65532. Go dependencies are pinned to Trivy's available security fixes.
+
 ## Responsibility
 
 Creates JSON reports, stores them in S3-compatible object storage, records metadata in MongoDB, and publishes report events to RabbitMQ.

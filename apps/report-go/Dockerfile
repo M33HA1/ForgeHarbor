@@ -23,6 +23,8 @@ WORKDIR /
 # Copy the static binary from the builder stage
 COPY --from=builder /app/main .
 
+USER 65532:65532
+
 # Expose the port the app runs on
 EXPOSE 8084
 

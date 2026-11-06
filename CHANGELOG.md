@@ -52,6 +52,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ### Changed
 
+- Rust and Go dependency locks now use Trivy's available fixes; application runtime images run without root, and Notify omits recommended build packages.
+
 - Malware now admits at most two file scans at once and returns 503 with `Retry-After` when capacity is full, bounding simultaneous 32 MiB upload buffers while VirusTotal processes scans. See [the Malware scan-capacity change](docs/obsidian/05-Changes/2026-11-05-malware-scan-capacity.md).
 
 - Reports retries RustFS bucket discovery/creation for up to 30 seconds at startup, absorbing brief storage readiness delays and honoring cancellation. See [the Reports bucket startup change](docs/obsidian/05-Changes/2026-11-05-reports-bucket-startup-retry.md).

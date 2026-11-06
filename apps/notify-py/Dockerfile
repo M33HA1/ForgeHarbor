@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Update pip first and install build dependencies
 RUN pip install --upgrade pip && \
-    apt-get update && apt-get install -y \
+    apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
@@ -17,6 +17,8 @@ RUN pip install --no-cache-dir --timeout=300 -r requirements.txt
 
 # Copy the rest of the application source code
 COPY . .
+RUN chown -R 10001:10001 /app
+USER 10001:10001
 
 # Expose the port the app runs on
 EXPOSE 8085

@@ -11,6 +11,10 @@ tags: [service/auth, status/p0, area/security, language/rust]
 
 Protected gateway requests use the shared Auth ForwardAuth gate; service JWT and ownership checks remain active. Exact GET health paths and CORS preflights remain public. See [[ADR-0005-shared-edge-auth]] and [[2026-11-03-shared-edge-auth]].
 
+## Runtime hardening
+
+The runtime container runs as an unprivileged UID; the MongoDB driver is pinned to 3.9.1 to remove vulnerable legacy DNS/TLS transitive crates.
+
 ## Responsibility
 
 Registration, login, JWT issuance, JWKS exposure, and current-user lookup. This is the trust anchor for every protected service.

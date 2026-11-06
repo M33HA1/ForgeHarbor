@@ -11,6 +11,10 @@ tags: [service/notify, status/p0, area/security, language/python]
 
 Protected gateway requests use the shared Auth ForwardAuth gate; service JWT and ownership checks remain active. Exact GET health paths and CORS preflights remain public. See [[ADR-0005-shared-edge-auth]] and [[2026-11-03-shared-edge-auth]].
 
+## Runtime hardening
+
+The runtime container runs as UID 10001, and its build dependencies are installed without recommended packages.
+
 ## Responsibility
 
 Consumes RabbitMQ messages, stores notifications in MongoDB, and exposes a read API.
