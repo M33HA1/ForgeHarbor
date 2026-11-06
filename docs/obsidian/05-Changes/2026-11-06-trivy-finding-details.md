@@ -15,6 +15,7 @@ tags: [change, ci, trivy, security]
 - Secret findings remain limited to rule IDs and counts; the summary does not print match text, source snippets, or secret paths.
 - Refreshed vulnerable Rust and Go dependencies to patched releases.
 - Set unprivileged runtime users for all scanned Dockerfiles and added --no-install-recommends to Notify's apt install.
+- Updated hosted integration setup to grant the non-root Auth UID read-only group access to its ephemeral test signing key.
 
 ## Why
 
