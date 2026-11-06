@@ -8,6 +8,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ### Added
 
+- The CI security summary now prints affected package versions, available fixes, and misconfiguration resources for HIGH/CRITICAL findings while omitting secret values and source snippets.
+
 - Report-only Gitleaks, Semgrep, Trivy, and Syft workflow plus weekly Dependabot updates; Gitleaks is pinned to the verified v2.3.8 commit and the workflow runs on `main` and `devsecops-baseline`.
 
 - DevSecOps workflow uses Node.js 24 compatible pinned Actions and Ubuntu 24.04 to avoid runner runtime and image migration warnings.
