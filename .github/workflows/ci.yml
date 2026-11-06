@@ -106,6 +106,9 @@ jobs:
         run: |
           python3 scripts/ci/prepare.py
           node scripts/setup-jwt-keys.mjs
+          # Keep runner ownership and allow only the Auth container UID group to read the ephemeral CI key.
+          sudo chgrp 65532 apps/auth-rs/config/jwt-private.pem
+          chmod 640 apps/auth-rs/config/jwt-private.pem
           python3 -m venv .venv-ci
           "$PYTHON" -m pip install --disable-pip-version-check -r apps/notify-py/requirements.txt
           npm --prefix apps/history-ts ci
