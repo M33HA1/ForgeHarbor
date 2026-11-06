@@ -49,7 +49,7 @@ jobs:
           case "$KIND" in
             rust) cargo test --locked; cargo build --locked ;;
             node) npm ci; npm run build ;;
-            go) go test ./...; go build ./... ;;
+            go) go test ./...; go build -buildvcs=false ./... ;;
             python)
               python -m pip install --disable-pip-version-check -r requirements.txt
               python -m unittest test_worker.py
