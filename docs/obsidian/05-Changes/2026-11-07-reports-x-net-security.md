@@ -1,6 +1,6 @@
 ---
 type: change
-status: verification-pending
+status: implemented
 updated: 2026-11-07
 tags: [change, area/security, service/reports, area/ci]
 ---
@@ -18,7 +18,8 @@ Post-merge [ForgeHarbor CI run #171](https://github.com/M33HA1/ForgeHarbor/actio
 ## Verification
 
 - Run #171: one HIGH finding in apps/report-go/go.mod.
-- Replacement dependency build and fresh Trivy scan pending hosted CI.
+- Fresh HIGH/CRITICAL Trivy gate, report-only Trivy, Gitleaks, Semgrep, and SBOM checks passed on PR #40's initial revision.
+- Service builds and full stack/API/browser results for the final revision are recorded in [PR #40 checks](https://github.com/M33HA1/ForgeHarbor/pull/40/checks). Require these checks before merge.
 - Local Go/Docker tooling unavailable; no local service build claimed.
 
 ## Follow-ups
