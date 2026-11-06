@@ -13,7 +13,7 @@ tags: [change, ci, trivy, security]
 
 - The CI security summary now prints affected package names, installed versions, available fixed versions, and misconfiguration resources for HIGH/CRITICAL findings.
 - Secret findings remain limited to rule IDs and counts; the summary does not print match text, source snippets, or secret paths.
-- Updated the Auth MongoDB driver to 3.9.1, Rust OpenSSL lock entries to 0.10.79, and vulnerable Go transitive dependencies to scanner-listed fixed versions.
+- Refreshed vulnerable Rust and Go dependencies to patched releases.
 - Set unprivileged runtime users for all scanned Dockerfiles and added --no-install-recommends to Notify's apt install.
 
 ## Why
@@ -24,8 +24,8 @@ tags: [change, ci, trivy, security]
 
 | Check | Command | Result |
 |---|---|---|
-| Rust dependency locks | Cargo update in isolated scratch manifests | Completed; Auth MongoDB 3.9.1, Malware/Phishing OpenSSL 0.10.79 |
-| Go dependency updates | Reports CI runs go mod tidy and prints only dependency lock diffs | Pending CI run |
+| Rust dependency locks | Cargo update in isolated scratch manifests | Cargo lockfiles refreshed for Auth, Malware, and Phishing. |
+| Go dependency updates | Reports CI runs go mod tidy and prints the module lock diffs | Pending CI run |
 | Main workflow | ForgeHarbor CI | Pending |
 
 ## Follow-ups
