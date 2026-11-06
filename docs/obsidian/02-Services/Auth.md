@@ -13,7 +13,7 @@ Protected gateway requests use the shared Auth ForwardAuth gate; service JWT and
 
 ## Runtime hardening
 
-The runtime container runs as an unprivileged UID; the MongoDB driver is pinned to 3.9.1 to remove vulnerable legacy DNS/TLS transitive crates.
+The runtime container runs as UID 65532; the MongoDB driver is pinned to 3.9.1 to remove vulnerable legacy DNS/TLS transitive crates. Hosted integration gives the generated ephemeral Auth key group 65532 read-only access (mode 0640), retaining runner ownership and private-key restrictions.
 
 ## Responsibility
 
