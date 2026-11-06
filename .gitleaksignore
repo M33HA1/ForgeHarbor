@@ -1,0 +1,2 @@
+# Historical generic-api-key false positive: dependency versions in the Trivy change note; current note no longer contains the flagged dependency string.
+a4167cd4a2d230eca80016f80fd57a10db402a78:docs/obsidian/05-Changes/2026-11-06-trivy-finding-details.md:generic-api-key:27
