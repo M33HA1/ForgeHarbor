@@ -108,6 +108,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ### Fixed
 
+- Disable Go build VCS stamping in hosted CI containers, where the checkout does not expose complete repository metadata; `go test` passed and `go build` had failed with `error obtaining VCS status`.
+
 - Fixed the CI workflow validation error by resolving the Playwright module path from `RUNNER_TEMP` in the integration step instead of using the unavailable job-level `runner` context.
 
 - Reports list and metadata reads now have five-second deadlines; report downloads use a twenty-second end-to-end database/object deadline. Timeout and infrastructure errors return generic 503 responses, while missing or foreign reports remain 404.
