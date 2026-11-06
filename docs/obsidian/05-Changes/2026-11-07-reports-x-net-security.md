@@ -9,13 +9,15 @@ tags: [change, area/security, service/reports, area/ci]
 
 ## What changed
 
-Upgrade Reports from golang.org/x/net v0.60.0 to v0.62.0 and align its required crypto, sys, and text modules. Refresh checksums using the upstream Trivy module records; hosted Go builds verify downloaded module contents.
+Upgrade Reports from golang.org/x/net v0.60.0 to v0.62.0 and align its required crypto, sys, text, and sync modules. Refresh checksums using the upstream Trivy module records; hosted Go builds verify downloaded module contents.
 
 ## Why
 
 Post-merge [ForgeHarbor CI run #171](https://github.com/M33HA1/ForgeHarbor/actions/runs/42283258324) failed the security gate on CVE-2026-78661. Its seven service builds, full stack health, API/ownership checks, and browser journeys passed. The [Go advisory](https://pkg.go.dev/vuln/GO-2026-6860) identifies versions before v0.62.0 as affected. Keep the security gate active; no findings are suppressed.
 
 ## Verification
+
+- The first PR integration image build correctly rejected an untidy module manifest: x/text v0.43.0 requires x/sync v0.24.0. Commit that version/checksum and change language CI to `go mod tidy -diff` so future module drift fails before Docker integration rather than being repaired silently.
 
 - Run #171: one HIGH finding in apps/report-go/go.mod.
 - Fresh HIGH/CRITICAL Trivy gate, report-only Trivy, Gitleaks, Semgrep, and SBOM checks passed on PR #40's initial revision.
