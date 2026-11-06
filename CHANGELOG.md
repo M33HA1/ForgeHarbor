@@ -108,7 +108,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ### Fixed
 
-- Disable Go build VCS stamping in hosted CI containers, where the checkout does not expose complete repository metadata; `go test` passed and `go build` had failed with `error obtaining VCS status`.
+- Pin the hosted Report-Go CI and Docker build images to Go 1.24 for the updated AWS SDK, and disable Go build VCS stamping in hosted CI containers; the previous Go 1.22 build failed because the SDK requires Go 1.24.
 
 - Fixed the CI workflow validation error by resolving the Playwright module path from `RUNNER_TEMP` in the integration step instead of using the unavailable job-level `runner` context.
 
