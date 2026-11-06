@@ -349,6 +349,7 @@ dependencies = [
  "dotenv",
  "jsonwebtoken",
  "mongodb",
+ "rand_core 0.6.4",
  "redis",
  "reqwest",
  "rustls",
