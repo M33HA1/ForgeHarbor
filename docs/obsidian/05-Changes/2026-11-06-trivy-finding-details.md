@@ -2,7 +2,7 @@
 date: 2026-11-06
 type: change
 area: [ci, security]
-status: in-progress
+status: complete
 related: [[Security-Review]]
 tags: [change, ci, trivy, security]
 ---
@@ -25,13 +25,13 @@ tags: [change, ci, trivy, security]
 
 | Check | Command | Result |
 |---|---|---|
-| Rust dependency locks | Cargo update in isolated scratch manifests | Cargo lockfiles refreshed for Auth, Malware, and Phishing. |
-| Go dependency updates | Reports CI runs go mod tidy and prints the module lock diffs | Pending CI run |
-| Main workflow | ForgeHarbor CI | Pending |
+| Rust dependency locks | Cargo update in isolated scratch manifests; hosted Cargo test/build | Auth, Malware, and Phishing builds pass; Auth RNG dependency lock is current. |
+| Go dependency locks | `go mod tidy`; `go test ./...`; `go build -buildvcs=false ./...` | Generated `go.mod` and `go.sum` committed; Reports tests and build pass. |
+| Service matrix and security gates | ForgeHarbor CI and DevSecOps Baseline | All seven service builds, Trivy HIGH/CRITICAL gate, Gitleaks, Semgrep, and Syft pass on PR #39. |
 
 ## Follow-ups
 
-- Capture the Go module checksum updates from CI, remove the temporary lock-diff output, then rerun the strict gate and full integration suite.
+- Keep the strict security gate enabled and review unrelated baseline alerts separately.
 - Keep unfixed findings visible; do not suppress the gate with broad ignores.
 
 ## Related notes
