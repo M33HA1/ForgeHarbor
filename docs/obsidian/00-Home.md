@@ -17,7 +17,7 @@ tags: [forgeharbor, dashboard, moc]
 | Repository | Active | Branch `main` |
 | Knowledge base | In place | This vault, linked from this dashboard |
 | Developer tooling | In place | `scripts/dev.ps1`, `scripts/dev.sh`, `.tool-versions` |
-| CI | Run #171 service builds and full stack/API/browser checks passed; one HIGH dependency finding remains under remediation | Reports x/net upgraded to v0.62.0; fresh verification pending; [[2026-11-07-reports-x-net-security]] |
+| CI | Run #171 service builds and full stack/API/browser checks passed; Reports dependency finding remediated and fresh security gate passed | Final revision build/integration evidence is tracked in [PR #40 checks](https://github.com/M33HA1/ForgeHarbor/pull/40/checks); [[2026-11-07-reports-x-net-security]] |
 | Application stack | Running; locally verified, production gates remain | Seven images build; eight health probes, gateway route/CORS checks, Auth credential bounds and rate limits, History/Reports ownership, scanner JWT gates, Notify isolation, trusted report provenance (legacy downloads return 410), artifact storage, and dependency-aware Reports readiness pass; mocked and live browser/API journeys pass; provider and hosted CI coverage remain |
 | Architecture | Reviewed | [[Architecture-Review]] — contracts, routing, auth boundary, events, secrets |
 | Routing | Contract fixed | D1=B in [[ADR-0004-gateway-prefix-contract]]; `scripts/check-routes.mjs` |
