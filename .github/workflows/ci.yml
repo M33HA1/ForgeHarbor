@@ -28,7 +28,7 @@ jobs:
           - { service: malware, kind: rust, path: apps/malware-rs, image: 'rust:1.90.0-bookworm' }
           - { service: history, kind: node, path: apps/history-ts, image: 'node:22.12-bookworm' }
           - { service: web, kind: node, path: apps/web, image: 'node:22.12-bookworm' }
-          - { service: reports, kind: go, path: apps/report-go, image: 'golang:1.24-bookworm' }
+          - { service: reports, kind: go, path: apps/report-go, image: 'golang:1.27.3-bookworm' }
           - { service: notify, kind: python, path: apps/notify-py, image: 'python:3.11-bookworm' }
     container:
       image: ${{ matrix.image }}
