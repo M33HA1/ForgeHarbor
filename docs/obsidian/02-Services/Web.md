@@ -9,6 +9,10 @@ tags: [service/web, status/p0, area/frontend, language/typescript]
 
 # Web
 
+## Runtime hardening
+
+The runtime container runs as the built-in unprivileged Node.js user.
+
 ## Responsibility
 
 React single-page application for signup, login, URL scans, file scans, history, reports, notifications, and service health.

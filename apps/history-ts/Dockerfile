@@ -29,4 +29,6 @@ RUN npm ci --omit=dev
 EXPOSE 8083
 
 # Command to run the application
+USER node
+
 CMD ["node", "dist/index.js"]

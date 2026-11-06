@@ -42,6 +42,10 @@ Manual review of the service code and live API probes against the local Compose 
 | SEC-020 | P2 | Concurrent signup requests could create duplicate email accounts | Auth | Enforce a unique MongoDB email index and map duplicate-key races to 409 | Fixed; index is ensured at startup and duplicate-key responses return 409 |
 | SEC-021 | P1 | Signup abuse and unbounded credentials/Argon2 work can consume Auth and database capacity | Auth | Validate credentials, cap bodies, rate-limit signup, bound password hashing, and reject known compromised passwords | Partial — validated input, 8 KiB JSON cap, two Argon2 jobs, retryable saturation, 20 valid signup attempts per trusted IP/15 minutes, and HIBP k-anonymity screening are verified locally. Production proxy configuration, outbound HIBP availability, and hosted CI coverage remain open |
 
+## Current Trivy gate work
+
+- The HIGH/CRITICAL gate identified vulnerable Rust DNS/TLS and OpenSSL dependency locks, four vulnerable Go transitive modules, root runtime users, and one Notify apt install without --no-install-recommends. Updates are being verified in [[2026-11-06-trivy-finding-details]].
+
 ## Positive controls
 
 - Shared ForwardAuth validates JWTs through Auth before dispatch to protected service routers; blank subjects are rejected and service ownership checks remain active. See [[ADR-0005-shared-edge-auth]] and [[2026-11-03-shared-edge-auth]]. Auth outage rejection/recovery are verified in [[2026-11-03-edge-auth-outage-and-recovery]]; production exposure and failure-latency review remain open.

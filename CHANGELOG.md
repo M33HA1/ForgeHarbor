@@ -6,7 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ## [Unreleased]
 
+### Fixed
+
+- CI gives the generated ephemeral Auth signing key read-only group access to the non-root Auth container, allowing the full stack health checks to start Auth without loosening the private-key mode.
+
+
 ### Added
+
+- The CI security summary now prints affected package versions, available fixes, and misconfiguration resources for HIGH/CRITICAL findings while omitting secret values and source snippets.
 
 - Report-only Gitleaks, Semgrep, Trivy, and Syft workflow plus weekly Dependabot updates; Gitleaks is pinned to the verified v2.3.8 commit and the workflow runs on `main` and `devsecops-baseline`.
 
@@ -49,6 +56,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 - ADR-0004 for the gateway prefix contract.
 
 ### Changed
+
+- Rust and Go dependency locks now use Trivy's available fixes; application runtime images run without root, and Notify omits recommended build packages.
 
 - Malware now admits at most two file scans at once and returns 503 with `Retry-After` when capacity is full, bounding simultaneous 32 MiB upload buffers while VirusTotal processes scans. See [the Malware scan-capacity change](docs/obsidian/05-Changes/2026-11-05-malware-scan-capacity.md).
 

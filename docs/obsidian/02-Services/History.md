@@ -11,6 +11,10 @@ tags: [service/history, status/p0, area/security, language/typescript]
 
 Protected gateway requests use the shared Auth ForwardAuth gate; service JWT and ownership checks remain active. Exact GET health paths and CORS preflights remain public. See [[ADR-0005-shared-edge-auth]] and [[2026-11-03-shared-edge-auth]].
 
+## Runtime hardening
+
+The runtime container runs as the built-in unprivileged Node.js user.
+
 ## Responsibility
 
 Reads scan records from MongoDB and exposes a paginated history API.

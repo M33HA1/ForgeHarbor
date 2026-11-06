@@ -11,6 +11,10 @@ tags: [service/phishing, status/p1, area/scanning, language/rust]
 
 Protected gateway requests use the shared Auth ForwardAuth gate; service JWT and ownership checks remain active. Exact GET health paths and CORS preflights remain public. See [[ADR-0005-shared-edge-auth]] and [[2026-11-03-shared-edge-auth]].
 
+## Runtime hardening
+
+The runtime container runs as an unprivileged UID; the OpenSSL lock entry is updated to 0.10.79.
+
 ## Responsibility
 
 Analyzes a URL for phishing indicators using Google Gemini and persists the result to the shared `scans` collection.

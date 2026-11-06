@@ -17,7 +17,7 @@ tags: [forgeharbor, dashboard, moc]
 | Repository | Active | Branch `main` |
 | Knowledge base | In place | This vault, linked from this dashboard |
 | Developer tooling | In place | `scripts/dev.ps1`, `scripts/dev.sh`, `.tool-versions` |
-| CI | Hosted builds now use Go 1.27.3 and disable VCS stamping; the Dockerfile parse blocker is fixed and dependency checks are rerunning | Seven-service language matrix, strict stack/API/browser suite, and HIGH/CRITICAL security gate; Playwright path uses `RUNNER_TEMP`; [[2026-11-06-ci-go-build-vcs]] |
+| CI | Seven-service and full stack/API/browser checks pass on main; Trivy findings are being remediated in PR #39 | Rust/Go dependency fixes, non-root runtime users, and safe package installation are included; [[2026-11-06-trivy-finding-details]] |
 | Application stack | Running; locally verified, production gates remain | Seven images build; eight health probes, gateway route/CORS checks, Auth credential bounds and rate limits, History/Reports ownership, scanner JWT gates, Notify isolation, trusted report provenance (legacy downloads return 410), artifact storage, and dependency-aware Reports readiness pass; mocked and live browser/API journeys pass; provider and hosted CI coverage remain |
 | Architecture | Reviewed | [[Architecture-Review]] — contracts, routing, auth boundary, events, secrets |
 | Routing | Contract fixed | D1=B in [[ADR-0004-gateway-prefix-contract]]; `scripts/check-routes.mjs` |

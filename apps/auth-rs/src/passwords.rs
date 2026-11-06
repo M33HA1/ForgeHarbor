@@ -1,5 +1,6 @@
 use actix_web::web;
-use argon2::password_hash::{SaltString, rand_core::OsRng};
+use argon2::password_hash::SaltString;
+use rand_core::OsRng;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use std::sync::Arc;
 use tokio::sync::Semaphore;

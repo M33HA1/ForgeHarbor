@@ -1,6 +1,5 @@
 # Stage 1: Build with a pinned stable toolchain.
-# The mongodb 3.2.x crate triggers a nightly-only async-drop cycle (E0391),
-# so this image must use stable Rust. The version is pinned for reproducibility.
+# Use a pinned stable toolchain for reproducible builds.
 FROM rust:1.90.0-bookworm AS builder
 
 WORKDIR /app
@@ -33,5 +32,7 @@ EXPOSE 8080
 
 ENV RUST_BACKTRACE=1 \
     RUST_LOG=info
+
+USER 65532:65532
 
 CMD ["/usr/local/bin/auth-rs"]
