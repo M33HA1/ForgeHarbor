@@ -102,6 +102,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ### Security
 
+- Upgrade Reports x/net to v0.62.0 and align required Go modules to remediate CVE-2026-78661 found by post-merge CI run #171; fresh verification is tracked in the Reports security change note.
+
 - Reports now exports evidence from an owned stored scan, ignores caller-supplied report content, records new-artifact provenance, and bounds creation payloads; Web sends only scan IDs.
 
 - Kept edge authentication registered independently of Auth container availability and verified rejection plus automatic recovery in a controlled local outage drill.
