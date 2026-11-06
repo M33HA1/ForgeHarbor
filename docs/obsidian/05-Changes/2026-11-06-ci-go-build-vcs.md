@@ -11,8 +11,8 @@ tags: [change, ci, go]
 
 ## What changed
 
-- Pinned hosted Report-Go CI to Go 1.24 and added `-buildvcs=false` to the Go build command.
-- Updated the Reports Docker builder to Go 1.24 so the image can compile against the upgraded AWS SDK.
+- Pinned hosted Report-Go CI to Go 1.27.3 and added `-buildvcs=false` to the Go build command.
+- Updated the Reports Docker builder to Go 1.27.3 so the image can compile against the upgraded AWS SDK.
 
 ## Why
 
@@ -23,7 +23,7 @@ tags: [change, ci, go]
 | Check | Command | Result |
 |---|---|---|
 | Hosted Report-Go tests | `go test ./...` | Passed on the CI run that exposed the build failure |
-| Hosted Report-Go build | `go build -buildvcs=false ./...` | Awaiting a fresh CI run after the Go 1.24 image update |
+| Hosted Report-Go build | `go build -buildvcs=false ./...` | Awaiting a fresh CI run after the Go 1.27.3 image update |
 
 ## Follow-ups
 
