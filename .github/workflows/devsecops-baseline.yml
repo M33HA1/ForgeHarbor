@@ -49,7 +49,7 @@ jobs:
           config: auto
       - name: Upload Semgrep SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@cdefb33c0f6224e58673d9004f47f7cb3e328b89 # v4.31.10
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           sarif_file: semgrep.sarif
         continue-on-error: true
@@ -73,7 +73,7 @@ jobs:
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
       - name: Upload Trivy FS SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@cdefb33c0f6224e58673d9004f47f7cb3e328b89 # v4.31.10
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           sarif_file: trivy-fs.sarif
         continue-on-error: true
