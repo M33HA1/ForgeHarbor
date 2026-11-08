@@ -15,7 +15,7 @@
     "jsonwebtoken": "9.0.3"
   },
   "devDependencies": {
-    "@types/dotenv": "6.1.1",
+    "@types/dotenv": "8.2.3",
     "@types/jsonwebtoken": "9.0.10",
     "tsx": "4.23.15",
     "typescript": "7.0.2"
