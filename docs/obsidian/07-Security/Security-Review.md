@@ -46,6 +46,10 @@ Manual review of the service code and live API probes against the local Compose 
 
 - The HIGH/CRITICAL gate identified vulnerable Rust DNS/TLS and OpenSSL dependency locks, four vulnerable Go transitive modules, root runtime users, and one Notify apt install without --no-install-recommends. Updates are being verified in [[2026-11-06-trivy-finding-details]].
 
+## Backend control-plane change
+
+Go Auth/History/Notify retain JWT verification and owner scoping. Backend MFA adds owner-bound encrypted seeds, hashed one-time recovery codes, Redis challenge limits, atomic proof consumption and session-version checks through ForwardAuth. Updated Rust Auth blocks password-only rollback for enrolled users. Browser MFA is a separate dependent change. See [[2026-11-09-backend-control-plane-pr]]. Production private service ports, TLS, key custody and provider credentials remain separate gates.
+
 ## Positive controls
 
 - Shared ForwardAuth validates JWTs through Auth before dispatch to protected service routers; blank subjects are rejected and service ownership checks remain active. See [[ADR-0005-shared-edge-auth]] and [[2026-11-03-shared-edge-auth]]. Auth outage rejection/recovery are verified in [[2026-11-03-edge-auth-outage-and-recovery]]; production exposure and failure-latency review remain open.

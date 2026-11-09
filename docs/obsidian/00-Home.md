@@ -10,6 +10,10 @@ tags: [forgeharbor, dashboard, moc]
 > [!summary] Current phase
 > **Phase 0: Stabilize.** The stack builds and passes health probes. Shared edge JWT validation and Auth trusted-peer IP handling are verified in dev; provider configuration, production exposure, and production proxy addresses remain open.
 
+## Backend PR
+
+Go Auth/History/Notify and backend MFA APIs are isolated on `codex/backend-control-plane`; the UI migration and redesign remain on `codex/language-revamp`. The unchanged browser supports unenrolled accounts; MFA browser screens require the separate frontend work. CI includes focused service builds, a real-store race suite, security scanning and the existing full-stack/browser job. See [[2026-11-09-backend-control-plane-pr]]. Hosted results are tracked on the PR; production deployment remains separate.
+
 ## Status
 
 | Area | State | Evidence |

@@ -29,6 +29,7 @@ jobs:
           - { service: history, kind: node, path: apps/history-ts, image: 'node:22.12-bookworm' }
           - { service: web, kind: node, path: apps/web, image: 'node:22.12-bookworm' }
           - { service: reports, kind: go, path: apps/report-go, image: 'golang:1.27.3-bookworm' }
+          - { service: controlplane, kind: go, path: apps/controlplane-go, image: 'golang:1.27.3-bookworm' }
           - { service: notify, kind: python, path: apps/notify-py, image: 'python:3.11-bookworm' }
     container:
       image: ${{ matrix.image }}
@@ -57,6 +58,18 @@ jobs:
               ;;
             *) exit 2 ;;
           esac
+
+  go-parity:
+    name: Go control-plane contract parity
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Isolated MongoDB, Redis, and RabbitMQ contract tests
+        shell: pwsh
+        run: ./scripts/check-go-parity.ps1
 
   security:
     name: High and critical security gate
@@ -107,8 +120,8 @@ jobs:
           python3 scripts/ci/prepare.py
           node scripts/setup-jwt-keys.mjs
           # Keep runner ownership and allow only the Auth container UID group to read the ephemeral CI key.
-          sudo chgrp 65532 apps/auth-rs/config/jwt-private.pem
-          chmod 640 apps/auth-rs/config/jwt-private.pem
+          sudo chgrp 65532 apps/auth-rs/config/jwt-private.pem apps/auth-rs/config/mfa-encryption.key
+          chmod 640 apps/auth-rs/config/jwt-private.pem apps/auth-rs/config/mfa-encryption.key
           python3 -m venv .venv-ci
           "$PYTHON" -m pip install --disable-pip-version-check -r apps/notify-py/requirements.txt
           npm --prefix apps/history-ts ci

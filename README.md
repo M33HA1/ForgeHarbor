@@ -124,3 +124,12 @@ See the [Build](docs/obsidian/03-Runbooks/Build.md) and [Run](docs/obsidian/03-R
 ## License
 
 A `LICENSE` file is not present in the repository yet.
+
+
+## Go control plane and backend MFA
+
+Development Compose uses independent Go Auth, History and Notify processes from `apps/controlplane-go`. Existing service paths, stored identities, cookie/JWT formats and ownership behavior are preserved. Use `deploy/compose/docker-compose.language-rollback.yml` for the retained legacy implementations.
+
+The key setup command also creates an ignored 32-byte `apps/auth-rs/config/mfa-encryption.key`. Back it up separately from JWT signing keys. API clients can enroll TOTP via `/auth/mfa/setup` and `/auth/mfa/enable`, then complete pending logins through `/auth/mfa/verify`. Recovery codes work once. Do not enroll accounts used by the unchanged browser until its separate MFA screens are deployed; the browser in this PR supports unenrolled accounts only. See [Auth](docs/obsidian/02-Services/Auth.md).
+
+Run `scripts/check-go-parity.ps1` for isolated race-enabled MongoDB, Redis and RabbitMQ contract tests, including backend MFA. No new production deployment target is configured by this change.

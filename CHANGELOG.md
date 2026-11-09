@@ -6,6 +6,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ## [Unreleased]
 
+### Backend control plane
+
+- Add Go Auth, History and Notify processes with compatible MongoDB/Redis/event contracts and a legacy runtime rollback overlay.
+- Add backend authenticator MFA APIs, encrypted seeds, bounded challenges, single-use recovery codes and session-version invalidation. Updated Rust rollback blocks password-only sign-in for enrolled accounts; browser MFA screens remain a separate frontend change.
+- Add Go service build/test coverage and race-enabled real MongoDB/Redis/RabbitMQ integration tests to CI. Keep the existing frontend and its integration checks unchanged.
+
+
 ### Fixed
 
 - CI gives the generated ephemeral Auth signing key read-only group access to the non-root Auth container, allowing the full stack health checks to start Auth without loosening the private-key mode.

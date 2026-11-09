@@ -45,7 +45,7 @@ if (health.every((up) => !up)) {
 }
 
 let failures = 0;
-console.log('Rust service CORS contract');
+console.log('Configured service CORS contract');
 for (const [index, service] of services.entries()) {
   if (!health[index]) {
     console.log(`  FAIL ${service.name}: health endpoint is not reachable`);

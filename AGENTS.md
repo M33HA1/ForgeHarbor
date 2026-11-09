@@ -21,12 +21,12 @@ The polyglot architecture is intentional. Each language must have a credible spe
 
 | Service | Language | Port | Public path | Status |
 |---|---|---:|---|---|
-| Auth | Rust | 8080 | `/auth` | Build and health verified; security review remains |
+| Auth | Go (Rust retained for rollback) | 8080 | `/auth` | Build and health verified; security review remains |
 | Phishing | Rust | 8081 | `/phishing` | Unverified |
 | Malware | Rust | 8082 | `/malware` | Unverified |
-| History | TypeScript | 8083 | `/history` | RS256 auth/ownership enforced; risk filter and integration tests remain |
+| History | Go (TypeScript retained for rollback) | 8083 | `/history` | RS256 auth/ownership enforced; risk filter and integration tests remain |
 | Reports | Go | 8084 | `/reports` | RS256 auth/ownership enforced; artifact flow unverified |
-| Notify | Python | 8085 | `/notify` | RS256 auth/ownership enforced; worker hardening remains |
+| Notify | Go (Python retained for rollback) | 8085 | `/notify` | RS256 auth/ownership enforced; worker hardening remains |
 | Web | React + Vite | 3000 | `/` | Node 22 image builds; UI regression coverage remains |
 
 Infrastructure: Traefik on host port 8088 (dashboard 8000), MongoDB 27017, Redis 6379, RabbitMQ 5672/15672, RustFS S3 storage 9000/9001.

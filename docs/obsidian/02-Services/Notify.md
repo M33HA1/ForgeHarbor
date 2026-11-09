@@ -2,18 +2,22 @@
 type: service
 status: protected
 priority: P1
-language: python
-updated: 2026-11-03
-tags: [service/notify, status/p0, area/security, language/python]
+language: go
+updated: 2026-11-09
+tags: [service/notify, status/p0, area/security, language/go]
 ---
 
 # Notify
+
+## Go language migration
+
+Development Compose now runs Notify from `apps/controlplane-go` behind the existing API/data contract. Backend contract/security checks and a legacy rollback overlay are provided; see [[2026-11-09-backend-control-plane-pr]]. The legacy implementation remains available through the language rollback overlay.
 
 Protected gateway requests use the shared Auth ForwardAuth gate; service JWT and ownership checks remain active. Exact GET health paths and CORS preflights remain public. See [[ADR-0005-shared-edge-auth]] and [[2026-11-03-shared-edge-auth]].
 
 ## Runtime hardening
 
-The runtime container runs as UID 10001, and its build dependencies are installed without recommended packages.
+The active Go runtime runs as UID 65532. The legacy Python image retains UID 10001.
 
 ## Responsibility
 
@@ -23,7 +27,7 @@ Consumes RabbitMQ messages, stores notifications in MongoDB, and exposes a read 
 
 | Field | Value |
 |---|---|
-| Language | Python, FastAPI |
+| Language | Go, net/http with AMQP consumer |
 | Direct port | 8085 |
 | Public route | `/notify` through Traefik |
 | Data store | MongoDB (`forgeharbor.notifications`) |
@@ -53,6 +57,8 @@ The frontend calls `/notify`, and the service now registers `/notify`; the gatew
 | `JWT_AUDIENCE` | No | Defaults to `forgeharbor-users` |
 
 ## Build and test
+
+Use `scripts/check-go-parity.ps1` for the active Go consumer, including real RabbitMQ retry exhaustion, dead storage, and idempotency with race checks. The commands below exercise the retained Python worker and shared HTTP ownership fixture; Python delivery checks validate the legacy worker, not the Go consumer.
 
 ```powershell
 Push-Location apps/notify-py

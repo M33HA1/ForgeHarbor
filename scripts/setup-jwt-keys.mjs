@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { createPrivateKey, createPublicKey, generateKeyPairSync } from 'node:crypto';
+import { createPrivateKey, createPublicKey, generateKeyPairSync, randomBytes } from 'node:crypto';
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -86,6 +86,13 @@ function ensurePublicReplica(filePath) {
 try {
   ensureAuthKeyPair();
   for (const replicaPath of replicaPaths) ensurePublicReplica(replicaPath);
+  const mfaKeyPath = path.join(authConfig, 'mfa-encryption.key');
+  if (!existsSync(mfaKeyPath)) {
+    writeNewFile(mfaKeyPath, randomBytes(32), 0o600);
+    console.log('Generated a local MFA encryption key. Back it up securely; do not rotate it without migrating enrolled factors.');
+  } else if (readFileSync(mfaKeyPath).length !== 32) {
+    throw new Error('The existing MFA encryption key is invalid and was left unchanged.');
+  }
   console.log('JWT key setup is ready. Keep the Auth private key local and out of version control.');
 } catch (error) {
   console.error(`JWT key setup stopped: ${error.message}`);

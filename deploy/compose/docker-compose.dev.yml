@@ -37,12 +37,13 @@ services:
       - "traefik.enable=false"
 
   # -------------------------
-  # Auth Service (Rust)
+  # Auth Service (Go; legacy Rust implementation available via rollback overlay)
   # -------------------------
   fh-auth:
     build:
-      context: ../../apps/auth-rs
+      context: ../../apps/controlplane-go
       dockerfile: Dockerfile
+    command: [auth]
     container_name: fh-auth
     env_file:
       - ../../config/.env
@@ -155,12 +156,13 @@ services:
       - "127.0.0.1:8082:8082"
 
   # -------------------------
-  # History Service (TypeScript)
+  # History Service (Go; TypeScript implementation retained for rollback)
   # -------------------------
   fh-history:
     build:
-      context: ../../apps/history-ts
+      context: ../../apps/controlplane-go
       dockerfile: Dockerfile
+    command: [history]
     container_name: fh-history
     env_file:
       - ../../config/.env
@@ -228,12 +230,13 @@ services:
       - "127.0.0.1:8084:8084"
 
   # -------------------------
-  # Notification Service (Python)
+  # Notification Service (Go; Python implementation retained for rollback)
   # -------------------------
   fh-notify:
     build:
-      context: ../../apps/notify-py
+      context: ../../apps/controlplane-go
       dockerfile: Dockerfile
+    command: [notify]
     container_name: fh-notify
     env_file:
       - ../../config/.env

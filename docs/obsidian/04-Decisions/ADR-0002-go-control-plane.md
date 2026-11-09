@@ -2,6 +2,7 @@
 type: adr
 status: accepted
 date: 2026-11-02
+updated: 2026-11-09
 tags: [adr, architecture, go]
 ---
 
@@ -70,7 +71,13 @@ Do not rewrite everything at once. Stabilize the current stack first, then migra
 | Rewrite everything in Go immediately | Too risky while the stack does not start |
 | Use Python for all backend services | Weaker fit for high-concurrency control-plane work |
 
+## Implementation status — 2026-11-09
+
+The language branch implements Go Auth/History/Notify in one shared module with separate processes, while the frontend migration remains on a separate branch. MongoDB, user IDs, key locations, string JWT audiences, and queue contracts remain compatible. Legacy runtimes remain available through the rollback overlay; local dependency, gateway, real-browser, and rollback checks pass. Auth refuses a non-default user database until a separate data migration is approved. Python threat intelligence and PostgreSQL remain separate roadmap work. See [[2026-11-09-backend-control-plane-pr]].
+
 ## Related notes
+
+Authenticator MFA is now implemented in Go Auth. The retained Rust rollback explicitly blocks password-only login for enrolled users and honors session-version changes; restoring MFA sign-in requires Go Auth. See [[2026-11-09-backend-control-plane-pr]].
 
 - [[ADR-0001-polyglot-boundaries]]
 - [[System-Overview]]

@@ -22,6 +22,7 @@ target/
 #jwt keys
 jwt-private.pem
 jwt-public.pem
+mfa-encryption.key
 
 #tree
 tree.txt

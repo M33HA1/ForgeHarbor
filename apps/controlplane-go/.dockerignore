@@ -1,0 +1,8 @@
+.git
+.env
+config
+*.pem
+*.test
+coverage*
+forgeharbor
+forgeharbor.exe
