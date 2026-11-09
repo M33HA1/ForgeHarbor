@@ -2,18 +2,22 @@
 type: service
 status: protected
 priority: P1
-language: typescript
-updated: 2026-11-03
-tags: [service/history, status/p0, area/security, language/typescript]
+language: go
+updated: 2026-11-09
+tags: [service/history, status/p0, area/security, language/go]
 ---
 
 # History
+
+## Go language migration
+
+Development Compose now runs History from `apps/controlplane-go` behind the existing API/data contract. Backend contract/security checks and a legacy rollback overlay are provided; see [[2026-11-09-backend-control-plane-pr]]. The legacy implementation remains available through the language rollback overlay.
 
 Protected gateway requests use the shared Auth ForwardAuth gate; service JWT and ownership checks remain active. Exact GET health paths and CORS preflights remain public. See [[ADR-0005-shared-edge-auth]] and [[2026-11-03-shared-edge-auth]].
 
 ## Runtime hardening
 
-The runtime container runs as the built-in unprivileged Node.js user.
+The active Go runtime runs as UID 65532; the legacy rollback image retains the Node.js user.
 
 ## Responsibility
 
@@ -23,7 +27,7 @@ Reads scan records from MongoDB and exposes a paginated history API.
 
 | Field | Value |
 |---|---|
-| Language | TypeScript, Fastify |
+| Language | Go, net/http |
 | Direct port | 8083 |
 | Public route | `/history` through Traefik |
 | Data store | MongoDB (`forgeharbor.scans`) |
@@ -66,6 +70,8 @@ Data routes require a valid RS256 JWT with issuer, audience, subject, and expira
 | `HISTORY_PORT` | No | Defaults to 8083 |
 
 ## Build and test
+
+Run `go test ./...` and `go build ./cmd/forgeharbor` in `apps/controlplane-go`. The retained TypeScript package supplies legacy builds and the shared API fixture; its integration test also passes against Go.
 
 ```powershell
 Push-Location apps/history-ts

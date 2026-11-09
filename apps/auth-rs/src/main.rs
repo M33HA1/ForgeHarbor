@@ -66,6 +66,16 @@ struct User {
     email: String,
     password_hash: String,
     created_at: DateTime<Utc>,
+    #[serde(default)]
+    mfa: MFAState,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+struct MFAState {
+    #[serde(default)]
+    enabled: bool,
+    #[serde(default)]
+    version: String,
 }
 
 // API Request/Response Types
@@ -120,6 +130,8 @@ struct Claims {
     email: String,
     #[serde(default)]
     jti: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    auth_version: Option<String>,
     iss: String,
     aud: String,
     exp: usize,
@@ -235,6 +247,7 @@ async fn signup(
         email: req.email.clone(),
         password_hash,
         created_at: Utc::now(),
+        mfa: MFAState::default(),
     };
 
     match collection.insert_one(&user).await {
@@ -354,12 +367,20 @@ async fn login(
         Err(error) => return Ok(password_error_response(error)),
     }
 
+    // Rollback must never downgrade an enrolled account to password-only login.
+    if user.mfa.enabled {
+        return Ok(HttpResponse::ServiceUnavailable()
+            .insert_header(("Cache-Control", "no-store"))
+            .insert_header(("Set-Cookie", session_cookie("", 0)))
+            .json(ErrorResponse { error: "Two-step sign-in is temporarily unavailable".to_string() }));
+    }
     println!("Creating JWT token...");
     let now = Utc::now();
     let claims = Claims {
         sub: user.user_id.clone(),
         email: user.email.clone(),
         jti: Some(Uuid::new_v4().to_string()),
+        auth_version: Some(user.mfa.version.clone()).filter(|v| !v.is_empty()),
         iss: env::var("JWT_ISSUER").unwrap_or_else(|_| "forgeharbor".to_string()),
         aud: env::var("JWT_AUDIENCE").unwrap_or_else(|_| "forgeharbor-users".to_string()),
         exp: (now + Duration::hours(1)).timestamp() as usize,
@@ -580,7 +601,16 @@ async fn me(state: web::Data<AppState>, request: HttpRequest) -> Result<HttpResp
             }
         }
     }
-    Ok(HttpResponse::Ok().json(UserResponse {
+    let collection = state.db.collection::<User>("users");
+    let version = match collection.find_one(doc! { "user_id": &claims.sub }).await {
+        Ok(Some(user)) => user.mfa.version,
+        Ok(None) => String::new(),
+        Err(_) => return Ok(HttpResponse::ServiceUnavailable().json(ErrorResponse { error: "Authentication temporarily unavailable".to_string() })),
+    };
+    if claims.auth_version.as_deref().unwrap_or("") != version {
+        return Ok(HttpResponse::Unauthorized().json(ErrorResponse { error: "Sign in again to verify your account".to_string() }));
+    }
+    Ok(HttpResponse::Ok().insert_header(("Cache-Control", "no-store")).json(UserResponse {
         user_id: claims.sub,
         email: claims.email,
     }))

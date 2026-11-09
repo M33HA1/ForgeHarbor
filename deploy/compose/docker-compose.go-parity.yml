@@ -1,0 +1,38 @@
+# Isolated contract fixtures only: no production env file, keys, volumes or gateway routes.
+services:
+  mongo:
+    image: mongo:6.0
+    healthcheck:
+      test: [CMD, mongosh, --quiet, --eval, "db.adminCommand('ping').ok"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+  rabbit:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: fhparity
+      RABBITMQ_DEFAULT_PASS: ${FH_PARITY_RABBIT_PASSWORD:?Generate an ephemeral test password}
+    healthcheck:
+      test: [CMD, rabbitmq-diagnostics, -q, ping]
+      interval: 3s
+      timeout: 10s
+      retries: 30
+  contracts:
+    build:
+      context: ../../apps/controlplane-go
+      target: test
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://fhparity:${FH_PARITY_RABBIT_PASSWORD}@rabbit:5672/
+    depends_on:
+      mongo: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      rabbit: { condition: service_healthy }

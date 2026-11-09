@@ -1,0 +1,18 @@
+# Explicit rollback after a language migration. Keep the same keys, data and routes.
+# docker compose -f docker-compose.dev.yml -f docker-compose.language-rollback.yml up -d --build fh-auth fh-history fh-notify
+services:
+  fh-auth:
+    build:
+      context: ../../apps/auth-rs
+      dockerfile: Dockerfile
+    command: null
+  fh-history:
+    build:
+      context: ../../apps/history-ts
+      dockerfile: Dockerfile
+    command: null
+  fh-notify:
+    build:
+      context: ../../apps/notify-py
+      dockerfile: Dockerfile
+    command: null
