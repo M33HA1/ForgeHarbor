@@ -1,7 +1,7 @@
 ---
 type: reference
 status: active
-updated: 2026-11-03
+updated: 2026-11-09
 tags: [reference, api]
 ---
 
@@ -30,10 +30,20 @@ Auth public `user_id` is the JWT `sub` and the ownership value used by scan/repo
 |---|---|---|---|---|
 | GET | `/auth/health` | None | — | `Service is Healthy!` |
 | POST | `/auth/signup` | None | `{ "email": "...", "password": "..." }` | Mailbox identity is lowercased; `201` with `message` and `user_id` |
-| POST | `/auth/login` | None | `{ "email": "...", "password": "..." }` | Case-insensitive mailbox lookup; sets `fh_access` as HttpOnly/SameSite=Strict; its RS256 token includes the JWKS `kid`; JSON `{ "expires_in": 3600 }` |
+| POST | `/auth/login` | None | `{ "email": "...", "password": "..." }` | Case-insensitive mailbox lookup; sets `fh_access` as HttpOnly/SameSite=Strict; its RS256 token includes the JWKS `kid`; JSON `{ "expires_in": 3600 }` for unenrolled users; enrolled accounts instead receive `mfa_required`, `challenge_token`, `expires_in: 300` and no access cookie |
 | POST | `/auth/logout` | None | — | Revokes the current token ID through expiry and clears the session cookie; returns 503 if Redis cannot persist revocation |
 | GET | `/auth/jwks` | None | — | RFC 7517 JWKS with RSA `n`, `e`, `kid`, `use`, and `alg` fields |
 | GET | `/auth/me` | HttpOnly session cookie or Bearer RS256 | — | Current user |
+
+MFA API routes are implemented in Go Auth. See [[Auth]] for requirements and key handling. Challenge tokens cannot authorize protected APIs; successful MFA verification issues the session cookie. Browser MFA screens remain separate from main.
+
+| Method | Public path | Requirement |
+|---|---|---|
+| GET | `/auth/mfa` | Current session; returns enabled/available/recovery count |
+| POST | `/auth/mfa/setup` | Session and password; returns enrollment token, seed and provisioning URI |
+| POST | `/auth/mfa/enable` | Same session, enrollment token and authenticator code; returns recovery codes once |
+| POST | `/auth/mfa/verify` | Password-login challenge and authenticator or recovery code |
+| POST | `/auth/mfa/disable` | Session, password and authenticator or recovery code |
 
 ## Phishing
 

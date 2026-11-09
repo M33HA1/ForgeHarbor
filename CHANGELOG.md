@@ -6,6 +6,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ## [Unreleased]
 
+### Documentation and cleanup
+
+- Align current architecture, runbooks, API/MFA references and backlog with backend PR #69 and its passing CI evidence; distinguish the separate frontend MFA work and unconfigured production CD.
+- Remove four unused seed/demo files (Notify command-execution demo and credential/config samples, plus the Web seed Dockerfile). Retain legacy services required for rollback. See [the cleanup note](docs/obsidian/05-Changes/2026-11-09-documentation-and-seed-cleanup.md).
+
 ### Backend control plane
 
 - Add Go Auth, History and Notify processes with compatible MongoDB/Redis/event contracts and a legacy runtime rollback overlay.

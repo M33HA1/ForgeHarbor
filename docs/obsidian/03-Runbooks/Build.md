@@ -1,7 +1,7 @@
 ---
 type: runbook
 status: active
-updated: 2026-11-02
+updated: 2026-11-09
 tags: [runbook, build]
 ---
 
@@ -18,10 +18,10 @@ Use this runbook to build images, compile services locally, or reproduce a build
 | Docker | 24+ with Compose v2 | 29.4.3 |
 | Node.js | 22.12+ for Vite 7 | 22.20.0 |
 | Rust | Stable 1.90.0, pinned in every Rust Dockerfile | 1.90.0 |
-| Go | 1.22+ for local Report builds | Not on PATH |
+| Go | 1.27.3 for Go control-plane and Reports builds | Not on PATH |
 | Python | 3.11 in the container | 3.13.7 locally |
 
-Install Go if you want local Report builds:
+Install Go if you want local control-plane or Reports builds:
 
 ```powershell
 winget install GoLang.Go
@@ -37,8 +37,8 @@ Tool versions are pinned in `.tool-versions` for asdf or mise users. The Dockerf
    ```powershell
    Copy-Item config/.env.example config/.env
    ```
-2. Fill in `GEMINI_API_KEY`, `VIRUSTOTAL_API_KEY`, and a strong `JWT_SECRET`.
-3. Generate the local RSA keys and verifier copies. The command keeps matching keys unchanged, refuses incomplete or mismatched pairs, and never overwrites an existing key:
+2. Fill in `GEMINI_API_KEY`, `VIRUSTOTAL_API_KEY`, and storage settings from the safe template. RS256 uses generated keys, not `JWT_SECRET`.
+3. Generate the local RSA keys, verifier copies, and MFA encryption key. The command keeps matching keys unchanged, refuses incomplete or mismatched pairs, and never overwrites an existing key:
    ```powershell
    node scripts/setup-jwt-keys.mjs
    ```
@@ -77,9 +77,16 @@ npm install
 npm run build
 Pop-Location
 
-# History
+# Active Auth, History and Notify (shared module, separate processes)
+Push-Location apps/controlplane-go
+go mod tidy -diff
+go test ./...
+go build -buildvcs=false ./...
+Pop-Location
+
+# Legacy History rollback only
 Push-Location apps/history-ts
-npm install
+npm ci
 npm run build
 Pop-Location
 
@@ -88,17 +95,17 @@ Push-Location apps/report-go
 go build ./...
 Pop-Location
 
-# Rust services
+# Legacy Auth rollback (Phishing/Malware remain active Rust services)
 Push-Location apps/auth-rs
 cargo build --release
 Pop-Location
 ```
 
-## Known blockers
+## Troubleshooting (including resolved historical failures)
 
 | Symptom | Cause | Workaround |
 |---|---|---|
-| `cycle detected when computing when error::GridFsErrorKind needs async drop` | `mongodb-3.2.5` with the current dependency resolution | Pin a compatible `mongodb` version or move Auth to Go |
+| `cycle detected when computing when error::GridFsErrorKind needs async drop` | `mongodb-3.2.5` with the current dependency resolution | Use the Go default or the retained Rust image pinned to stable 1.90.0 and MongoDB 3.9.1 |
 | `UnhandledPromiseRejectionWarning: SyntaxError: Unexpected token '??='` | Node 14 running Vite 7 | Change the web Dockerfile to `node:22` |
 | `pull access denied for minio/minio` | The old MinIO image is no longer available | The development Compose stack now pins RustFS; verify report artifact operations separately |
 | `Failed to retrieve information of the docker client and server host` | Traefik cannot reach the Docker socket/API | Recreate the Traefik container and verify the socket mount |

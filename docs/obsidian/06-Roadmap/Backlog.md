@@ -1,7 +1,7 @@
 ---
 type: backlog
 status: active
-updated: 2026-11-05
+updated: 2026-11-09
 tags: [roadmap, backlog]
 ---
 
@@ -38,14 +38,14 @@ tags: [roadmap, backlog]
 | FH-017 | Frontend | Remove `|| 85` confidence fallback | Misleading scores | Done — unknown file confidence is shown as vendor counts |
 | FH-018 | Build | Add clean-clone bootstrap and key generation | Clone does not start | Done — `node scripts/setup-jwt-keys.mjs` safely generates or validates the Auth pair and verifier copies |
 | FH-019 | Docs | Correct README paths, ports, and endpoints | Setup instructions are wrong | Done — README now uses the current config path, dev scripts, loopback ports, RustFS, and registered routes |
-| FH-020 | Testing | Add auth and ownership regression tests | Prevent recurrence | In progress: backend auth/owner fixtures, seven mocked browser scenarios, and a real local signup/History/report/notification/two-user-denial journey pass; provider-backed scans, pagination races, and CI remain |
+| FH-020 | Testing | Add auth and ownership regression tests | Prevent recurrence | In progress: backend auth/owner fixtures, seven mocked browser scenarios, and a real local signup/History/report/notification/two-user-denial journey pass; provider-backed scans and pagination races remain; PR #69 hosted browser/API integration passed |
 | FH-021 | Architecture | Add Go scan orchestrator | Synchronous scans do not scale | Open |
 | FH-022 | Data | Add PostgreSQL for relational records | Ownership and filters are awkward in Mongo | Open |
 | FH-023 | Observability | Add request IDs and structured logs | Hard to debug across services | Open |
 | FH-036 | Messaging | Standardize the event envelope and add a dead-letter queue | Prevent notification loss, drift, and stuck messages | In progress: v1 event, consumer idempotency/retry/dead storage, and producer outbox with mandatory confirms/replay verified; broker/producer outage drills, quorum redrive, backlog monitoring, and reviewed dead-message replay remain |
 | FH-037 | Data | Define one scan result schema and add query indexes | Filters and history pagination are unreliable | Open |
 | FH-038 | Testing | Add OpenAPI contracts and schema validation for every service | Hand-written calls drift from behavior | Open |
-| FH-041 | Security | Bound Auth credential and password-hashing work; reject known compromised passwords | Oversized inputs, parallel Argon2 requests, and reused breached passwords increase account risk | In progress: validated credentials, 8 KiB body cap, two-job Argon2 pool, retryable overload, atomic 20/IP/15-minute signup throttle, and HIBP k-anonymity screening pass locally; production outbound policy and hosted regression coverage remain |
+| FH-041 | Security | Bound Auth credential and password-hashing work; reject known compromised passwords | Oversized inputs, parallel Argon2 requests, and reused breached passwords increase account risk | In progress: validated credentials, 8 KiB body cap, two-job Argon2 pool, retryable overload, atomic 20/IP/15-minute signup throttle, and HIBP k-anonymity screening pass locally; PR #69 hosted regression coverage passed; production outbound policy remains |
 
 ## P2 — Hardening and polish
 
@@ -56,13 +56,13 @@ tags: [roadmap, backlog]
 | FH-026 | Scanning | Add file-size and archive-bomb limits | DoS resistance | In progress — Malware rejects files over 32 MiB and limits concurrent scans to two; archive-bomb inspection and disk streaming remain |
 | FH-027 | Scanning | Add ClamAV and YARA | Deeper file analysis | Open |
 | FH-028 | Intelligence | Add Python threat-intelligence service | Better AI/feed integration | Open |
-| FH-029 | CI | Add language matrix and security scans | Prevent regressions | In progress: seven-service build/test matrix, strict API/browser runner, and HIGH/CRITICAL security gate implemented; fixed an invalid job-level runner context; fresh hosted run, finding triage, and required-check configuration remain |
+| FH-029 | CI | Add language matrix and security scans | Prevent regressions | In progress: eight language build/test jobs, Go store race contracts, strict API/browser runner and HIGH/CRITICAL security gate passed on PR #69 head 9d41051 (run #209); report-only finding triage, required-check policy and production CD remain |
 | FH-030 | Testing | Add k6 load tests | Measure performance claims | Open |
 | FH-031 | Docs | Add demo video and screenshots | Portfolio presentation | Open |
 | FH-032 | Infra | Add Terraform or Kubernetes manifests | Deployment maturity | Open |
 | FH-039 | Security | Move the Gemini key out of the query string and tokens out of `localStorage` | Key leakage and XSS token theft | Done in the browser path — Gemini uses `x-goog-api-key`; Web uses an HttpOnly Strict cookie, never stores JWTs in Web storage, clears the cookie and revokes its token ID on logout; API bearer support remains |
 
-| FH-040 | Architecture | Migrate Auth, History, and Notify to Go in parallel with hardening | Align control-plane services with the target Go boundary while keeping the running stack available | Planned â€” contracts first; Auth, then History, then Notify; MongoDB retained until a separate database migration |
+| FH-040 | Architecture | Migrate Auth, History and Notify to Go | Preserve API/data/queue contracts during the language cutover | Merged in PR #69 as bbb8055; Go is the dev default; PR-head race parity, security and full-stack/browser CI passed; MongoDB and legacy rollback retained; production rollout remains |
 
 ## Definition of ready
 

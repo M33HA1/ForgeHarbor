@@ -11,7 +11,7 @@ tags: [service/notify, status/p0, area/security, language/go]
 
 ## Go language migration
 
-Development Compose now runs Notify from `apps/controlplane-go` behind the existing API/data contract. Backend contract/security checks and a legacy rollback overlay are provided; see [[2026-11-09-backend-control-plane-pr]]. The legacy implementation remains available through the language rollback overlay.
+Development Compose now runs Notify from `apps/controlplane-go` behind the existing API/data contract. Merged in [PR #69](https://github.com/M33HA1/ForgeHarbor/pull/69); hosted build, security, real-store race contracts and full-stack browser checks passed on PR head `9d41051`. A legacy rollback overlay is retained; see [[2026-11-09-backend-control-plane-pr]]. The legacy implementation remains available through the language rollback overlay.
 
 Protected gateway requests use the shared Auth ForwardAuth gate; service JWT and ownership checks remain active. Exact GET health paths and CORS preflights remain public. See [[ADR-0005-shared-edge-auth]] and [[2026-11-03-shared-edge-auth]].
 

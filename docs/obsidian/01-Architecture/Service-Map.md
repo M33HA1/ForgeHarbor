@@ -11,15 +11,15 @@ tags: [forgeharbor, architecture, services]
 
 | Service | Language | Direct port | Public route | Primary data | Status | Note |
 |---|---|---:|---|---|---|---|
-| Auth | Go | 8080 | `/auth` | MongoDB | Build and health verified | [[Auth]] |
-| Phishing | Rust | 8081 | `/phishing` | MongoDB | Unverified | [[Phishing]] |
-| Malware | Rust | 8082 | `/malware` | MongoDB | Unverified | [[Malware]] |
-| History | Go | 8083 | `/history` | MongoDB | Owner/risk/cursor and legacy rollback verified locally | [[History]] |
+| Auth | Go | 8080 | `/auth` | MongoDB, Redis | Hosted build, store race and Auth/MFA contracts pass | [[Auth]] |
+| Phishing | Rust | 8081 | `/phishing` | MongoDB | Build/auth gate/health pass; live Gemini analysis remains unverified | [[Phishing]] |
+| Malware | Rust | 8082 | `/malware` | MongoDB | Build/auth gate/health pass; live VirusTotal analysis remains unverified | [[Malware]] |
+| History | Go | 8083 | `/history` | MongoDB | Hosted owner/risk/cursor contracts pass; legacy rollback retained | [[History]] |
 | Reports | Go | 8084 | `/reports` | MongoDB, RustFS, RabbitMQ | RS256 auth and ownership verified; artifact create/download verified | [[Reports]] |
 | Notify | Go | 8085 | `/notify` | MongoDB, RabbitMQ | Owner API and Go broker contracts pass; operational drills remain | [[Notify]] |
-| Web | React + Vite | 3000 | `/` | Browser storage | Unchanged in the backend PR; frontend migration is separate | [[Web]] |
+| Web | React + Vite | 3000 | `/` | HttpOnly session cookie | Existing browser CI passes; MFA/TypeScript/redesign remain separate | [[Web]] |
 
-Auth, History, and Notify share `apps/controlplane-go` and run as separate processes. The language rollback overlay selects the retained Rust/TypeScript/Python implementations against the same data and keys. Backend verification: [[2026-11-09-backend-control-plane-pr]].
+Auth, History, and Notify share `apps/controlplane-go` and run as separate processes. The language rollback overlay selects the retained Rust/TypeScript/Python implementations against the same data and keys. Merged backend and hosted verification: [[2026-11-09-backend-control-plane-pr]].
 
 Every service registers its full public prefix, and the gateway does not rewrite paths (D1=B, [[ADR-0004-gateway-prefix-contract]]). The public route, direct-port path, and service route are identical; `scripts/check-routes.mjs` enforces the contract.
 

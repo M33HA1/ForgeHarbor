@@ -1,7 +1,7 @@
 ---
 type: runbook
 status: active
-updated: 2026-11-03
+updated: 2026-11-09
 tags: [runbook, test]
 ---
 
@@ -9,7 +9,7 @@ tags: [runbook, test]
 
 CI entry points: `bash scripts/ci/integration.sh` requires a running local stack and executes health, tooling, route/CORS, edge/scanner auth, Auth, History, Reports, and Notify integration checks. It starts the loopback-only Auth test proxy using the `integration` Compose profile and stops it on exit. Set `PYTHON` to an absolute interpreter path when using a virtual environment. `node scripts/ci/browser.mjs` runs both existing browser suites headlessly; install Playwright separately and set `PLAYWRIGHT_MODULE` to its absolute `index.mjs` path if it is outside the repository. Install Playwright Chromium, or use `PLAYWRIGHT_CHANNEL=chrome` / `msedge` for an existing local browser; CI uses its installed Chromium. The CLI cleans its disposable live fixtures in `finally`. See [[2026-11-03-ci-matrix-and-strict-integration]].
 
-`.github/workflows/ci.yml` adds a seven-service build/test matrix, provider-disabled ephemeral Compose environment, strict integration/browser job, and a separate HIGH/CRITICAL vulnerability/secret/configuration gate. All Actions references use immutable commit hashes. The first hosted workflow result and required-check setup are pending. CI reports finding IDs/counts without secret matches or source snippets. Only the ephemeral hosted workflow removes its volumes; the reusable local scripts preserve stack data.
+`.github/workflows/ci.yml` adds eight language build/test jobs (including retained rollback implementations), provider-disabled ephemeral Compose environment, strict integration/browser job, and a separate HIGH/CRITICAL vulnerability/secret/configuration gate. All Actions references use immutable commit hashes. All 11 jobs passed in [CI run #209](https://github.com/M33HA1/ForgeHarbor/actions/runs/42642752091) on PR #69 head `9d41051`, including the real-store Go race suite and full-stack browser/API checks. Required-check policy and production deployment remain separate. CI reports finding IDs/counts without secret matches or source snippets. Only the ephemeral hosted workflow removes its volumes; the reusable local scripts preserve stack data.
 
 Offline route/CORS checks retain their local skip behavior. Set `FH_REQUIRE_RUNNING=1` (or `CI=true`) to make unreachable services fail; the integration runner always enables this requirement.
 
@@ -23,7 +23,7 @@ Notification delivery: from `apps/notify-py`, run `python -m unittest test_worke
 
 Report evidence integrity: `python scripts/check-report-integrity.py` uses local MongoDB and development RustFS credentials, creates disposable scan/report fixtures, checks downloaded evidence and owner boundaries, observes notifications, and removes test objects/records. See [[2026-11-03-trusted-scan-reports]].
 
-Auth credential boundaries: `python scripts/check-auth-inputs.py` verifies signup email/password limits, Unicode length accounting, the 8 KiB JSON cap, redacted body errors, Argon2id storage, and short-password login compatibility using disposable accounts and scoped rate keys. The image build runs `cargo test --release --locked` before compiling its Auth binary. See [[2026-11-03-auth-credential-boundaries-and-password-capacity]].
+Auth credential boundaries: `python scripts/check-auth-inputs.py` verifies signup email/password limits, Unicode length accounting, the 8 KiB JSON cap, redacted body errors, Argon2id storage, and short-password login compatibility using disposable accounts and scoped rate keys. The active Go Auth suite covers these behaviors; retained Rust Auth also runs its unit tests in CI. See [[2026-11-03-auth-credential-boundaries-and-password-capacity]].
 
 Local outage drill: `powershell -ExecutionPolicy Bypass -File scripts/check-edge-auth-outage.ps1`. This intentionally stops only local Auth, asserts protected HTTP failures and public health, then restores Auth in `finally` and verifies recovery. It requires local Docker engine access, a running Auth service, and the default local URLs. Do not interrupt it while Auth is stopped. Evidence: [[2026-11-03-edge-auth-outage-and-recovery]].
 
@@ -37,11 +37,11 @@ Use this runbook before claiming a change works, before a release, or when addin
 
 | Layer | Purpose | Current state |
 |---|---|---|
-| Unit | Pure functions and handlers | Missing in most services |
-| Integration | Service with MongoDB/Redis/RabbitMQ | Automated disposable Auth/History/Reports/Notify fixtures; first hosted run pending |
-| Contract | Frontend and service request/response shapes | Missing |
+| Unit | Pure functions and handlers | Go Auth/History/Notify and Reports, Rust scanners/rollback Auth, and legacy Notify have focused CI tests; Web has browser fixtures |
+| Integration | Service with MongoDB/Redis/RabbitMQ | Automated disposable fixtures; hosted Go race contracts and full-stack/API checks passed on PR #69 |
+| Contract | Frontend and service request/response shapes | Go store/API parity and browser fixtures exist; generated OpenAPI/schema contracts remain open |
 | Smoke | Health and critical user path | Automated health/routes and mocked/live local browser suites; provider paths pending |
-| Security | Auth bypass, IDOR, secrets | Automated auth/owner checks plus CI scanner gate; hosted scan result pending; findings in [[Security-Review]] |
+| Security | Auth bypass, IDOR, secrets | Automated auth/owner checks plus CI scanner gate; high/critical gate passed on PR #69; report-only findings in [[Security-Review]] |
 
 ## Commands
 
@@ -54,7 +54,14 @@ Push-Location apps/web
 npm run build
 Pop-Location
 
-# History
+# Active Go Auth/History/Notify
+Push-Location apps/controlplane-go
+go test ./...
+go vet -tags=integration ./...
+Pop-Location
+.\scripts\check-go-parity.ps1
+
+# Legacy History rollback
 Push-Location apps/history-ts
 npm run build
 Pop-Location
@@ -121,12 +128,12 @@ node scripts/check-cors.mjs
 
 ## Security regression tests
 
-These should become automated tests before the project is called portfolio-ready:
+These cases are exercised by the existing integration suites; rerun them for authentication changes:
 
 1. `GET /history` without a token must return 401, not all scans.
 2. `GET /history` with a forged unsigned JWT must return 401.
 3. `GET /history/:id` for another user's scan must return 404 or 403.
-4. `GET /notifications` without a token must return 401.
+4. `GET /notify` without a token must return 401.
 5. `POST /reports` without a token must return 401.
 6. `GET /reports/:id` for another user's report must return 404 or 403.
 7. Malformed scan and report IDs must return 400, not 500.

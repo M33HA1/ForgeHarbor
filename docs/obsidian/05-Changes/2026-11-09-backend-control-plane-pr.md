@@ -2,7 +2,7 @@
 date: 2026-11-09
 type: change
 area: [backend, auth, history, notify, ci]
-status: in-review
+status: merged
 updated: 2026-11-09
 related: [Auth, History, Notify, ADR-0002-go-control-plane]
 tags: [change, backend, go, mfa, ci]
@@ -20,7 +20,7 @@ tags: [change, backend, go, mfa, ci]
 
 ## Verification
 
-Passed locally on this isolated branch: `go mod tidy -diff`, `go test ./...`, `go vet -tags=integration ./...`, the race-enabled MongoDB/Redis/RabbitMQ parity suite, and the 92-note link check. Hosted checks and their logs are authoritative for this PR revision. Existing full-stack/API/browser CI remains enabled with the unchanged frontend. Security scanning remains a gate; no findings are suppressed by this change.
+Passed locally on this isolated branch: `go mod tidy -diff`, `go test ./...`, `go vet -tags=integration ./...`, the race-enabled MongoDB/Redis/RabbitMQ parity suite, and the 92-note link check. [CI run #209](https://github.com/M33HA1/ForgeHarbor/actions/runs/42642752091) passed all 11 jobs on PR head `9d41051`, including full-stack/API/browser integration and the high/critical security gate. All four report-only DevSecOps jobs also passed. [PR #69](https://github.com/M33HA1/ForgeHarbor/pull/69) merged as `bbb8055` on 2026-11-09. These are PR-head results; subsequent main-branch runs are separate. Existing full-stack/API/browser CI remains enabled with the unchanged frontend. Security scanning remains a gate; no findings are suppressed by this change.
 
 ## Rollout and limitations
 
