@@ -65,7 +65,7 @@ Do not add another service language for the sake of language count. Add SQL and 
 
 ## Implementation status — 2026-11-09
 
-The language branch implements Go Auth/History/Notify in one shared module with separate processes, while the frontend migration remains on a separate branch. MongoDB, user IDs, key locations, string JWT audiences, and queue contracts remain compatible. Legacy runtimes remain available through the rollback overlay; local dependency, gateway, real-browser, and rollback checks pass. Auth refuses a non-default user database until a separate data migration is approved. Python threat intelligence and PostgreSQL remain separate roadmap work. See [[2026-11-09-backend-control-plane-pr]].
+PR #69 merged Go Auth/History/Notify to main in one shared module with separate processes, while the frontend migration remains on a separate branch. MongoDB, user IDs, key locations, string JWT audiences, and queue contracts remain compatible. Legacy runtimes remain available through the rollback overlay; PR-head hosted dependency-race, gateway/API/browser and security checks passed; the rollback overlay remains available. Auth refuses a non-default user database until a separate data migration is approved. Python threat intelligence and PostgreSQL remain separate roadmap work. See [[2026-11-09-backend-control-plane-pr]].
 
 ## Related notes
 

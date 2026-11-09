@@ -1,7 +1,7 @@
 ---
 type: dashboard
 status: active
-updated: 2026-11-07
+updated: 2026-11-09
 tags: [forgeharbor, dashboard, moc]
 ---
 
@@ -10,9 +10,11 @@ tags: [forgeharbor, dashboard, moc]
 > [!summary] Current phase
 > **Phase 0: Stabilize.** The stack builds and passes health probes. Shared edge JWT validation and Auth trusted-peer IP handling are verified in dev; provider configuration, production exposure, and production proxy addresses remain open.
 
-## Backend PR
+## Merged backend and separate frontend
 
-Go Auth/History/Notify and backend MFA APIs are isolated on `codex/backend-control-plane`; the UI migration and redesign remain on `codex/language-revamp`. The unchanged browser supports unenrolled accounts; MFA browser screens require the separate frontend work. CI includes focused service builds, a real-store race suite, security scanning and the existing full-stack/browser job. See [[2026-11-09-backend-control-plane-pr]]. Hosted results are tracked on the PR; production deployment remains separate.
+Go Auth/History/Notify and backend MFA APIs merged to `main` in [PR #69](https://github.com/M33HA1/ForgeHarbor/pull/69) (`bbb8055`). [CI run #209](https://github.com/M33HA1/ForgeHarbor/actions/runs/42642752091) passed all 11 jobs for PR head `9d41051`; the report-only DevSecOps workflow also passed. See [[2026-11-09-backend-control-plane-pr]]. UI migration, MFA browser screens and redesign remain on `codex/language-revamp`. The browser on `main` supports unenrolled accounts only; deploy the frontend MFA flow before enrolling browser accounts. Production CD is not configured.
+
+Documentation and seed cleanup: [[2026-11-09-documentation-and-seed-cleanup]].
 
 ## Status
 
@@ -21,8 +23,8 @@ Go Auth/History/Notify and backend MFA APIs are isolated on `codex/backend-contr
 | Repository | Active | Branch `main` |
 | Knowledge base | In place | This vault, linked from this dashboard |
 | Developer tooling | In place | `scripts/dev.ps1`, `scripts/dev.sh`, `.tool-versions` |
-| CI | Run #171 service builds and full stack/API/browser checks passed; Reports dependency finding remediated and fresh security gate passed | Final revision build/integration evidence is tracked in [PR #40 checks](https://github.com/M33HA1/ForgeHarbor/pull/40/checks); [[2026-11-07-reports-x-net-security]] |
-| Application stack | Running; locally verified, production gates remain | Seven images build; eight health probes, gateway route/CORS checks, Auth credential bounds and rate limits, History/Reports ownership, scanner JWT gates, Notify isolation, trusted report provenance (legacy downloads return 410), artifact storage, and dependency-aware Reports readiness pass; mocked and live browser/API journeys pass; provider and hosted CI coverage remain |
+| CI | PR #69 checks passed: all 11 CI and four report-only DevSecOps jobs | [CI run #209](https://github.com/M33HA1/ForgeHarbor/actions/runs/42642752091); [[2026-11-09-backend-control-plane-pr]] |
+| Application stack | Running; locally verified, production gates remain | Seven images build; eight health probes, gateway route/CORS checks, Auth credential bounds and rate limits, History/Reports ownership, scanner JWT gates, Notify isolation, trusted report provenance (legacy downloads return 410), artifact storage, and dependency-aware Reports readiness pass; mocked and live browser/API journeys pass; live provider coverage and production gates remain |
 | Architecture | Reviewed | [[Architecture-Review]] — contracts, routing, auth boundary, events, secrets |
 | Routing | Contract fixed | D1=B in [[ADR-0004-gateway-prefix-contract]]; `scripts/check-routes.mjs` |
 | Security | Shared edge JWT validation deployed | Five service routers use ForwardAuth; cookie and bearer sessions pass owner fixtures and outage recovery; Auth trusts forwarded client IPs only from configured socket peers; production exposure and proxy addresses remain under [[Security-Review]] |
@@ -42,9 +44,9 @@ Go Auth/History/Notify and backend MFA APIs are isolated on `codex/backend-contr
 
 1. Rotate local provider credentials and verify fresh Gemini/VirusTotal configuration before live scans or publication.
 2. Define production TLS/service-port exposure policy and review the observed Auth failure latency against the deployment availability target.
-3. Configure production HTTPS/proxy peers and HIBP egress, verify hosted CI/security findings, and add Auth refresh.
+3. Configure production HTTPS/proxy peers and HIBP egress, triage report-only findings, and add Auth refresh.
 
-The planned Go migrations for Auth, History, and Notify are tracked as a parallel workstream in [[Roadmap]] and FH-040; each replacement stays off live traffic until parity and rollback checks pass.
+Go Auth, History and Notify are the merged development defaults under FH-040. Legacy implementations remain for rollback. PostgreSQL migration, frontend MFA deployment and production rollout remain separate work in [[Roadmap]].
 
 See [[Roadmap]] for the full sequence.
 

@@ -1,11 +1,14 @@
 ---
 type: change-index
 status: active
-updated: 2026-11-05
+updated: 2026-11-09
 tags: [change, changelog]
 ---
 
 # Change Log
+
+- [[2026-11-09-documentation-and-seed-cleanup]] — align current docs with merged backend/CI evidence and remove four unused seed/demo files.
+- [[2026-11-09-backend-control-plane-pr]] — Go Auth/History/Notify and MFA APIs merged in PR #69; all PR-head CI checks passed.
 
 - [[2026-11-05-malware-scan-capacity]] — Malware caps in-memory file scans at two concurrent requests and returns 503 with `Retry-After` when saturated.
 - [[2026-11-05-reports-bucket-startup-retry]] — Reports retries bucket discovery/creation for up to 30 seconds to tolerate brief RustFS startup delays.

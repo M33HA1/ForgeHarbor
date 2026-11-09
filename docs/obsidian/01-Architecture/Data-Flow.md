@@ -1,7 +1,7 @@
 ---
 type: architecture
 status: active
-updated: 2026-11-02
+updated: 2026-11-09
 tags: [forgeharbor, architecture, data-flow]
 ---
 
@@ -18,7 +18,7 @@ sequenceDiagram
     participant M as MongoDB
 
     U->>T: POST /phishing/v1/url/check
-    T->>P: POST /v1/url/check
+    T->>P: POST /phishing/v1/url/check
     P->>G: Analyze URL
     G-->>P: Verdict
     P->>M: Persist scan metadata
@@ -37,7 +37,7 @@ sequenceDiagram
     participant M as MongoDB
 
     U->>T: POST /malware/v1/file/analyze
-    T->>V: POST /v1/file/analyze
+    T->>V: POST /malware/v1/file/analyze
     V->>VT: Submit hash or file
     VT-->>V: Vendor verdict
     V->>M: Persist scan metadata
@@ -53,7 +53,7 @@ sequenceDiagram
     participant T as Traefik
     participant R as Reports (Go)
     participant M as MongoDB
-    participant S as MinIO
+    participant S as RustFS
     participant Q as RabbitMQ
 
     U->>T: POST /reports
@@ -73,13 +73,13 @@ Reports now emits the versioned report-created envelope in [[ADR-0006-report-not
 ```mermaid
 sequenceDiagram
     participant Q as RabbitMQ
-    participant N as Notify (Python)
+    participant N as Notify (Go)
     participant M as MongoDB
     participant U as Browser
 
     Q->>N: Consume scan or report event
     N->>M: Persist notification
-    U->>N: GET /notify (gateway) or /notifications (service)
+    U->>N: GET /notify (gateway and service)
     N-->>U: Notification list
 ```
 

@@ -1,7 +1,7 @@
 ---
 type: roadmap
 status: active
-updated: 2026-11-03
+updated: 2026-11-09
 tags: [roadmap, planning]
 ---
 
@@ -45,7 +45,7 @@ tags: [roadmap, planning]
 - [x] Scope History list and detail queries to the caller.
 - [x] Add JWT auth and ownership checks to Reports.
 - [x] Add JWT auth and ownership checks to Notify.
-- [ ] Centralize JWT validation at the edge (ForwardAuth or BFF).
+- [x] Centralize development gateway JWT validation with ForwardAuth; production HTTPS/exposure remains a release gate.
 - [x] Add `.dockerignore` files for every application build context and mount public keys at runtime.
 - [x] Bind development app and infrastructure host ports to loopback.
 - [x] Fix malformed-ID handling to return 400 in History and Reports.
@@ -57,7 +57,7 @@ tags: [roadmap, planning]
 
 - [x] Fix file-scan result mapping.
 - [x] Remove the `|| 85` confidence fallback.
-- [ ] Use report IDs and malware status in History.
+- [x] Use report IDs and malware status in History; existing browser/API regression checks pass.
 - [x] Fix the notification path (service now registers `/notify`).
 
 ## Phase 1 — Core product
@@ -100,13 +100,9 @@ Do not add Phase 2 services while Phase 0 exit criteria are unmet. A smaller sta
 
 ## Parallel workstream â€” Go service migrations
 
-Run this workstream alongside Phase 0 hardening. Keep the current Rust Auth, TypeScript History, and Python Notify services as the routed path while Go replacements are built and verified without receiving traffic. The Go direction follows [[ADR-0002-go-control-plane]].
+Go Auth, History and Notify merged in PR #69 (`bbb8055`) and are now the development Compose defaults. PR-head run #209 passed Go race-enabled MongoDB/Redis/RabbitMQ contracts, all language builds, the security gate and full-stack health/API/browser checks. See [[2026-11-09-backend-control-plane-pr]].
 
-1. **Contracts first:** capture and test current routes, request/response shapes, JWT claims, ownership rules, persistence behavior, and queue semantics before replacing a service.
-2. **Auth first:** implement the Go replacement against existing MongoDB and Redis interfaces. Match signup, login, `/me`, RS256 validation, account uniqueness, and rate-limit behavior. Test without routing live traffic.
-3. **History second:** preserve owner scoping, filters, pagination, and MongoDB record compatibility.
-4. **Notify third:** preserve JWT ownership, queue behavior, and idempotency.
-5. **Cut over one service at a time:** require contract and security regression checks, runtime health, and a rehearsed rollback before changing gateway traffic. Keep the current implementation available until parity is proven.
+Retain the Rust Auth, TypeScript History and Python Notify implementations for `docker-compose.language-rollback.yml`. Updated Rust Auth refuses enrolled password-only login; return to Go Auth for enrolled login. Frontend TypeScript, MFA browser screens and redesign remain separate. Production cutover requires the gates in [[Deploy]].
 
 Keep the database migration separate from the language migration. Retain MongoDB during Go parity work; plan PostgreSQL adoption separately under FH-022 and [[ADR-0003-postgres-for-history]]. Rust Phishing/Malware remain Rust, and Python remains the target for threat intelligence.
 

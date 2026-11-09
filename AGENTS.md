@@ -113,17 +113,16 @@ Project servers: Context7, Playwright, GitHub (read-only), Obsidian vault, scope
 
 Use the `forgeharbor-mcp` skill for setup, health checks, and key rotation. Never embed secrets in `.codex/config.toml` or legacy `.opencode/opencode.jsonc`; use environment variables.
 
-## Current blockers
+## Current state and blockers
 
-- Auth build is fixed; auth and ownership behavior still needs security review.
-- Local provider credentials must be verified and rotated before publication.
-- RustFS has been wired as the S3-compatible dev store; report artifact storage still needs end-to-end verification.
-- Centralized edge auth remains open; development ports are loopback-bound and production service ports should stay internal-only.
-- History's risk filter and the shared scan result schema still need alignment.
-- The frontend needs report/history state and auth-flow regression coverage.
-- Traefik Docker provider and gateway prefix contract are fixed and route-verified.
+- Go Auth, History and Notify merged in PR #69 (`bbb8055`) and are the development Compose defaults. The legacy Rust/TypeScript/Python services remain required for the rollback overlay and compatibility checks.
+- All 11 PR-head CI jobs and four report-only DevSecOps jobs passed on `9d41051`, including full-stack health/API/browser, owner boundaries, Go real-store race contracts and the high/critical security gate. Report-only success does not establish the absence of findings.
+- The frontend TypeScript migration, MFA browser screens and redesign remain on `codex/language-revamp`. Main's browser supports unenrolled accounts only; deploy MFA screens before enrolling browser accounts.
+- Local provider credentials must be verified and rotated before publication; TLS, trusted production proxies, private service ports, MFA encryption-key custody and backups remain deployment gates.
+- RustFS report create/download, History risk filters, shared edge auth and existing browser/API regressions have passing evidence. Shared scan-schema versioning, pagination/load coverage and broker failure/redrive operations remain open.
+- CI exists; no production CD/promotion workflow or deployment target is configured.
 
-Do not claim the stack is working while these are unresolved. Track progress in `docs/obsidian/06-Roadmap/Backlog.md`.
+Do not claim production readiness while these gates remain open. Track details in `docs/obsidian/06-Roadmap/Backlog.md` and [[2026-11-09-backend-control-plane-pr]].
 
 ## Project skills (`.agents/skills/`)
 

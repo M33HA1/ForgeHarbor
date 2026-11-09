@@ -2,11 +2,13 @@
 type: architecture
 status: open
 priority: P0
-updated: 2026-11-02
+updated: 2026-11-09
 tags: [architecture, review, status/p0, area/security, area/scanning, area/build]
 ---
 
 # Architecture Review — 2026-11-02
+
+> Historical audit from 2026-11-02. For the current service topology and verified backend state, use [[System-Overview]], [[Service-Map]] and [[2026-11-09-backend-control-plane-pr]]. The unused credential/config and command-execution seed files referenced below were removed in [[2026-11-09-documentation-and-seed-cleanup]]; historical findings are preserved.
 
 ## Verdict
 

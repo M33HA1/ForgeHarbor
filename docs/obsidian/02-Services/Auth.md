@@ -1,6 +1,6 @@
 ---
 type: service
-status: build-fixed
+status: protected
 priority: P0
 language: go
 updated: 2026-11-09
@@ -11,13 +11,13 @@ tags: [service/auth, status/p0, area/security, language/go]
 
 ## Go language migration
 
-Development Compose now runs Auth from `apps/controlplane-go` behind the existing API/data contract. Backend contract/security checks and a legacy rollback overlay are provided; see [[2026-11-09-backend-control-plane-pr]]. The legacy implementation remains available through the language rollback overlay.
+Development Compose now runs Auth from `apps/controlplane-go` behind the existing API/data contract. Merged in [PR #69](https://github.com/M33HA1/ForgeHarbor/pull/69); hosted build, security, real-store race contracts and full-stack browser checks passed on PR head `9d41051`. A legacy rollback overlay is retained; see [[2026-11-09-backend-control-plane-pr]]. The legacy implementation remains available through the language rollback overlay.
 
 Protected gateway requests use the shared Auth ForwardAuth gate; service JWT and ownership checks remain active. Exact GET health paths and CORS preflights remain public. See [[ADR-0005-shared-edge-auth]] and [[2026-11-03-shared-edge-auth]].
 
 ## Runtime hardening
 
-The runtime container runs as UID 65532; the MongoDB driver is pinned to 3.9.1 to remove vulnerable legacy DNS/TLS transitive crates. Hosted integration gives the generated ephemeral Auth key group 65532 read-only access (mode 0640), retaining runner ownership and private-key restrictions.
+The active Go runtime container runs as UID 65532. The legacy Rust image pins MongoDB crate 3.9.1 to remove vulnerable DNS/TLS transitive crates. Hosted integration gives the generated ephemeral Auth key group 65532 read-only access (mode 0640), retaining runner ownership and private-key restrictions.
 
 ## Responsibility
 
@@ -78,7 +78,7 @@ Verification: `scripts/check-go-parity.ps1` runs race-enabled real MongoDB/Redis
 | `JWT_AUDIENCE` | Recommended | Expected audience; default `forgeharbor-users` |
 | `./config/jwt-private.pem` | Yes | RS256 signing key |
 | `./config/jwt-public.pem` | Yes | RS256 verification key |
-| `AUTH_PORT` | No | Documented as 8080; the code binds 8080 directly |
+| `AUTH_PORT` | No | Documented as 8080; Go Auth defaults to 8080 |
 | `AUTH_TRUSTED_PROXY_IPS` | No | Exact peer-IP allowlist for `X-Forwarded-For`; unset means no proxy is trusted. Dev Compose defaults to the fixed Traefik edge IP and the integration-only test proxy IP. |
 | `AUTH_COOKIE_SECURE` | No | Defaults to true; dev Compose explicitly sets false for its loopback HTTP gateway. Production must keep this enabled and use HTTPS. |
 

@@ -2,7 +2,7 @@
 type: security
 status: open
 priority: P0
-updated: 2026-11-05
+updated: 2026-11-09
 tags: [security, review, p0]
 ---
 
@@ -11,6 +11,12 @@ tags: [security, review, p0]
 ## Scope
 
 Auth, History, Reports, Notify, the Traefik edge, local configuration, and the frontend's handling of tokens and results.
+
+## Latest backend evidence (2026-11-09)
+
+PR #69 merged Go Auth/History/Notify and backend MFA APIs as `bbb8055`. The high/critical security gate, real-store race contracts, owner/API/browser regressions and all build jobs passed for PR head `9d41051` in [CI run #209](https://github.com/M33HA1/ForgeHarbor/actions/runs/42642752091). The report-only workflow also passed; its success does not establish the absence of findings. No new finding suppression was added.
+
+Removed unused `vuln_demo.py`, `aws_creds.txt`, `config.txt` and `Dockerfile.seed` in [[2026-11-09-documentation-and-seed-cleanup]]. Deletion does not remove historical Git copies or rotate any credential; credential rotation remains open. The dated findings below remain an audit trail.
 
 ## Method
 
