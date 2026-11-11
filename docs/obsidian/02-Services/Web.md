@@ -3,7 +3,7 @@ type: service
 status: partially-verified
 priority: P0
 language: typescript
-updated: 2026-11-05
+updated: 2026-11-11
 tags: [service/web, status/p0, area/frontend, language/typescript]
 ---
 
@@ -69,9 +69,9 @@ Run Playwright MCP `browser_run_code_unsafe` with `filename: scripts/check-web-u
 
 - Signup explains that Auth checks a partial password hash against known breach data and never sends the password itself.
 - The dashboard presents URL and file analysis in a shared, task-first workspace with responsive layouts and accessible input focus styling.
-- Scan submission and result mapping remain connected to the existing API service; seven fixture-driven browser scenarios cover auth, scan-result rendering, report actions, filters, and mobile controls; real local backend journey coverage now passes; provider-backed scans and production deployment coverage remain open.
-- History restores caller-owned report IDs from Reports and shows creation/download feedback; fixture and real local browser coverage now pass; production deployment and CI coverage remain open.
-- Visual direction draws on Watermelon UI's component hierarchy, Manus's task-first workspace, Cult UI's restrained dark surfaces, and Refero's interface references.
+- Scan submission and result mapping remain connected to the existing API service; ten fixture-driven browser groups cover auth, scan-result rendering, report actions, filters, and mobile controls; real local backend journey coverage now passes; provider-backed scans and production deployment coverage remain open.
+- History restores caller-owned report IDs from Reports and shows creation/download feedback; fixture and real local browser coverage now pass; production deployment coverage remains open; final revision CI is tracked in [[2026-11-11-demo-finalisation]].
+- Visual direction draws on Watermelon UI's component hierarchy, Manus's task-first workspace, Cult UI's component ideas. Refero was checked as a reference index but readable designs were unavailable; see the dated research record.
 
 ## Recent changes
 

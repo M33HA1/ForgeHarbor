@@ -41,7 +41,7 @@ Current-run screenshots showed a large dense assessment panel competing with ent
 - Axe WCAG A/AA checks found no violation groups in the tested public/account/workspace states at 320/768/1440 pixels; this is automated coverage, not full conformance certification.
 - Coordinated Vite 8/React plugin 6/Tailwind 4 migration builds and passes the ten UI groups. Remove unused floating decoration and v3 configuration; bundle the font locally.
 - Reports AWS SDK dependencies updated together; Go route tests pass. Remove the redundant legacy History dotenv type stub; History builds.
-- Select the AWS-LC cryptography provider explicitly for JWT 11 in all Rust services; retain RS256 validation and test the rollback path. Replace unbounded scanner requirements with compatible version ranges. Rust and hosted security/integration checks remain pending.
+- Select the AWS-LC cryptography provider explicitly for JWT 11 in all Rust services; retain RS256 validation and test the rollback path. Replace unbounded scanner requirements with compatible version ranges. Rust Auth passed 25 tests. The Phishing request-header test reproduced missing TLS-provider initialization after the Reqwest upgrade; the shared Gemini client now explicitly initializes Ring and bounds requests to 30 seconds, and that test passes. Malware and hosted integration checks remain pending.
 - Local screenshots are ignored artifacts under `.playwright-mcp/final-review`; historical screenshot evidence is not substituted for this run.
 
 ## Remaining external and future work

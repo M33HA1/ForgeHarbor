@@ -142,7 +142,7 @@ async fn check_phishing_with_gemini(
     );
 
     let body = json!({ "contents": [{ "parts": [{ "text": prompt }] }] });
-    let client = reqwest::Client::new();
+    let client = gemini_client()?;
     let request = build_gemini_request(&client, api_key, &body)?;
     let res = client.execute(request).await?;
     let status = res.status();
@@ -180,6 +180,14 @@ async fn check_phishing_with_gemini(
     } else {
         Err(format!("Gemini API error {}: {}", status, raw_text).into())
     }
+}
+
+fn gemini_client() -> Result<reqwest::Client, reqwest::Error> {
+    // Reqwest 0.13 with rustls-no-provider requires explicit provider selection.
+    let _ = rustls::crypto::ring::default_provider().install_default();
+    reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
 }
 
 fn build_gemini_request(
@@ -321,11 +329,11 @@ async fn main() -> std::io::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::build_gemini_request;
+    use super::{build_gemini_request, gemini_client};
 
     #[test]
     fn gemini_api_key_is_sent_in_header_not_url() {
-        let client = reqwest::Client::new();
+        let client = gemini_client().expect("TLS provider and client must initialize");
         let request = build_gemini_request(&client, "test-key", &serde_json::json!({})).unwrap();
         assert_eq!(request.url().query(), None);
         assert_eq!(request.headers().get("x-goog-api-key").unwrap(), "test-key");

@@ -3,7 +3,7 @@ type: service
 status: protected
 priority: P0
 language: go
-updated: 2026-11-09
+updated: 2026-11-11
 tags: [service/auth, status/p0, area/security, language/go]
 ---
 
@@ -17,7 +17,7 @@ Protected gateway requests use the shared Auth ForwardAuth gate; service JWT and
 
 ## Runtime hardening
 
-The active Go runtime container runs as UID 65532. The legacy Rust image pins MongoDB crate 3.9.1 to remove vulnerable DNS/TLS transitive crates. Hosted integration gives the generated ephemeral Auth key group 65532 read-only access (mode 0640), retaining runner ownership and private-key restrictions.
+The active Go runtime container runs as UID 65532. The finalisation branch updates the legacy Rust image to MongoDB 3.10 and JWT 11 with an explicit AWS-LC provider; locked dependencies and security checks remain enforced. Hosted integration gives the generated ephemeral Auth key group 65532 read-only access (mode 0640), retaining runner ownership and private-key restrictions.
 
 ## Responsibility
 
@@ -25,7 +25,7 @@ Registration, login, JWT issuance, JWKS exposure, and current-user lookup. This 
 
 ## Authenticator MFA
 
-Optional two-step verification is implemented in Go Auth; see [[2026-11-09-backend-control-plane-pr]]. API enrollment requires the current password and an authenticator code. Browser enrollment and challenge screens are part of the separate frontend work; the unchanged browser login supports unenrolled accounts only. Seeds are encrypted with AES-256-GCM and bound to the user; MongoDB stores only ciphertext and hashes of ten single-use recovery codes. TOTP uses six digits, a 30-second period, and one step of clock skew. Atomic MongoDB updates prevent TOTP and recovery-code replay.
+Optional two-step verification is implemented in Go Auth; see [[2026-11-09-backend-control-plane-pr]]. API enrollment requires the current password and an authenticator code. The finalisation frontend adds enrollment, authenticator/recovery challenges, single-use recovery feedback and factor disable; its real-browser verification is tracked in [[2026-11-11-demo-finalisation]]. Seeds are encrypted with AES-256-GCM and bound to the user; MongoDB stores only ciphertext and hashes of ten single-use recovery codes. TOTP uses six digits, a 30-second period, and one step of clock skew. Atomic MongoDB updates prevent TOTP and recovery-code replay.
 
 Enrolled password login clears the access cookie and returns `mfa_required`, `challenge_token`, and `expires_in: 300`. The challenge cannot authorize API calls. Redis bounds each challenge to five attempts and five minutes; account/IP login limits also remain active. A successful second factor establishes the HttpOnly cookie. MFA changes rotate `auth_version`, invalidating older sessions through `/auth/me` and ForwardAuth. Production service ports must remain private so callers cannot bypass that check.
 
