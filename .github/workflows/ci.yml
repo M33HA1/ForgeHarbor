@@ -80,7 +80,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Scan dependencies, secrets, and configuration
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           version: v0.76.1
           scan-type: fs
@@ -112,7 +112,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '22.20.0'
       - name: Prepare isolated CI dependencies and settings
@@ -144,6 +144,13 @@ jobs:
         run: bash scripts/ci/integration.sh
       - name: Mocked and real local browser journeys
         run: PLAYWRIGHT_MODULE="$RUNNER_TEMP/forgeharbor-browser/node_modules/playwright/index.mjs" node scripts/ci/browser.mjs
+      - name: Stop the full stack before isolated MFA verification
+        run: docker compose -f deploy/compose/docker-compose.dev.yml down --volumes --remove-orphans
+      - name: Real authenticator enrollment, recovery, replay and rollback journey
+        shell: pwsh
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/forgeharbor-browser/node_modules/playwright/index.mjs
+        run: ./scripts/check-mfa.ps1
       - name: Remove ephemeral hosted-runner services and data
         if: always()
         run: docker compose -f deploy/compose/docker-compose.dev.yml down --volumes --remove-orphans

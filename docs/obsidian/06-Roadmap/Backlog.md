@@ -38,7 +38,7 @@ tags: [roadmap, backlog]
 | FH-017 | Frontend | Remove `|| 85` confidence fallback | Misleading scores | Done — unknown file confidence is shown as vendor counts |
 | FH-018 | Build | Add clean-clone bootstrap and key generation | Clone does not start | Done — `node scripts/setup-jwt-keys.mjs` safely generates or validates the Auth pair and verifier copies |
 | FH-019 | Docs | Correct README paths, ports, and endpoints | Setup instructions are wrong | Done — README now uses the current config path, dev scripts, loopback ports, RustFS, and registered routes |
-| FH-020 | Testing | Add auth and ownership regression tests | Prevent recurrence | In progress: backend auth/owner fixtures, seven mocked browser scenarios, and a real local signup/History/report/notification/two-user-denial journey pass; provider-backed scans and pagination races remain; PR #69 hosted browser/API integration passed |
+| FH-020 | Testing | Add auth and ownership regression tests | Prevent recurrence | In progress: backend auth/owner fixtures, ten mocked browser scenarios, and a real local signup/History/report/notification/two-user-denial journey pass; provider-backed scans and pagination races remain; PR #69 hosted browser/API integration passed |
 | FH-021 | Architecture | Add Go scan orchestrator | Synchronous scans do not scale | Open |
 | FH-022 | Data | Add PostgreSQL for relational records | Ownership and filters are awkward in Mongo | Open |
 | FH-023 | Observability | Add request IDs and structured logs | Hard to debug across services | Open |
@@ -56,7 +56,7 @@ tags: [roadmap, backlog]
 | FH-026 | Scanning | Add file-size and archive-bomb limits | DoS resistance | In progress — Malware rejects files over 32 MiB and limits concurrent scans to two; archive-bomb inspection and disk streaming remain |
 | FH-027 | Scanning | Add ClamAV and YARA | Deeper file analysis | Open |
 | FH-028 | Intelligence | Add Python threat-intelligence service | Better AI/feed integration | Open |
-| FH-029 | CI | Add language matrix and security scans | Prevent regressions | In progress: eight language build/test jobs, Go store race contracts, strict API/browser runner and HIGH/CRITICAL security gate passed on PR #69 head 9d41051 (run #209); report-only finding triage, required-check policy and production CD remain |
+| FH-029 | CI | Add language matrix and security scans | Prevent regressions | In progress: eight language build/test jobs, Go store race contracts, strict API/browser runner and HIGH/CRITICAL security gate passed on PR #69 head 9d41051 (run #209); main ruleset requires all 11 checks; finalisation revision adds real MFA to integration; report-only finding triage and production CD remain |
 | FH-030 | Testing | Add k6 load tests | Measure performance claims | Open |
 | FH-031 | Docs | Add demo video and screenshots | Portfolio presentation | Open |
 | FH-032 | Infra | Add Terraform or Kubernetes manifests | Deployment maturity | Open |
@@ -85,3 +85,7 @@ tags: [roadmap, backlog]
 - [[Milestones]]
 - [[Test-Matrix]]
 - [[Security-Review]]
+
+## Resume-demo delivery boundary
+
+[[2026-11-11-demo-finalisation]] integrates browser MFA, strict TypeScript and the redesigned interface with the merged control plane. [[AWS-Deployment]] records the proposed single-host AWS path. Future orchestrator, PostgreSQL, YARA/ClamAV and production HA are separate roadmap extensions; they are not represented as delivered demo features. Fresh provider credentials, rotation and an actual cloud deployment remain external verification gates.

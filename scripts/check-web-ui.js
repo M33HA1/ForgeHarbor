@@ -48,6 +48,7 @@ async (hostPage) => {
     }
     if (path === '/auth/me') return profileFails || request.headers().cookie !== 'fh_access=' + token ? reply({ error: 'Session verification failed' }, 401) : reply({ user_id: 'ui-owner', email: 'fixture@example.invalid' });
     if (path === '/auth/signup') return reply({ user_id: 'ui-owner' }, 201);
+    if (path === '/auth/mfa') return reply({ enabled: false, available: true, recovery_codes_remaining: 0 });
     if (path === '/history') return reply({ items: [row], next_cursor: null });
     if (path === '/reports' && request.method() === 'GET') return reply([{ id: savedReport, scanId }]);
     if (path === '/reports' && request.method() === 'POST') return reportFails ? reply({ error: 'Report generation unavailable' }, 503) : reply({ id: createdReport, scanId, source: 'stored-scan-v1' });
@@ -68,6 +69,9 @@ async (hostPage) => {
   const reset = async signedIn => {
     loginFails = profileFails = reportFails = legacyReportFails = malformedScan = profileAfterLoginFails = false;
     cleanUrl = false;
+    // Unload the prior scenario before changing its authentication state.
+    // In-flight History/report effects must not inherit the next fixture's cookies.
+    await page.goto('about:blank');
     await context.clearCookies();
     await page.goto(base + '/login');
     if (signedIn) {
@@ -131,11 +135,11 @@ async (hostPage) => {
       await page.goto(base + '/app/dashboard');
       await page.getByLabel('Enter URL to check:', { exact: true }).fill(row.input);
       await page.getByRole('button', { name: 'Analyze website', exact: true }).click();
-      await page.getByRole('heading', { name: 'Dangerous Currents Detected' }).waitFor();
+      await page.getByRole('heading', { name: 'Threat detected' }).waitFor();
       await page.getByText('95%', { exact: true }).waitFor();
       cleanUrl = true;
       await page.getByRole('button', { name: 'Analyze website', exact: true }).click();
-      await page.getByRole('heading', { name: 'Clean Waters - Safe to Navigate' }).waitFor();
+      await page.getByRole('heading', { name: 'No threats detected' }).waitFor();
       await page.getByText('0%', { exact: true }).waitFor();
       malformedScan = true;
       await page.getByRole('button', { name: 'Analyze website', exact: true }).click();
@@ -147,7 +151,7 @@ async (hostPage) => {
       await page.getByRole('button', { name: 'File Analysis', exact: true }).click();
       await page.getByLabel('Upload file', { exact: true }).setInputFiles({ name: 'fixture.txt', mimeType: 'text/plain', buffer: Buffer.from('local UI fixture') });
       await page.getByRole('button', { name: 'Analyze file', exact: true }).click();
-      await page.getByRole('heading', { name: 'Dangerous Currents Detected' }).waitFor();
+      await page.getByRole('heading', { name: 'Threat detected' }).waitFor();
       await page.getByText('5/70', { exact: true }).waitFor();
       malformedScan = true;
       await page.getByRole('button', { name: 'Analyze file', exact: true }).click();
@@ -184,6 +188,70 @@ async (hostPage) => {
         page.getByRole('combobox', { name: /^Risk level/ }).selectOption('high'),
       ]);
     });
+    await check('clear evidence, keyboard submission, active navigation and upload bounds', async () => {
+      await reset(true);
+      await page.goto(base + '/app/dashboard');
+      assert(await page.getByRole('link', {name:'Dashboard',exact:true}).getAttribute('aria-current') === 'page', 'Active page is not identified');
+      await page.getByRole('link', {name:'Skip to content'}).focus();
+      await page.getByRole('link', {name:'Skip to content'}).press('Enter');
+      assert(await page.evaluate(() => document.activeElement?.id === 'main-content'), 'Skip link did not focus main content');
+      await page.getByLabel('Enter URL to check:').fill('https://fixture.example.invalid');
+      await page.getByLabel('Enter URL to check:').press('Enter');
+      await page.getByRole('heading',{name:'Threat detected',exact:true}).waitFor();
+      await page.getByText('Not assessed',{exact:true}).waitFor();
+      assert(await page.evaluate(() => document.activeElement?.getAttribute('aria-label') === 'Analysis result'), 'Completed result did not receive focus');
+      await page.getByRole('button',{name:'File Analysis',exact:true}).click();
+      await page.getByLabel('Upload file',{exact:true}).evaluate(input => {
+        const transfer = new DataTransfer();
+        transfer.items.add(new File([new Uint8Array(32*1024*1024+1)],'oversized-fixture.bin'));
+        input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));
+      });
+      await page.getByRole('alert').filter({hasText:'32 MiB'}).waitFor();
+      assert(await page.getByRole('button',{name:'Analyze file',exact:true}).isDisabled(), 'Oversized file can be submitted');
+      const previousResult = row.result;
+      row.result = {};
+      try {
+        await page.goto(base + '/app/history');
+        await page.getByText('Not assessed',{exact:true}).waitFor();
+        assert(await page.getByText('No threats detected',{exact:true}).count()===0,'Missing historical evidence was marked clean');
+      } finally { row.result = previousResult; }
+    });
+    await check('marketing claims and responsive workspace and account pages', async () => {
+      await reset(false);
+      await page.goto(base + '/');
+      await page.getByRole('link', {name:'Create your workspace',exact:true}).waitFor();
+      assert(await page.getByText('99.9%', {exact:true}).count()===0, 'Unverified accuracy claim remains');
+      await page.getByText('Illustrative data',{exact:true}).waitFor();
+      await page.getByRole('button',{name:'No reported threat',exact:true}).click();
+      await page.getByRole('heading',{name:'No threats detected',exact:true}).waitFor();
+      await page.getByRole('button',{name:'Flagged URL',exact:true}).click();
+      await page.getByRole('heading',{name:'Threat detected',exact:true}).waitFor();
+      for (const width of [320, 768, 1440]) {
+        await page.setViewportSize({width,height:1000});
+        for (const path of ['/', '/login', '/signup']) {
+          await page.goto(base+path);
+          if (path === '/') await page.getByText('Illustrative data',{exact:true}).waitFor();
+          else await page.getByLabel('Password',{exact:true}).waitFor();
+          assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth), `${path} overflows at ${width}px`);
+        }
+      }
+      await reset(true);
+      for (const width of [320, 768, 1440]) {
+        await page.setViewportSize({width,height:1000});
+        for (const path of ['/app/dashboard', '/app/history', '/app/profile']) {
+          await page.goto(base+path);
+          await page.getByRole('navigation',{name:'Workspace navigation'}).waitFor();
+          assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth), `${path} overflows at ${width}px`);
+        }
+      }
+    });
+    await check('unknown page offers a working return path', async () => {
+      await reset(false);
+      await page.goto(base + '/missing-page');
+      await page.getByRole('heading', {name:'Page not found',exact:true}).waitFor();
+      await page.getByRole('link', {name:'Return to home',exact:true}).click();
+      await page.getByRole('link', {name:'Create your workspace',exact:true}).waitFor();
+    });
     await check('mobile navigation names, layout, and logout', async () => {
       await reset(true);
       await page.setViewportSize({ width: 390, height: 844 });
@@ -202,8 +270,8 @@ async (hostPage) => {
     if (failures.length) throw new Error(JSON.stringify({ passed, failures }));
     return { passed, backendWrites: 0, providerCalls: 0, scope: 'Built React UI with deterministic local API fixtures' };
   } finally {
-    await context.clearCookies().catch(() => {});
     await page.goto('about:blank');
+    await context.clearCookies().catch(() => {});
     await page.unroute('**/*', handler);
     page.removeListener('pageerror', onError);
     await context.close();

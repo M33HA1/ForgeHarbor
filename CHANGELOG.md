@@ -6,6 +6,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ## [Unreleased]
 
+- Replace the obsolete Semgrep wrapper with a pinned CLI that produces and preserves its scan report.
+- Remediate lower-severity Trivy dependency findings in Rust and Reports without adding suppressions.
+- Consolidate compatible dependency updates, migrate Web to Vite 8/Tailwind 4, configure the JWT 11 cryptography backend, and remove unused frontend decoration and dotenv types.
+
+### Resume-demo completion pass
+
+- Integrate strict TypeScript and browser MFA with the merged Go backend; redesign public entry and workspace navigation with bundled typography, clear evidence and responsive layouts.
+- Fix browser fixture authentication/teardown races, add a useful unknown-page return path, and include real MFA enrollment/recovery/replay/rollback verification in the required integration job.
+- Refresh pinned setup-node, Trivy and SARIF actions; document the single-host AWS resume/demo plan and remaining account/provider deployment inputs.
+- See [verification and design research](docs/obsidian/05-Changes/2026-11-11-demo-finalisation.md).
+
+
 ### Documentation and cleanup
 
 - Align current architecture, runbooks, API/MFA references and backlog with backend PR #69 and its passing CI evidence; distinguish the separate frontend MFA work and unconfigured production CD.

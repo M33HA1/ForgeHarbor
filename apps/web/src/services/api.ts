@@ -1,3 +1,6 @@
+import type { User, LoginResponse, LoginResult, MFAStatus, MFAEnrollment, ScanResponse, ScanRecord, HistoryPage, Report, ServiceHealth } from '../types';
+import { errorMessage } from '../types';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
 
 class ApiService {
@@ -5,39 +8,52 @@ class ApiService {
     return { 'Content-Type': 'application/json' };
   }
 
-  async handleResponse(response) {
+  async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Network error' }));
       throw new Error(error.error || error.message || `HTTP ${response.status}`);
     }
-    return response.json();
+    return response.json() as Promise<T>;
   }
 
   // Auth Service
-  async signup(email, password) {
+  async signup(email: string, password: string) {
     const response = await fetch(`${API_BASE_URL}/auth/signup`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify({ email, password })
     });
-    return this.handleResponse(response);
+    return this.handleResponse<User>(response);
   }
 
-  async login(email, password) {
+  async login(email: string, password: string) {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify({ email, password })
     });
-    const data = await this.handleResponse(response);
-    return { expires_in: data.expires_in };
+    return this.handleResponse<LoginResult>(response);
   }
+
+  async mfaRequest<T>(path: string, body?: object): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}/auth/mfa${path}`, {
+      method: body ? 'POST' : 'GET', headers: this.getAuthHeaders(), cache: 'no-store',
+      ...(body && { body: JSON.stringify(body) }),
+    });
+    return this.handleResponse<T>(response);
+  }
+
+  getMFAStatus() { return this.mfaRequest<MFAStatus>(''); }
+  setupMFA(password: string) { return this.mfaRequest<MFAEnrollment>('/setup', { password }); }
+  enableMFA(enrollment_token: string, code: string) { return this.mfaRequest<{enabled: true; recovery_codes: string[]}>('/enable', { enrollment_token, code }); }
+  verifyMFA(challenge_token: string, code: string) { return this.mfaRequest<LoginResponse>('/verify', { challenge_token, code }); }
+  disableMFA(password: string, code: string) { return this.mfaRequest<{enabled: false}>('/disable', { password, code }); }
 
   async getProfile() {
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
       headers: this.getAuthHeaders()
     });
-    return this.handleResponse(response);
+    return this.handleResponse<User>(response);
   }
 
   async logout() {
@@ -48,17 +64,17 @@ class ApiService {
   }
 
   // URL Scanning Service (Phishing Detection)
-  async scanUrl(url) {
+  async scanUrl(url: string) {
     const response = await fetch(`${API_BASE_URL}/phishing/v1/url/check`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify({ url })
     });
-    return this.handleResponse(response);
+    return this.handleResponse<ScanResponse>(response);
   }
 
   // File Scanning Service (Malware Detection)
-  async scanFile(file) {
+  async scanFile(file: File) {
     const formData = new FormData();
     formData.append('file', file);
     
@@ -66,52 +82,52 @@ class ApiService {
       method: 'POST',
       body: formData
     });
-    return this.handleResponse(response);
+    return this.handleResponse<ScanResponse>(response);
   }
 
   // History Service
-  async getScanHistory(params = {}) {
+  async getScanHistory(params: Record<string, string> = {}) {
     const queryString = new URLSearchParams(params).toString();
     const response = await fetch(`${API_BASE_URL}/history?${queryString}`, {
       headers: this.getAuthHeaders()
     });
-    return this.handleResponse(response);
+    return this.handleResponse<HistoryPage | ScanRecord[]>(response);
   }
 
-  async getScanDetails(scanId) {
+  async getScanDetails(scanId: string) {
     const response = await fetch(`${API_BASE_URL}/history/${scanId}`, {
       headers: this.getAuthHeaders()
     });
-    return this.handleResponse(response);
+    return this.handleResponse<ScanRecord>(response);
   }
 
   // Reports Service
-  async generateReport(scanId) {
+  async generateReport(scanId: string) {
     const response = await fetch(`${API_BASE_URL}/reports`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify({ scanId })
     });
-    return this.handleResponse(response);
+    return this.handleResponse<Report>(response);
   }
 
-  async getReportsForScans(scanIds = []) {
+  async getReportsForScans(scanIds: string[] = []) {
     const params = new URLSearchParams();
     scanIds.forEach((scanId) => params.append('scan_id', String(scanId)));
     const response = await fetch(`${API_BASE_URL}/reports?${params.toString()}`, {
       headers: this.getAuthHeaders()
     });
-    return this.handleResponse(response);
+    return this.handleResponse<Report[]>(response);
   }
 
-  async getReport(reportId) {
+  async getReport(reportId: string) {
     const response = await fetch(`${API_BASE_URL}/reports/${reportId}`, {
       headers: this.getAuthHeaders()
     });
-    return this.handleResponse(response);
+    return this.handleResponse<Report>(response);
   }
 
-  async downloadReport(reportId) {
+  async downloadReport(reportId: string) {
     const response = await fetch(`${API_BASE_URL}/reports/${reportId}/download`, {
       headers: this.getAuthHeaders()
     });
@@ -137,7 +153,7 @@ class ApiService {
   }
 
   // Health checks for individual services
-  async checkServiceHealth() {
+  async checkServiceHealth(): Promise<ServiceHealth[]> {
     const services = [
       { name: 'auth', url: `${API_BASE_URL}/auth/health` },
       { name: 'phishing', url: `${API_BASE_URL}/phishing/health` },
@@ -147,27 +163,27 @@ class ApiService {
       { name: 'notifications', url: `${API_BASE_URL}/notify/health` }
     ];
 
-    const results = await Promise.allSettled(
+    const results = await Promise.all(
       services.map(async service => {
         try {
           const response = await fetch(service.url);
           const data = await response.json().catch(() => ({}));
           return { 
             name: service.name, 
-            status: response.ok ? 'healthy' : 'unhealthy',
+            status: response.ok ? 'healthy' as const : 'unhealthy' as const,
             message: data.message || data.status || 'OK'
           };
         } catch (error) {
           return { 
             name: service.name, 
-            status: 'unavailable',
-            message: error.message
+            status: 'unavailable' as const,
+            message: errorMessage(error)
           };
         }
       })
     );
 
-    return results.map(result => result.value || result.reason);
+    return results;
   }
 }
 

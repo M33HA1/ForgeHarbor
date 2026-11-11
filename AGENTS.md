@@ -27,7 +27,7 @@ The polyglot architecture is intentional. Each language must have a credible spe
 | History | Go (TypeScript retained for rollback) | 8083 | `/history` | RS256 auth/ownership enforced; risk filter and integration tests remain |
 | Reports | Go | 8084 | `/reports` | RS256 auth/ownership enforced; artifact flow unverified |
 | Notify | Go (Python retained for rollback) | 8085 | `/notify` | RS256 auth/ownership enforced; worker hardening remains |
-| Web | React + Vite | 3000 | `/` | Node 22 image builds; UI regression coverage remains |
+| Web | React + strict TypeScript + Vite | 3000 | `/` | Node 22 image builds; UI regression coverage remains |
 
 Infrastructure: Traefik on host port 8088 (dashboard 8000), MongoDB 27017, Redis 6379, RabbitMQ 5672/15672, RustFS S3 storage 9000/9001.
 
@@ -117,7 +117,7 @@ Use the `forgeharbor-mcp` skill for setup, health checks, and key rotation. Neve
 
 - Go Auth, History and Notify merged in PR #69 (`bbb8055`) and are the development Compose defaults. The legacy Rust/TypeScript/Python services remain required for the rollback overlay and compatibility checks.
 - All 11 PR-head CI jobs and four report-only DevSecOps jobs passed on `9d41051`, including full-stack health/API/browser, owner boundaries, Go real-store race contracts and the high/critical security gate. Report-only success does not establish the absence of findings.
-- The frontend TypeScript migration, MFA browser screens and redesign remain on `codex/language-revamp`. Main's browser supports unenrolled accounts only; deploy MFA screens before enrolling browser accounts.
+- The frontend TypeScript migration, MFA browser screens and redesigned interface are integrated on `codex/project-finalisation`. The completion branch integrates MFA browser screens; require real enrollment/recovery/replay/disable checks before merge.
 - Local provider credentials must be verified and rotated before publication; TLS, trusted production proxies, private service ports, MFA encryption-key custody and backups remain deployment gates.
 - RustFS report create/download, History risk filters, shared edge auth and existing browser/API regressions have passing evidence. Shared scan-schema versioning, pagination/load coverage and broker failure/redrive operations remain open.
 - CI exists; no production CD/promotion workflow or deployment target is configured.

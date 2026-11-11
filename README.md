@@ -2,6 +2,12 @@
 
 ForgeHarbor is a local threat-detection platform with a React web client, Go control-plane services, and Rust analysis services. Traefik routes browser and API traffic. The development stack uses MongoDB, Redis, RabbitMQ, and RustFS for S3-compatible report storage.
 
+## Resume project and demo scope
+
+ForgeHarbor is a resume/portfolio project. Local analysis uses real Gemini/VirusTotal integrations when fresh test credentials are configured. The public assessment example is explicitly illustrative; it does not call a provider. Do not submit confidential content. CI uses disposable accounts and provider-free fixtures; passing CI does not establish live-provider availability or production readiness.
+
+The [AWS demo plan](docs/obsidian/06-Roadmap/AWS-Deployment.md) recommends one EC2/Compose host plus ECR/S3/SSM and OIDC deployment. It replaces the earlier managed-service budget recommendation. No AWS resources are created by the application changes.
+
 ## Current capabilities
 
 - User signup and login with RS256 JWTs, HttpOnly browser sessions, and backend TOTP MFA APIs.
@@ -130,7 +136,7 @@ A `LICENSE` file is not present in the repository yet.
 
 Development Compose uses independent Go Auth, History and Notify processes from `apps/controlplane-go`. Existing service paths, stored identities, cookie/JWT formats and ownership behavior are preserved. Use `deploy/compose/docker-compose.language-rollback.yml` for the retained legacy implementations.
 
-The key setup command also creates an ignored 32-byte `apps/auth-rs/config/mfa-encryption.key`. Back it up separately from JWT signing keys. API clients can enroll TOTP via `/auth/mfa/setup` and `/auth/mfa/enable`, then complete pending logins through `/auth/mfa/verify`. Recovery codes work once. Do not enroll accounts used by the unchanged browser until its separate MFA screens are deployed; the browser on `main` supports unenrolled accounts only. See [Auth](docs/obsidian/02-Services/Auth.md).
+The key setup command also creates an ignored 32-byte `apps/auth-rs/config/mfa-encryption.key`. Back it up separately from JWT signing keys. API clients can enroll TOTP via `/auth/mfa/setup` and `/auth/mfa/enable`, then complete pending logins through `/auth/mfa/verify`. Recovery codes work once. The TypeScript browser includes enrollment, authenticator/recovery challenge, one-time recovery-code display and second-factor-confirmed disable. Keep the MFA key stable across deployments. See [Auth](docs/obsidian/02-Services/Auth.md).
 
 Run `scripts/check-go-parity.ps1` for isolated race-enabled MongoDB, Redis and RabbitMQ contract tests, including backend MFA. No production deployment target is configured.
 

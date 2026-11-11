@@ -1,6 +1,8 @@
+import { errorMessage } from '../types';
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from '../services/api';
+import AuthFrame from '../components/Auth/AuthFrame';
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");
@@ -15,7 +17,7 @@ const SignupPage = () => {
     return () => clearTimeout(timer);
   }, [message, navigate]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (submitting || message) return;
     const passwordLength = Array.from(password).length;
@@ -30,21 +32,21 @@ const SignupPage = () => {
       await api.signup(email, password);
       setMessage("Signup successful! Redirecting to login...");
     } catch (err) {
-      setError(err.message || "Failed to sign up. Please try again.");
+      setError(errorMessage(err) || "Failed to sign up. Please try again.");
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto">
-      <div className="rounded-3xl p-10 shadow-2xl backdrop-blur-lg border bg-slate-800/40 border-slate-700/50">
-        <h2 className="text-3xl font-bold text-center text-white mb-8">Create an Account</h2>
-        {error && <p role="alert" className="text-red-400 text-center mb-4">{error}</p>}
-        {message && <p role="status" className="text-green-400 text-center mb-4">{message}</p>}
+    <AuthFrame>
+      <div className="auth-card">
+        <h2 className="text-3xl font-bold text-center text-slate-900 mb-8">Create an Account</h2>
+        {error && <p role="alert" className="text-red-700 text-center mb-4">{error}</p>}
+        {message && <p role="status" className="text-green-700 text-center mb-4">{message}</p>}
         <form onSubmit={handleSubmit} className="space-y-6">
            <div>
-            <label htmlFor="signup-email" className="text-sm font-medium text-slate-300 mb-2 block">Email</label>
+            <label htmlFor="signup-email" className="text-sm font-medium text-slate-700 mb-2 block">Email</label>
             <input
               id="signup-email"
               autoComplete="email"
@@ -53,12 +55,12 @@ const SignupPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full bg-slate-900/50 border border-slate-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              className="w-full bg-white border border-slate-300 text-slate-900 rounded-lg p-3 focus:outline-hidden focus:ring-2 focus:ring-cyan-500"
               required
             />
           </div>
           <div>
-            <label htmlFor="signup-password" className="text-sm font-medium text-slate-300 mb-2 block">Password</label>
+            <label htmlFor="signup-password" className="text-sm font-medium text-slate-700 mb-2 block">Password</label>
             <input
               id="signup-password"
               autoComplete="new-password"
@@ -67,28 +69,28 @@ const SignupPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-slate-900/50 border border-slate-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              className="w-full bg-white border border-slate-300 text-slate-900 rounded-lg p-3 focus:outline-hidden focus:ring-2 focus:ring-cyan-500"
               required
             />
-            <p id="signup-password-hint" className="mt-2 text-sm text-slate-400">Use 15 to 128 characters. Spaces and Unicode are welcome.</p>
-            <p id="signup-password-privacy" className="mt-2 text-sm leading-relaxed text-slate-400">We check a partial hash against known breaches. Your password itself is never sent.</p>
+            <p id="signup-password-hint" className="mt-2 text-sm text-slate-500">Use 15 to 128 characters. Spaces and Unicode are welcome.</p>
+            <p id="signup-password-privacy" className="mt-2 text-sm leading-relaxed text-slate-500">We check a partial hash against known breaches. Your password itself is never sent.</p>
           </div>
           <button
             disabled={submitting || Boolean(message)}
             type="submit"
-            className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 transition-opacity"
+            className="w-full bg-blue-700 text-slate-900 font-bold py-3 px-4 rounded-lg hover:opacity-90 transition-opacity"
           >
             {submitting ? 'Signing up...' : 'Sign Up'}
           </button>
         </form>
-         <p className="text-center text-slate-400 mt-6">
+         <p className="text-center text-slate-500 mt-6">
           Already have an account?{" "}
-          <Link to="/login" className="font-medium text-cyan-400 hover:underline">
+          <Link to="/login" className="font-medium text-cyan-700 hover:underline">
             Login
           </Link>
         </p>
       </div>
-    </div>
+    </AuthFrame>
   );
 };
 

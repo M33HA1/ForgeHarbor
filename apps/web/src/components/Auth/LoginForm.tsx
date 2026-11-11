@@ -2,20 +2,24 @@ import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { User, Lock, LogIn, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import MFAVerification from './MFAVerification';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [challenge, setChallenge] = useState<string | null>(null);
   const { login, error, setError } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError(null); // Clear previous errors
     try {
-      await login(email, password);
+      const result = await login(email, password);
+      setPassword('');
+      if ('mfa_required' in result) { setChallenge(result.challenge_token); return; }
       navigate('/'); // Redirect to dashboard on successful login
     } catch (err) {
       console.error('Login failed:', err);
@@ -25,6 +29,7 @@ const LoginForm = () => {
     }
   };
 
+  if (challenge) return <MFAVerification challenge={challenge} onCancel={() => setChallenge(null)} onVerified={() => navigate('/app/dashboard')} />;
   return (
     <div className="w-full">
       <h2 className="text-3xl font-bold text-white mb-6 text-center">Login</h2>
@@ -41,13 +46,13 @@ const LoginForm = () => {
             Email
           </label>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full pl-10 pr-4 py-3 rounded-lg border bg-slate-700/50 text-white border-slate-600 focus:border-cyan-400 focus:outline-none transition-colors"
+              className="w-full pl-10 pr-4 py-3 rounded-lg border bg-slate-700/50 text-white border-slate-600 focus:border-cyan-400 focus:outline-hidden transition-colors"
               placeholder="you@email.com"
             />
           </div>
@@ -58,13 +63,13 @@ const LoginForm = () => {
             Password
           </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full pl-10 pr-4 py-3 rounded-lg border bg-slate-700/50 text-white border-slate-600 focus:border-cyan-400 focus:outline-none transition-colors"
+              className="w-full pl-10 pr-4 py-3 rounded-lg border bg-slate-700/50 text-white border-slate-600 focus:border-cyan-400 focus:outline-hidden transition-colors"
               placeholder="Enter your password"
             />
           </div>

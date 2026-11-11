@@ -7,6 +7,8 @@ tags: [change, changelog]
 
 # Change Log
 
+- [[2026-11-11-demo-finalisation]] — TypeScript/MFA integration, interface redesign, browser fixture fixes, CI and corrected AWS demo scope.
+
 - [[2026-11-09-documentation-and-seed-cleanup]] — align current docs with merged backend/CI evidence and remove four unused seed/demo files.
 - [[2026-11-09-backend-control-plane-pr]] — Go Auth/History/Notify and MFA APIs merged in PR #69; all PR-head CI checks passed.
 

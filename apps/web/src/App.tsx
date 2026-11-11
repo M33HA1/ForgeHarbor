@@ -1,6 +1,6 @@
 import React from "react";
-import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
+import { BrowserRouter as Router, Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import LandingPage from "./pages/LandingPage";
 import DashboardPage from "./pages/DashboardPage";
 import HistoryPage from "./pages/HistoryPage";
@@ -9,18 +9,18 @@ import ProfilePage from "./pages/ProfilePage";
 import SignupPage from "./pages/SignupPage";
 import Header from "./components/Layout/Header";
 import Footer from "./components/Layout/Footer";
-import FloatingElements from "./components/FloatingElements";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-const App = () => {
+const AppLayout = () => {
+  const { user } = useAuth();
+  const { pathname } = useLocation();
+  const workspace = Boolean(user) && pathname.startsWith('/app/');
   return (
-    <AuthProvider>
-      <Router>
-        <div className="min-h-screen flex flex-col">
-          <div className="flex-1 relative overflow-hidden flex flex-col">
-            <FloatingElements />
-            <Header />
-            <main className="relative z-10 container mx-auto px-6 py-12 flex-grow">
+        <div className={workspace ? 'app-shell workspace-shell' : 'app-shell public-shell'}>
+          <a className="skip-link" href="#main-content">Skip to content</a>
+          <div className="flex-1 relative flex flex-col">
+            <Header workspace={workspace} />
+            <main id="main-content" tabIndex={-1} className={workspace ? 'workspace-main' : 'public-main'}>
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
@@ -43,14 +43,15 @@ const App = () => {
                 } />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
+                <Route path="*" element={<section className="auth-card" style={{maxWidth:520,margin:'40px auto'}}><h1>Page not found</h1><p>This address does not lead to a ForgeHarbor page.</p><Link className="primary-button" to={user ? '/app/dashboard' : '/'}>Return to {user ? 'workspace' : 'home'}</Link></section>} />
               </Routes>
             </main>
-            <Footer />
+            <Footer workspace={workspace} />
           </div>
         </div>
-      </Router>
-    </AuthProvider>
   );
 };
+
+const App = () => <AuthProvider><Router><AppLayout /></Router></AuthProvider>;
 
 export default App;

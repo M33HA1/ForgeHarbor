@@ -20,6 +20,8 @@ Use this runbook for a local demo or when preparing a production-like deployment
 
 CI builds and tests changes but does not deploy them. PR #69 passed [CI run #209](https://github.com/M33HA1/ForgeHarbor/actions/runs/42642752091) on `9d41051` and merged as `bbb8055`; subsequent revisions need their own checks. No production CD/promotion workflow or target exists.
 
+For the resume/demo scope, use [[AWS-Deployment]]. No cloud target or automatic CD is implemented yet.
+
 ## Pre-deploy checklist
 
 - [ ] All seven services build.
