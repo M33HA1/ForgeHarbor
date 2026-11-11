@@ -48,7 +48,7 @@ jobs:
           python3 -m venv "$RUNNER_TEMP/semgrep"
           "$RUNNER_TEMP/semgrep/bin/pip" install --disable-pip-version-check semgrep==1.185.0
       - name: Semgrep scan
-        run: '"$RUNNER_TEMP/semgrep/bin/semgrep" scan --config auto --metrics off --strict --sarif --output semgrep.sarif .'
+        run: '"$RUNNER_TEMP/semgrep/bin/semgrep" scan --config p/default --metrics off --strict --sarif --output semgrep.sarif .'
       - name: Preserve Semgrep evidence
         if: always() && hashFiles('semgrep.sarif') != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
