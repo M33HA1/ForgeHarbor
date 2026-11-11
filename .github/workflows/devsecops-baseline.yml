@@ -43,16 +43,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install pinned Semgrep CLI
+        run: |
+          python3 -m venv "$RUNNER_TEMP/semgrep"
+          "$RUNNER_TEMP/semgrep/bin/pip" install --disable-pip-version-check semgrep==1.185.0
       - name: Semgrep scan
-        uses: returntocorp/semgrep-action@713efdd345f3035192eaa63f56867b88e63e4e5d # v1
+        run: '"$RUNNER_TEMP/semgrep/bin/semgrep" scan --config auto --metrics off --strict --sarif --output semgrep.sarif .'
+      - name: Preserve Semgrep evidence
+        if: always() && hashFiles('semgrep.sarif') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          config: auto
+          name: semgrep-report
+          path: semgrep.sarif
+          if-no-files-found: error
       - name: Upload Semgrep SARIF
-        if: always()
+        if: always() && hashFiles('semgrep.sarif') != ''
         uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           sarif_file: semgrep.sarif
-        continue-on-error: true
 
   sca-trivy-fs:
     runs-on: ubuntu-24.04
