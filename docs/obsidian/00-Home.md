@@ -1,7 +1,7 @@
 ---
 type: dashboard
 status: active
-updated: 2026-11-09
+updated: 2026-11-12
 tags: [forgeharbor, dashboard, moc]
 ---
 
@@ -16,9 +16,9 @@ Go Auth/History/Notify and backend MFA APIs merged to `main` in [PR #69](https:/
 
 Documentation and seed cleanup: [[2026-11-09-documentation-and-seed-cleanup]].
 
-## Resume-demo completion branch
+## Resume-demo integration and patch follow-up
 
-[PR #71](https://github.com/M33HA1/ForgeHarbor/pull/71), from `codex/project-finalisation`, delivers: strict TypeScript, browser MFA and a revised UI integrated with the merged backend. [[2026-11-11-demo-finalisation]] records current verification and research; the PR checks show the current hosted result, and the active ruleset requires all 11 checks before merge. [[AWS-Deployment]] is now a proposed single-host resume/demo plan. Provider credentials, credential rotation and actual AWS provisioning remain external gates; do not claim a production launch.
+[PR #71](https://github.com/M33HA1/ForgeHarbor/pull/71), from `codex/project-finalisation`, delivers: strict TypeScript, browser MFA and a revised UI integrated with the merged backend. [[2026-11-11-demo-finalisation]] records current verification and research; the PR checks show the current hosted result, and the active ruleset requires all 11 checks before merge. PR #71 merged as `868c51c`; [post-merge CI](https://github.com/M33HA1/ForgeHarbor/actions/runs/42985159308) and the security workflow passed. [[2026-11-12-dependency-followup]] tracks the six subsequently renewed patch updates on `codex/dependency-followup`. [[AWS-Deployment]] is a proposed single-host resume/demo plan. Provider credentials, credential rotation and actual AWS provisioning remain external gates; do not claim a production launch.
 
 ## Status
 
@@ -27,7 +27,7 @@ Documentation and seed cleanup: [[2026-11-09-documentation-and-seed-cleanup]].
 | Repository | Active | Branch `main` |
 | Knowledge base | In place | This vault, linked from this dashboard |
 | Developer tooling | In place | `scripts/dev.ps1`, `scripts/dev.sh`, `.tool-versions` |
-| CI | PR #69 checks passed: all 11 CI and four report-only DevSecOps jobs | [CI run #209](https://github.com/M33HA1/ForgeHarbor/actions/runs/42642752091); [[2026-11-09-backend-control-plane-pr]] |
+| CI | PR #71 and merged-main checks passed: all 11 CI and four report-only security jobs | [Merged-main CI](https://github.com/M33HA1/ForgeHarbor/actions/runs/42985159308); [[2026-11-11-demo-finalisation]] |
 | Application stack | Verified using disposable local/hosted fixtures; production gates remain | Seven images build; eight health probes, gateway route/CORS checks, Auth credential bounds and rate limits, History/Reports ownership, scanner JWT gates, Notify isolation, trusted report provenance (legacy downloads return 410), artifact storage, and dependency-aware Reports readiness pass; mocked and live browser/API journeys pass; live provider coverage and production gates remain |
 | Architecture | Reviewed | [[Architecture-Review]] — contracts, routing, auth boundary, events, secrets |
 | Routing | Contract fixed | D1=B in [[ADR-0004-gateway-prefix-contract]]; `scripts/check-routes.mjs` |

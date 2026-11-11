@@ -3,7 +3,7 @@ type: service
 status: partially-verified
 priority: P0
 language: typescript
-updated: 2026-11-11
+updated: 2026-11-12
 tags: [service/web, status/p0, area/frontend, language/typescript]
 ---
 
@@ -27,7 +27,7 @@ React single-page application for signup, login, URL scans, file scans, history,
 
 | Field | Value |
 |---|---|
-| Language | JavaScript/JSX with Vite; TypeScript conversion is a target |
+| Language | Strict TypeScript/TSX, React and Vite |
 | Direct port | 3000 |
 | Public route | `/` through Traefik |
 | API base | `VITE_API_BASE_URL` or `window.location.origin` |
@@ -79,7 +79,7 @@ Run Playwright MCP `browser_run_code_unsafe` with `filename: scripts/check-web-u
 
 - [[2026-11-03-auth-breached-password-screening]]: signup explains the privacy-preserving breached-password check before account creation.
 
-- [[2026-11-03-ci-matrix-and-strict-integration]]: headless CLI runs the existing mock and live local browser suites with fixture cleanup; first hosted workflow run pending.
+- [[2026-11-03-ci-matrix-and-strict-integration]]: headless CLI runs the existing mock and live local browser suites with fixture cleanup; latest merged-main evidence is recorded in [[2026-11-12-dependency-followup]].
 
 - [[2026-11-03-http-only-browser-sessions]]: browser JWTs moved from localStorage to a Strict HttpOnly cookie; protected routes and cross-service ownership work with cookies.
 
@@ -112,3 +112,7 @@ Pop-Location
 - [[Notify]]
 - [[Build]]
 - [[Test-Matrix]]
+
+## Dependency follow-up
+
+[[2026-11-12-dependency-followup]] pairs Tailwind 4.3.5 with its Vite compiler package and updates Lucide to 1.70.0. PR #71 already merged the interface and MFA; this patch batch preserves those flows.

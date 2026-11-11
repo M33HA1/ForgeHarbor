@@ -3,7 +3,7 @@ type: service
 status: protected
 priority: P1
 language: go
-updated: 2026-11-07
+updated: 2026-11-12
 tags: [service/reports, status/p0, area/security, language/go]
 ---
 
@@ -130,3 +130,7 @@ python scripts/check-report-integrity.py
 - [[Security-Review]]
 - [[ADR-0001-polyglot-boundaries]]
 - [[2026-11-02-reports-route-and-rustfs]]
+
+## Dependency follow-up
+
+[[2026-11-12-dependency-followup]] updates the AWS SDK core/config/credentials/S3 packages together after Dependabot renewed its four PRs. Retain owner/provenance checks, operation deadlines and the patched quic-go/x/crypto dependencies from PR #71. Credential-chain support for real AWS S3 is still planned in [[AWS-Deployment]].

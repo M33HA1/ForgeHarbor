@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ## [Unreleased]
 
+- Coordinate the six renewed dependency PRs: AWS SDK patches, Lucide 1.70 and matching Tailwind/Vite compiler 4.3.5 packages. Correct the Web language inventory to reflect the merged TypeScript frontend.
+
 - Replace the obsolete Semgrep wrapper with a pinned CLI that produces and preserves its scan report.
 - Remediate lower-severity Trivy dependency findings in Rust and Reports without adding suppressions.
 - Consolidate compatible dependency updates, migrate Web to Vite 8/Tailwind 4, configure the JWT 11 cryptography backend, and remove unused frontend decoration and dotenv types.
