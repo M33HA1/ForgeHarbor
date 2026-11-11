@@ -13,7 +13,7 @@ ForgeHarbor is a resume project, not a customer SaaS launch. The earlier managed
 
 ## Recommended architecture
 
-One Linux x86-64 EC2 host runs the existing application, MongoDB, Redis and RabbitMQ through an explicit production/demo Compose configuration. Candidate size: 2 vCPU / 8 GiB, validated by memory, Argon2 and concurrent scan measurements; build images in CI, not on the demo host. Use encrypted EBS for state. All backend and data ports stay unpublished; only Traefik HTTPS and the ACME HTTP challenge/redirect are public. Disable the insecure dashboard and prefer static file-provider routing over a Docker socket mount.
+One Linux x86-64 EC2 host runs the existing application, MongoDB, Redis and RabbitMQ through an explicit production/demo Compose configuration. Recommend Mumbai (`ap-south-1`) for the initial India-facing demo, with `t3.large` (2 vCPU / 8 GiB) and a 60 GiB encrypted gp3 volume as the initial sizing candidate; validate memory, Argon2, disk growth and concurrent scan measurements before launch; build images in CI, not on the demo host. Use encrypted EBS for state. All backend and data ports stay unpublished; only Traefik HTTPS and the ACME HTTP challenge/redirect are public. Disable the insecure dashboard and prefer static file-provider routing over a Docker socket mount.
 
 Use ECR for immutable images, a private encrypted/versioned S3 bucket for report objects, Secrets Manager for fresh cloud secrets, SSM for administration without SSH, and CloudWatch with short retention for logs/health/cost alarms. Keep MongoDB/Redis/RabbitMQ local to this demo host; single-host downtime and data recovery limitations must be stated openly.
 
@@ -46,7 +46,7 @@ Sources researched 2026-11-11: [EC2 T3](https://aws.amazon.com/ec2/instance-type
 
 ## Acceptance and remaining inputs
 
-Region/domain/account, final cost estimate, provider test credentials and data scope are still inputs before provisioning. Successful local/hosted CI is not an AWS deployment. A resume demo does not establish production HA, compliance or security certification.
+The recommended region and starting host are above. The actual AWS account/domain, a current regional cost estimate, fresh provider test credentials and data scope remain inputs before provisioning. Successful local/hosted CI is not an AWS deployment. A resume demo does not establish production HA, compliance or security certification.
 
 - [[Deploy]]
 - [[Backlog]]

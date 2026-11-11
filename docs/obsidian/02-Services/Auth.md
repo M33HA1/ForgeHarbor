@@ -17,7 +17,7 @@ Protected gateway requests use the shared Auth ForwardAuth gate; service JWT and
 
 ## Runtime hardening
 
-The active Go runtime container runs as UID 65532. The finalisation branch updates the legacy Rust image to MongoDB 3.10 and JWT 11 with an explicit AWS-LC provider; locked dependencies and security checks remain enforced. Hosted integration gives the generated ephemeral Auth key group 65532 read-only access (mode 0640), retaining runner ownership and private-key restrictions.
+The active Go runtime container runs as UID 65532. [PR #71](https://github.com/M33HA1/ForgeHarbor/pull/71) updates the legacy Rust image to MongoDB 3.10 and JWT 11 with an explicit AWS-LC provider; locked dependencies and security checks remain enforced. Hosted integration gives the generated ephemeral Auth key group 65532 read-only access (mode 0640), retaining runner ownership and private-key restrictions.
 
 ## Responsibility
 

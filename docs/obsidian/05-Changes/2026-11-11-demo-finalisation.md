@@ -1,7 +1,7 @@
 ---
 date: 2026-11-11
 type: change
-status: in-verification
+status: locally-verified
 updated: 2026-11-11
 area: [web, auth, ci, docs]
 related: [Web, Auth, AWS-Deployment]
@@ -37,11 +37,11 @@ Current-run screenshots showed a large dense assessment panel competing with ent
 - Nine browser groups passed three consecutive runs; ten groups passed after adding unknown-page recovery. Layouts checked at 320/768/1440 pixels.
 - Real MongoDB/Redis/RabbitMQ Go contracts passed with the race detector.
 - Real MFA verification passed five end-to-end groups after reproducing and fixing the disposed-response teardown race; zero browser runtime errors.
-- Repository baseline passed Compose/configuration, source syntax and internal-link checks; live gateway checks were skipped when the disposable stack was stopped. Hosted CI for the final revision remains pending.
+- Repository baseline passed Compose/configuration, source syntax and internal-link checks; live gateway checks were skipped when the disposable stack was stopped. [PR #71](https://github.com/M33HA1/ForgeHarbor/pull/71) is the canonical hosted-check record; merge requires all 11 checks under the active main ruleset.
 - Axe WCAG A/AA checks found no violation groups in the tested public/account/workspace states at 320/768/1440 pixels; this is automated coverage, not full conformance certification.
 - Coordinated Vite 8/React plugin 6/Tailwind 4 migration builds and passes the ten UI groups. Remove unused floating decoration and v3 configuration; bundle the font locally.
 - Reports AWS SDK dependencies updated together; Go route tests pass. Remove the redundant legacy History dotenv type stub; History builds.
-- Select the AWS-LC cryptography provider explicitly for JWT 11 in all Rust services; retain RS256 validation and test the rollback path. Replace unbounded scanner requirements with compatible version ranges. Rust Auth passed 25 tests. The Phishing request-header test reproduced missing TLS-provider initialization after the Reqwest upgrade; the shared Gemini client now explicitly initializes Ring and bounds requests to 30 seconds, and that test passes. Malware and hosted integration checks remain pending.
+- Select the AWS-LC cryptography provider explicitly for JWT 11 in all Rust services; retain RS256 validation and test the rollback path. Replace unbounded scanner requirements with compatible version ranges. Rust Auth passed 25 tests. The Phishing request-header test reproduced missing TLS-provider initialization after the Reqwest upgrade; the shared Gemini client now explicitly initializes Ring and bounds requests to 30 seconds, and that test passes. Malware passed all three upload/concurrency tests. The final dependency set also passed all five real MFA groups with zero runtime errors and automatic disposable-state cleanup. Hosted full-stack verification is tracked in PR #71.
 - Local screenshots are ignored artifacts under `.playwright-mcp/final-review`; historical screenshot evidence is not substituted for this run.
 
 ## Remaining external and future work
