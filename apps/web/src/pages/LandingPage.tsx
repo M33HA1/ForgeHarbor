@@ -18,7 +18,7 @@ export default function LandingPage() {
         <div className="product-category"><ScanLine size={17} /> URL and file threat analysis</div><h1>Investigate a link.<br />Understand the risk.</h1>
         <p>Check suspicious URLs and files. Read the evidence, keep your findings, and make a more informed next move.</p>
         <div className="landing-actions"><Link to={user ? '/app/dashboard' : '/signup'} className="primary-button">{user ? 'Open your workspace' : 'Create your workspace'}<ArrowRight size={17} /></Link>{!user && <Link to="/login" className="secondary-button">Login</Link>}</div>
-        
+
         <div className="landing-trust"><span><ShieldCheck size={15} /> Authenticator sign-in</span><span><LockKeyhole size={15} /> Your own scan history</span></div>
       </div>
     </section>
