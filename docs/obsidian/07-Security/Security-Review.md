@@ -2,7 +2,7 @@
 type: security
 status: open
 priority: P0
-updated: 2026-11-09
+updated: 2026-11-11
 tags: [security, review, p0]
 ---
 
@@ -104,3 +104,19 @@ Expected: 401 for missing or invalid auth, 404 for cross-user access, and 400 fo
 - [[Notify]]
 - [[Environment]]
 - [[Backlog]]
+
+
+## Finalisation scanner evidence and audit dispositions (2026-11-11)
+
+[[2026-11-11-demo-finalisation]] and [PR #71](https://github.com/M33HA1/ForgeHarbor/pull/71) retain final regression/check links. Reviewing the full-severity Trivy artifact identified 15 dependency alerts beyond the HIGH/CRITICAL gate; fixed dependency versions removed all 15. The subsequent all-severity Trivy JSON contained no vulnerabilities, and Gitleaks SARIF contained zero results. No new finding suppression was added. These reports do not resolve SEC-006 credential rotation or verify live providers.
+
+The obsolete Semgrep wrapper failed to parse current registry severity values and never created SARIF despite its green job badge. The replacement pinned CLI scans with `p/default`, metrics disabled and strict scan/config errors. Its [first valid report](https://github.com/M33HA1/ForgeHarbor/actions/runs/42982444889) ran 610 rules across 253 files and produced these 16 audit matches. Keep the matches visible; report-only findings are not silently excluded.
+
+| Matches | Rule/surface | Evidence and disposition |
+|---|---|---|
+| 8 | Dependabot missing explicit cooldown | Advisory hardening recommendation. Current GitHub documentation specifies a default three-day cooldown even without this field; security updates are exempt. Existing weekly update configuration retains that default. No new schedule is created. [Official behavior](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference#cooldown) |
+| 1 | SHA-1 in `internal/auth/breach.go` | Required by HIBP's k-anonymity range protocol. Only the first five hexadecimal characters go to the fixed HTTPS endpoint; redirects are disabled, responses bounded and the suffix compared locally. Password storage uses Argon2id. Replacing this digest would break the protocol, not improve password storage. [HIBP protocol](https://haveibeenpwned.com/API/v3#PwnedPasswords) |
+| 1 | Cookie Secure flag in `internal/auth/service.go` | The flag is explicitly set to `s.CookieSecure`; the Auth entrypoint defaults `AUTH_COOKIE_SECURE` to true. Contract fixtures set true; local HTTP Compose explicitly opts out. Cookie remains HttpOnly and SameSite Strict. AWS must use HTTPS and Secure cookies as required by [[AWS-Deployment]]. This match does not show an omitted flag. |
+| 6 | Dynamic urllib in test scripts | Operator-run Auth/Reports/Notify fixtures and local S3 cleanup, not request handlers. Targets come from fixed local URLs or operator test configuration, not application input. Local storage restricts the host to loopback. Do not repurpose these disposable-fixture scripts as public URL-fetch endpoints or run them against production. |
+
+These are contextual dispositions of the exact reviewed matches, not a blanket exemption for the rules or a claim that static analysis establishes security. New matches and changes to these boundaries require fresh review.
