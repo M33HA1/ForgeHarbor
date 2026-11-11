@@ -1,7 +1,18 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiService from '../services/api';
 
-const AuthContext = createContext();
+import type { User, LoginResponse, LoginResult } from '../types';
+import { errorMessage } from '../types';
+
+interface AuthState {
+  user: User | null; loading: boolean; error: string | null; isAuthenticated: boolean;
+  login(email: string, password: string): Promise<LoginResult>;
+  verifyMFA(challenge: string, code: string): Promise<LoginResponse>;
+  signup(email: string, password: string): Promise<User>;
+  logout(): Promise<void>;
+  setError: React.Dispatch<React.SetStateAction<string | null>>;
+}
+const AuthContext = createContext<AuthState | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -11,10 +22,10 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+export const AuthProvider = ({ children }: React.PropsWithChildren) => {
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuthStatus();
@@ -31,27 +42,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (email, password) => {
+  const login = async (email: string, password: string) => {
     try {
       setError(null);
       const response = await apiService.login(email, password);
+      if ('mfa_required' in response) { setUser(null); return response; }
       const userData = await apiService.getProfile();
       setUser(userData);
       return response;
     } catch (err) {
       await apiService.logout().catch(() => {});
       setUser(null);
-      setError(err.message);
+      setError(errorMessage(err));
       throw err;
     }
   };
 
-  const signup = async (email, password) => {
+  const verifyMFA = async (challenge: string, code: string) => {
+    setError(null);
+    try {
+      const result = await apiService.verifyMFA(challenge, code);
+      try { setUser(await apiService.getProfile()); }
+      catch (error) { await apiService.logout().catch(() => {}); throw error; }
+      return result;
+    } catch (error) { setUser(null); setError(errorMessage(error)); throw error; }
+  };
+
+  const signup = async (email: string, password: string) => {
     try {
       setError(null);
       return await apiService.signup(email, password);
     } catch (err) {
-      setError(err.message);
+      setError(errorMessage(err));
       throw err;
     }
   };
@@ -69,6 +91,7 @@ export const AuthProvider = ({ children }) => {
       value={{ 
         user, 
         login, 
+        verifyMFA,
         signup, 
         logout, 
         loading, 

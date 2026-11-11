@@ -9,6 +9,12 @@ tags: [service/web, status/p0, area/frontend, language/typescript]
 
 # Web
 
+## Current interface and integration
+
+`codex/project-finalisation` integrates strict TypeScript and browser MFA with the Go control plane. The interface uses locally bundled Manrope, a quiet public introduction and interactive illustrative evidence preview, and a dark workspace sidebar with light scan/history/account surfaces. Controls retain visible focus, keyboard submission, reduced-motion support, provider disclosures and explicit incomplete/error states. An unknown page has a working return path.
+
+Ten deterministic browser groups cover auth errors/returns/logout, URL/file evidence, reports, mobile navigation, 320/768/1440 layouts, upload bounds and the unknown route. Real-store MFA and hosted full-stack verification are tracked in [[2026-11-11-demo-finalisation]]. No seed, challenge, recovery code or JWT is written to browser storage. Screenshots and passing fixtures do not establish WCAG conformance or production readiness.
+
 ## Runtime hardening
 
 The runtime container runs as the built-in unprivileged Node.js user.

@@ -16,6 +16,10 @@ Go Auth/History/Notify and backend MFA APIs merged to `main` in [PR #69](https:/
 
 Documentation and seed cleanup: [[2026-11-09-documentation-and-seed-cleanup]].
 
+## Resume-demo completion branch
+
+The active completion work is `codex/project-finalisation`: strict TypeScript, browser MFA and a revised UI integrated with the merged backend. [[2026-11-11-demo-finalisation]] records current verification and research; hosted checks for this revision remain pending until publication. [[AWS-Deployment]] is now a proposed single-host resume/demo plan. Provider credentials, credential rotation and actual AWS provisioning remain external gates; do not claim a production launch.
+
 ## Status
 
 | Area | State | Evidence |
