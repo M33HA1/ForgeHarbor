@@ -1,8 +1,8 @@
-import { Anchor } from 'lucide-react';
+import BrandMark from './BrandMark';
 
 export default function Footer({ workspace = false }: { workspace?: boolean }) {
   return <footer className={workspace ? 'workspace-footer' : 'public-footer'}>
-    <span><Anchor size={14} aria-hidden="true" /> ForgeHarbor</span>
+    <span><BrandMark size={22} /> ForgeHarbor</span>
     <p>URL and file threat analysis</p>
   </footer>;
 }

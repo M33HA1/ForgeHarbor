@@ -245,6 +245,82 @@ async (hostPage) => {
         }
       }
     });
+    await check('custom identity and searchable keyboard shortcuts', async () => {
+      await reset(true);
+      await page.setViewportSize({width: 320, height: 900});
+      await page.goto(base + '/app/dashboard');
+      assert(await page.getByRole('link', {name:'ForgeHarbor home',exact:true}).locator('img').evaluate(image => image.complete && image.naturalWidth > 0), 'Custom brand asset did not load');
+      assert(await page.locator('link[rel="icon"]').getAttribute('href') === '/forgeharbor-mark.svg', 'Custom favicon missing');
+      const urlInput = page.getByLabel('Enter URL to check:', {exact:true});
+      await urlInput.focus();
+      await page.keyboard.press('Control+k');
+      const dialog = page.getByRole('dialog', {name:'Find a workspace page'});
+      await dialog.waitFor();
+      assert(await dialog.getByLabel('Find a workspace page').evaluate(input => input === document.activeElement), 'Shortcut search did not receive focus');
+      for (let n = 0; n < 8; n++) {
+        await page.keyboard.press('Tab');
+        assert(await dialog.evaluate(element => element.contains(document.activeElement)), 'Modal focus escaped');
+      }
+      // brand-ux-dialog-audit
+      await page.keyboard.press('Escape');
+      assert(await urlInput.evaluate(input => input === document.activeElement), 'Escape did not restore the original input focus');
+      await page.getByRole('button', {name:'Open workspace shortcuts'}).click();
+      await dialog.getByLabel('Find a workspace page').fill('reports');
+      await dialog.getByRole('link', {name:/Scan history/}).click();
+      await page.waitForURL('**/app/history');
+      assert(!(await dialog.isVisible()), 'Shortcut dialog remained open after navigation');
+      await page.getByRole('button', {name:'Open workspace shortcuts'}).click();
+      await dialog.getByLabel('Find a workspace page').fill('no-such-page');
+      await dialog.getByRole('status').filter({hasText:'No matching pages'}).waitFor();
+      await dialog.getByRole('button', {name:'Close workspace shortcuts'}).click();
+      await page.getByRole('button', {name:'Open workspace shortcuts'}).click();
+      await dialog.getByLabel('Find a workspace page').fill('security');
+      await dialog.getByLabel('Find a workspace page').press('ArrowDown');
+      assert(await dialog.getByRole('link', {name:/Account & security/}).evaluate(link => link === document.activeElement), 'Arrow Down did not focus the matching page');
+      await page.keyboard.press('Enter');
+      await page.waitForURL('**/app/profile');
+      await page.getByRole('button', {name:'Open workspace shortcuts'}).click();
+      await dialog.getByLabel('Find a workspace page').fill('reports');
+      await dialog.getByLabel('Find a workspace page').press('Enter');
+      await page.waitForURL('**/app/history');
+    });
+    await check('evidence copy feedback and clipboard failure recovery', async () => {
+      await reset(true);
+      await page.goto(base + '/app/dashboard');
+      await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', {configurable:true, value:{writeText:async value => { window.__copiedEvidence = value; }}}));
+      await page.getByLabel('Enter URL to check:', {exact:true}).fill(row.input);
+      await page.getByRole('button', {name:'Analyze website',exact:true}).click();
+      await page.getByRole('heading', {name:'Threat detected'}).waitFor();
+      const scansBefore = requests.filter(item => item.path.includes('/url/check')).length;
+      await page.getByRole('button', {name:'Copy URL',exact:true}).click();
+      await page.getByRole('status').filter({hasText:'Copied to clipboard'}).waitFor();
+      assert(await page.evaluate(() => window.__copiedEvidence) === row.input, 'Copied evidence differs from the analyzed target');
+      assert(requests.filter(item => item.path.includes('/url/check')).length === scansBefore, 'Copy triggered another analysis');
+      await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', {configurable:true, value:{writeText:async () => { throw new Error('fixture clipboard denial'); }}}));
+      await page.getByRole('button', {name:'Copy URL',exact:true}).click();
+      await page.getByRole('status').filter({hasText:'Copy unavailable'}).waitFor();
+    });
+    await check('file review and multiple-file drop rejection', async () => {
+      await reset(true);
+      await page.goto(base + '/app/dashboard');
+      await page.getByRole('button', {name:'File Analysis',exact:true}).click();
+      await page.getByLabel('Upload file', {exact:true}).setInputFiles({name:'review-fixture.txt',mimeType:'text/plain',buffer:Buffer.from('local fixture')});
+      await page.getByText('Ready to submit', {exact:true}).waitFor();
+      assert(await page.getByText('review-fixture.txt', {exact:true}).count() === 1, 'Selected filename is duplicated');
+      // brand-ux-upload-audit
+      const files = await page.evaluateHandle(() => {
+        const transfer = new DataTransfer();
+        transfer.items.add(new File(['first'], 'first.txt', {type:'text/plain'}));
+        transfer.items.add(new File(['second'], 'second.txt', {type:'text/plain'}));
+        return transfer;
+      });
+      await page.getByRole('button', {name:'Change file',exact:true}).dispatchEvent('drop', {dataTransfer:files});
+      await files.dispose();
+      await page.getByRole('alert').filter({hasText:'Choose one file at a time'}).waitFor();
+      assert(await page.getByText('review-fixture.txt', {exact:true}).count() === 1, 'Rejected drop changed the selected evidence');
+      await page.getByRole('button', {name:'Remove file',exact:true}).click();
+      assert(await page.getByRole('button', {name:'Analyze file',exact:true}).isDisabled(), 'Removed evidence remains submittable');
+    });
     await check('unknown page offers a working return path', async () => {
       await reset(false);
       await page.goto(base + '/missing-page');

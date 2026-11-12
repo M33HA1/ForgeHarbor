@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Anchor, ArrowUpRight, History, LogOut, ScanLine, ShieldCheck, UserRound } from 'lucide-react';
+import { ArrowUpRight, History, LogOut, ScanLine, ShieldCheck, UserRound } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import BrandMark from './BrandMark';
+import WorkspaceShortcuts from './WorkspaceShortcuts';
 
 export default function Header({ workspace = false }: { workspace?: boolean }) {
   const { user, logout } = useAuth();
@@ -14,7 +16,7 @@ export default function Header({ workspace = false }: { workspace?: boolean }) {
     finally { setLeaving(false); navigate('/login'); }
   };
   const brand = <Link to={workspace ? '/app/dashboard' : '/'} className="brand" aria-label="ForgeHarbor home">
-    <span className="brand-icon"><Anchor size={21} aria-hidden="true" /></span>
+    <BrandMark />
     <span>ForgeHarbor<span className="brand-caption">Investigation workspace</span></span>
   </Link>;
   const links = [
@@ -24,6 +26,7 @@ export default function Header({ workspace = false }: { workspace?: boolean }) {
   ];
   if (workspace && user) return <header className="workspace-nav">
     {brand}
+    <WorkspaceShortcuts />
     <div className="nav-section-label">Workspace</div>
     <nav aria-label="Workspace navigation">{links.map(({ to, label, text, icon: Icon }) =>
       <NavLink key={to} to={to} aria-label={label} className={({isActive}) => `workspace-nav-link ${isActive ? 'is-active' : ''}`}>

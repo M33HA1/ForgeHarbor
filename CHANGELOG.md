@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ## [Unreleased]
 
+- Introduce the original ForgeHarbor channel mark across navigation, footer and favicon; add keyboard-searchable workspace shortcuts, copy-evidence feedback and clearer file review with multiple-drop rejection.
+
 - Replace the MFA browser interception bridge with a loopback test gateway; verify cancellation, cookie forwarding and listener readiness.
 - Coordinate the six renewed dependency PRs: AWS SDK patches, Lucide 1.70 and matching Tailwind/Vite compiler 4.3.5 packages. Correct the Web language inventory to reflect the merged TypeScript frontend.
 

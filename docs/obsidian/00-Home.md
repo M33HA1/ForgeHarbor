@@ -1,7 +1,7 @@
 ---
 type: dashboard
 status: active
-updated: 2026-11-12
+updated: 2026-11-13
 tags: [forgeharbor, dashboard, moc]
 ---
 
@@ -18,7 +18,11 @@ Documentation and seed cleanup: [[2026-11-09-documentation-and-seed-cleanup]].
 
 ## Resume-demo integration and patch follow-up
 
-[PR #71](https://github.com/M33HA1/ForgeHarbor/pull/71), from `codex/project-finalisation`, delivers: strict TypeScript, browser MFA and a revised UI integrated with the merged backend. [[2026-11-11-demo-finalisation]] records current verification and research; the PR checks show the current hosted result, and the active ruleset requires all 11 checks before merge. PR #71 merged as `868c51c`; [post-merge CI](https://github.com/M33HA1/ForgeHarbor/actions/runs/42985159308) and the security workflow passed. [[2026-11-12-dependency-followup]] tracks the six subsequently renewed patch updates and the MFA test-gateway repair on `codex/dependency-followup`; follow-up hosted verification is still required. [[AWS-Deployment]] is a proposed single-host resume/demo plan. Provider credentials, credential rotation and actual AWS provisioning remain external gates; do not claim a production launch.
+[PR #71](https://github.com/M33HA1/ForgeHarbor/pull/71), from `codex/project-finalisation`, delivers: strict TypeScript, browser MFA and a revised UI integrated with the merged backend. [[2026-11-11-demo-finalisation]] records current verification and research; the PR checks show the current hosted result, and the active ruleset requires all 11 checks before merge. PR #71 merged as `868c51c`; [post-merge CI](https://github.com/M33HA1/ForgeHarbor/actions/runs/42985159308) and the security workflow passed. [[2026-11-12-dependency-followup]] tracks the six subsequently renewed patch updates and the MFA test-gateway repair on `codex/dependency-followup`; PR #72 merged as `c7c939b`; [merged-main CI](https://github.com/M33HA1/ForgeHarbor/actions/runs/43276307814) and all four security workflow jobs passed. [[AWS-Deployment]] is a proposed single-host resume/demo plan. Provider credentials, credential rotation and actual AWS provisioning remain external gates; do not claim a production launch.
+
+## Brand and workspace usability
+
+[[2026-11-13-brand-and-workspace-ux]] records the original channel mark, native workspace shortcut dialog, evidence-copy feedback and compact selected-file review. Verification for each revision is recorded in its PR checks; production/provider gates remain tracked separately.
 
 ## Status
 

@@ -1,13 +1,15 @@
 ---
 type: change-index
 status: active
-updated: 2026-11-12
+updated: 2026-11-13
 tags: [change, changelog]
 ---
 
 # Change Log
 
-- [[2026-11-12-dependency-followup]] � refreshed AWS SDK, Lucide and paired Tailwind compiler patch updates after PR #71 merged.
+- [[2026-11-13-brand-and-workspace-ux]] — custom identity, workspace shortcuts, evidence copy and file-selection review.
+
+- [[2026-11-12-dependency-followup]] — refreshed AWS SDK, Lucide and paired Tailwind compiler patch updates after PR #71 merged.
 
 - [[2026-11-11-demo-finalisation]] — TypeScript/MFA integration, interface redesign, browser fixture fixes, CI and corrected AWS demo scope.
 
