@@ -1,166 +1,41 @@
-import React, { useState, useRef } from 'react';
-import { Upload, FileText, X, Search, Loader2 } from 'lucide-react';
-
-const UploadSection = ({
-  file,
-  setFile,
-  isAnalyzing,
-  onAnalyze
-}: { file: File | null; setFile: (file: File | null) => void; isAnalyzing: boolean; onAnalyze: () => void }) => {
+import { useRef, useState, type DragEvent } from 'react';
+import { Check, FileText, Loader2, Search, Upload, X } from 'lucide-react';
+const formatSize = (bytes: number) => bytes < 1024 ? `${bytes} B` : bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KiB` : `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
+export default function UploadSection({ file, setFile, isAnalyzing, onAnalyze }: {
+  file: File | null; setFile: (file: File | null) => void; isAnalyzing: boolean; onAnalyze: () => void;
+}) {
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const chooseFile = (selected: File) => {
-    if (isAnalyzing) return;
-    if (selected.size > 32 * 1024 * 1024) { setError('Choose a file smaller than or equal to 32 MiB.'); setFile(null); return; }
-    setError(''); setFile(selected);
+  const input = useRef<HTMLInputElement>(null);
+  const choose = (files: FileList | null) => {
+    if (isAnalyzing || !files?.length) return;
+    if (files.length !== 1) { setError('Choose one file at a time. No new file was selected.'); return; }
+    if (files[0].size > 32 * 1024 * 1024) { setError('Choose a file smaller than or equal to 32 MiB.'); setFile(null); return; }
+    setError(''); setFile(files[0]);
   };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      chooseFile(selectedFile);
-    }
+  const drop = (event: DragEvent<HTMLButtonElement>) => {
+    event.preventDefault(); setDragActive(false); choose(event.dataTransfer.files);
   };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setDragActive(false);
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile) {
-      chooseFile(droppedFile);
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-xl font-semibold mb-2 flex items-center text-slate-900">
-          <Upload className="w-5 h-5 text-teal-700 mr-3" />
-          <span>Scan a file</span>
-        </h3>
-        <p className="text-sm text-slate-500">
-          Upload a file to analyze for potential security threats
-        </p>
-      </div>
-
-      <div
-        role="button"
-        tabIndex={isAnalyzing ? -1 : 0}
-        aria-disabled={isAnalyzing}
-        aria-label="Choose a file"
-        onKeyDown={(event) => {
-          if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
-            event.preventDefault();
-            if (!isAnalyzing) fileInputRef.current?.click();
-          }
-        }}
-        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer ${
-          dragActive
-            ? 'border-cyan-400 bg-cyan-400/10 scale-105'
-            : 'border-slate-300 hover:border-teal-300/70 hover:bg-teal-300/[.03]'
-        }`}
-        onClick={() => { if (!isAnalyzing) fileInputRef.current?.click(); }}
-        onDragEnter={(e) => {
-          e.preventDefault();
-          setDragActive(true);
-        }}
-        onDragLeave={(e) => {
-          e.preventDefault();
-          setDragActive(false);
-        }}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={handleDrop}
-      >
-        <input
-          aria-label="Upload file"
-          ref={fileInputRef}
-          type="file"
-          disabled={isAnalyzing}
-          onChange={handleFileChange}
-          className="hidden"
-        />
-        <div className="space-y-4">
-          <div className="flex justify-center">
-            <div className="p-4 rounded-full bg-white backdrop-blur-sm">
-              <Upload className="w-8 h-8 text-teal-700" />
-            </div>
-          </div>
-          <div>
-            <p className="text-lg font-medium mb-2 text-slate-900">
-              {file ? (
-                <span className="flex items-center justify-center">
-                  <FileText className="w-5 h-5 mr-2 text-teal-700" />
-                  {file.name}
-                </span>
-              ) : (
-                <span className="flex items-center justify-center">
-                  <FileText className="w-5 h-5 mr-2" />
-                  Drop your file here or click to browse
-                </span>
-              )}
-            </p>
-            <p className="text-sm text-slate-500">
-              One file at a time · Up to 32 MiB
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-
-      {file && (
-        <div className="rounded-lg p-4 border backdrop-blur-sm bg-white border-slate-300">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-lg bg-white">
-                <FileText className="w-5 h-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="font-medium text-slate-900">
-                  {file.name}
-                </p>
-                <p className="text-sm text-slate-500">
-                  {(file.size / 1024).toFixed(2)} KB
-                </p>
-              </div>
-            </div>
-            <button
-              aria-label="Remove file"
-              disabled={isAnalyzing}
-              onClick={() => { setFile(null); setError(''); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-              className="p-2 rounded-lg transition-colors hover:bg-white text-slate-500 hover:text-red-700"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      <button
-        onClick={onAnalyze}
-        disabled={!file || isAnalyzing}
-        className={`w-full py-4 px-6 rounded-xl font-medium transition-all duration-300 flex items-center justify-center space-x-2 ${
-          !file || isAnalyzing
-            ? 'bg-white text-slate-500 cursor-not-allowed'
-            : 'bg-teal-200 hover:bg-teal-100 text-slate-950 shadow-[0_8px_24px_rgba(94,234,212,.12)] hover:-translate-y-0.5'
-        }`}
-      >
-        {isAnalyzing ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            <span>Analyzing file…</span>
-          </>
-        ) : (
-          <>
-            <Search className="w-5 h-5" />
-            <span>Analyze file</span>
-          </>
-        )}
-      </button>
-    </div>
-  );
-};
-
-export default UploadSection;
+  const remove = () => { setFile(null); setError(''); if (input.current) input.current.value = ''; };
+  return <div className="upload-section">
+    <div><h3>Scan a file</h3><p className="upload-intro">Select the attachment you want to investigate.</p></div>
+    <input ref={input} type="file" aria-label="Upload file" disabled={isAnalyzing} className="hidden" onClick={event => { event.currentTarget.value = ''; }} onChange={event => choose(event.target.files)} />
+    <button type="button" aria-label={file ? 'Change file' : 'Choose a file'} disabled={isAnalyzing} className={`upload-dropzone ${file ? 'has-file' : ''} ${dragActive ? 'is-dragging' : ''}`} onClick={() => input.current?.click()}
+      onDragEnter={event => { event.preventDefault(); if (!isAnalyzing) setDragActive(true); }} onDragLeave={event => { event.preventDefault(); setDragActive(false); }} onDragOver={event => event.preventDefault()} onDrop={drop}>
+      {file ? <><Upload size={16} aria-hidden="true" /><strong>Change file</strong></> : <>
+        <span className="upload-symbol"><Upload size={24} aria-hidden="true" /></span>
+        <strong>Choose a file</strong><span>or drop a file here</span><small>One file, up to 32 MiB</small>
+      </>}
+    </button>
+    {error && <p role="alert" className="upload-error">{error}</p>}
+    <span className="sr-only" role="status">{file ? `${file.name} selected. Ready to submit; not analyzed yet.` : ''}</span>
+    {file && <div className="selected-file" role="group" aria-label="Selected file">
+      <span className="selected-file-icon"><FileText size={22} aria-hidden="true" /></span>
+      <div className="selected-file-copy"><strong>{file.name}</strong><span>{formatSize(file.size)}<span className="file-ready"><Check size={12} aria-hidden="true" /> Ready to submit</span></span></div>
+      <button type="button" aria-label="Remove file" className="icon-button" disabled={isAnalyzing} onClick={remove}><X size={17} aria-hidden="true" /></button>
+    </div>}
+    <button type="button" onClick={onAnalyze} disabled={!file || isAnalyzing} className="upload-submit">
+      {isAnalyzing ? <><Loader2 size={18} className="animate-spin" aria-hidden="true" /> Analyzing file…</> : <><Search size={18} aria-hidden="true" /> Analyze file</>}
+    </button>
+  </div>;
+}

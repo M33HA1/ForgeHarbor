@@ -3,7 +3,7 @@ type: service
 status: partially-verified
 priority: P0
 language: typescript
-updated: 2026-11-12
+updated: 2026-11-13
 tags: [service/web, status/p0, area/frontend, language/typescript]
 ---
 
@@ -13,7 +13,11 @@ tags: [service/web, status/p0, area/frontend, language/typescript]
 
 [PR #71](https://github.com/M33HA1/ForgeHarbor/pull/71) integrates strict TypeScript and browser MFA with the Go control plane. The interface uses locally bundled Manrope, a quiet public introduction and interactive illustrative evidence preview, and a dark workspace sidebar with light scan/history/account surfaces. Controls retain visible focus, keyboard submission, reduced-motion support, provider disclosures and explicit incomplete/error states. An unknown page has a working return path.
 
-Ten deterministic browser groups cover auth errors/returns/logout, URL/file evidence, reports, mobile navigation, 320/768/1440 layouts, upload bounds and the unknown route. Real-store MFA and hosted full-stack verification are tracked in [[2026-11-11-demo-finalisation]]. No seed, challenge, recovery code or JWT is written to browser storage. Screenshots and passing fixtures do not establish WCAG conformance or production readiness.
+Thirteen deterministic browser groups cover auth errors/returns/logout, URL/file evidence, reports, mobile navigation, 320/768/1440 layouts, upload bounds and the unknown route. Real-store MFA and hosted full-stack verification are tracked in [[2026-11-11-demo-finalisation]]. No seed, challenge, recovery code or JWT is written to browser storage. Screenshots and passing fixtures do not establish WCAG conformance or production readiness.
+
+## Identity and usability components
+
+[[2026-11-13-brand-and-workspace-ux]] introduces a bespoke SVG channel mark shared by header, footer and favicon. Workspace shortcuts support Ctrl/Command+K, filtered page navigation, keyboard selection, Escape and focus restoration. Evidence can be copied without opening suspicious content, with clear clipboard failure feedback. File selection shows one filename and exact size, collapses the change control after selection, announces readiness without a safety verdict and rejects multiple-file drops. API/auth contracts are unchanged.
 
 ## Runtime hardening
 
