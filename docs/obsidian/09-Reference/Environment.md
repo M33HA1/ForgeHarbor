@@ -1,7 +1,7 @@
 ---
 type: reference
 status: active
-updated: 2026-11-09
+updated: 2026-11-13
 tags: [reference, environment, secrets]
 ---
 
@@ -26,11 +26,12 @@ The Compose stack reads `config/.env`. A clean clone should start from `config/.
 | `GEMINI_API_KEY` | Phishing | Required for URL analysis |
 | `VIRUSTOTAL_API_KEY` | Malware | Required for file analysis |
 | Outbound HTTPS to `api.pwnedpasswords.com` | Auth | Required for privacy-preserving compromised-password checks; no API key is required; signup fails closed if the service is unavailable |
-| `S3_ENDPOINT` | Reports | RustFS S3-compatible endpoint |
-| `S3_REGION` | Reports | Default `us-east-1` |
-| `S3_BUCKET` | Reports | Must be non-empty |
-| `S3_ACCESS_KEY` | Reports | S3-compatible storage credential |
-| `S3_SECRET_KEY` | Reports | S3-compatible storage credential |
+| `S3_MODE` | Reports | `compatible` (default) or `aws`; see [[AWS-Deployment]] |
+| `S3_ENDPOINT` | Reports | Required compatible HTTP(S) origin; forbidden in AWS mode |
+| `S3_REGION` | Reports | Compatible defaults to `us-east-1`; AWS requires this override or an SDK region |
+| `S3_BUCKET` | Reports | Required; AWS bucket must already exist |
+| `S3_ACCESS_KEY`, `S3_SECRET_KEY` | Reports | Required compatible credentials; forbidden in AWS mode |
+| `S3_SESSION_TOKEN` | Reports | Optional compatible-store token; AWS uses the SDK chain instead |
 | `NOTIFY_QUEUE` | Notify | Default `notifications`; Reports publishes to the same configured queue |
 | `AUTH_PORT` | Auth | Go Auth defaults to 8080 |
 | `PHISHING_PORT` | Phishing | Documented 8081; code binds 8081 |

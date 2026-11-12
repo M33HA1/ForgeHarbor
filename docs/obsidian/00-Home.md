@@ -20,6 +20,10 @@ Documentation and seed cleanup: [[2026-11-09-documentation-and-seed-cleanup]].
 
 [PR #71](https://github.com/M33HA1/ForgeHarbor/pull/71), from `codex/project-finalisation`, delivers: strict TypeScript, browser MFA and a revised UI integrated with the merged backend. [[2026-11-11-demo-finalisation]] records current verification and research; the PR checks show the current hosted result, and the active ruleset requires all 11 checks before merge. PR #71 merged as `868c51c`; [post-merge CI](https://github.com/M33HA1/ForgeHarbor/actions/runs/42985159308) and the security workflow passed. [[2026-11-12-dependency-followup]] tracks the six subsequently renewed patch updates and the MFA test-gateway repair on `codex/dependency-followup`; PR #72 merged as `c7c939b`; [merged-main CI](https://github.com/M33HA1/ForgeHarbor/actions/runs/43276307814) and all four security workflow jobs passed. [[AWS-Deployment]] is a proposed single-host resume/demo plan. Provider credentials, credential rotation and actual AWS provisioning remain external gates; do not claim a production launch.
 
+## AWS preparation workstream
+
+[[2026-11-13-aws-report-storage]] implements the first prerequisite in [[AWS-Deployment]]: Reports uses refreshable SDK credentials and regional S3 in explicit AWS mode, with a pre-provisioned bucket and HTTPS trust roots. Local RustFS behavior remains covered. Terraform and the HTTPS deployment configuration are next; no cloud resources have been created, and the provider/key gates remain open.
+
 ## Brand and workspace usability
 
 [[2026-11-13-brand-and-workspace-ux]] records the original channel mark, native workspace shortcut dialog, evidence-copy feedback and compact selected-file review. Verification for each revision is recorded in its PR checks; production/provider gates remain tracked separately.
@@ -51,7 +55,7 @@ Documentation and seed cleanup: [[2026-11-09-documentation-and-seed-cleanup]].
 ## Next three actions
 
 1. Rotate local provider credentials and verify fresh Gemini/VirusTotal configuration before live scans or publication.
-2. Define production TLS/service-port exposure policy and review the observed Auth failure latency against the deployment availability target.
+2. Continue [[AWS-Deployment]] with reviewed Terraform and an isolated HTTPS demo Compose configuration; do not provision until account/domain, cost and fresh-secret inputs are available.
 3. Configure production HTTPS/proxy peers and HIBP egress, triage report-only findings, and add Auth refresh.
 
 Go Auth, History and Notify are the merged development defaults under FH-040. Legacy implementations remain for rollback. PostgreSQL migration, frontend MFA deployment and production rollout remain separate work in [[Roadmap]].

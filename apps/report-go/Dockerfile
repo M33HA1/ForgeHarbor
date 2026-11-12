@@ -3,6 +3,9 @@ FROM golang:1.27.3-alpine AS builder
 
 WORKDIR /app
 
+# Regional S3 and credential endpoints require trusted HTTPS in the scratch image.
+RUN apk add --no-cache ca-certificates
+
 # Copy module files and download dependencies
 COPY go.mod go.sum ./
 # Set a reliable Go proxy and then download dependencies
@@ -22,6 +25,7 @@ WORKDIR /
 
 # Copy the static binary from the builder stage
 COPY --from=builder /app/main .
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 USER 65532:65532
 

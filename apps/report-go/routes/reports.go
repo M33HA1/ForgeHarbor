@@ -24,8 +24,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
@@ -176,51 +174,18 @@ func RegisterReportRoutes(r *gin.Engine, mongoClient *mongo.Client) {
 		log.Fatal("Report owner/scan index setup failed")
 	}
 
-	// S3 setup
-	awsCfg, err := config.LoadDefaultConfig(
-		context.TODO(),
-		config.WithRegion(func() string {
-			if v := os.Getenv("S3_REGION"); v != "" {
-				return v
-			}
-			return "us-east-1"
-		}()),
-		config.WithEndpointResolver(aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
-			return aws.Endpoint{URL: os.Getenv("S3_ENDPOINT"), HostnameImmutable: true}, nil
-		})),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
-			os.Getenv("S3_ACCESS_KEY"),
-			os.Getenv("S3_SECRET_KEY"),
-			"",
-		)),
-	)
+	storageCtx, cancelStorage := context.WithTimeout(context.Background(), reportBucketInitTimeout)
+	s3Client, bucket, createBucket, err := newReportStorage(storageCtx)
+	cancelStorage()
 	if err != nil {
-		log.Fatal("S3 config error:", err)
-	}
-	s3Client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
-		// MinIO/S3-compatible: prefer path-style addressing
-		o.UsePathStyle = true
-	})
-	bucket := os.Getenv("S3_BUCKET")
-
-	// Ensure bucket exists (create if missing)
-	if bucket == "" {
-		log.Fatal("S3_BUCKET env var is required")
+		// SDK errors may contain credential-source URLs or profile details.
+		log.Fatal("Report storage configuration failed")
 	}
 	bucketCtx, cancelBucket := context.WithTimeout(context.Background(), reportBucketInitTimeout)
-	err = ensureReportBucket(bucketCtx,
-		func(ctx context.Context) error {
-			_, err := s3Client.HeadBucket(ctx, &s3.HeadBucketInput{Bucket: aws.String(bucket)})
-			return err
-		},
-		func(ctx context.Context) error {
-			_, err := s3Client.CreateBucket(ctx, &s3.CreateBucketInput{Bucket: aws.String(bucket)})
-			return err
-		},
-	)
+	err = initializeReportBucket(bucketCtx, s3Client, bucket, createBucket)
 	cancelBucket()
 	if err != nil {
-		log.Fatal("S3 bucket check/create failed before startup deadline")
+		log.Fatal("Report storage bucket unavailable before startup deadline")
 	}
 
 	// Load the same Auth public key used by History and Notify. Missing or invalid
