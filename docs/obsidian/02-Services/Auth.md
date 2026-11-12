@@ -3,7 +3,7 @@ type: service
 status: protected
 priority: P0
 language: go
-updated: 2026-11-11
+updated: 2026-11-12
 tags: [service/auth, status/p0, area/security, language/go]
 ---
 
@@ -163,3 +163,7 @@ Pop-Location
 - [[Debug]]
 - [[Security-Review]]
 - [[ADR-0001-polyglot-boundaries]]
+
+## Browser fixture gateway
+
+[[2026-11-12-dependency-followup]] replaces the cancellation-prone browser Auth interception bridge with a disposable loopback HTTP gateway. Real Go/Rust Auth endpoints and cookie behavior remain in the test path. This does not add a deployed proxy or change Auth authorization.

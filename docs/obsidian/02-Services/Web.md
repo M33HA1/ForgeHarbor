@@ -115,4 +115,4 @@ Pop-Location
 
 ## Dependency follow-up
 
-[[2026-11-12-dependency-followup]] pairs Tailwind 4.3.5 with its Vite compiler package and updates Lucide to 1.70.0. PR #71 already merged the interface and MFA; this patch batch preserves those flows.
+[[2026-11-12-dependency-followup]] pairs Tailwind 4.3.5 with its Vite compiler package and updates Lucide to 1.70.0. PR #71 already merged the interface and MFA; this patch batch preserves those flows. The isolated MFA harness uses a loopback HTTP gateway rather than intercepting Auth responses in Playwright; cancellation/cookie behavior has a dedicated regression.

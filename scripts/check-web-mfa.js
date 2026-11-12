@@ -1,5 +1,5 @@
 // Run against isolated Go/Rust Auth fixtures on loopback ports 8180/8181 and
-// the built Web preview on 8088. Uses real Auth endpoints; returns no secrets.
+// the loopback test gateway on 8088 (Web upstream 8182). Uses real Auth endpoints; returns no secrets.
 // Never point the Auth fixture at a shared database. Its data is disposable.
 async (hostPage) => {
   const browser = hostPage.context().browser();
@@ -13,20 +13,8 @@ async (hostPage) => {
   const passed = [], errors = [];
   page.on('pageerror', error => errors.push(error.message));
   const assert = (value, message) => { if (!value) throw new Error(message); };
-  await page.route('**/*', async route => {
-    const req = route.request(), url = new URL(req.url());
-    if (url.origin !== base) return route.fulfill({ status: 418, body: 'External request blocked' });
-    if (url.pathname.startsWith('/__mfa_rollback/')) {
-      const response = await route.fetch({ url: 'http://localhost:8181/auth/' + url.pathname.split('/').pop(), maxRetries: 0 });
-      return route.fulfill({ response });
-    }
-    if (url.pathname.startsWith('/auth/')) {
-      const response = await route.fetch({ url: 'http://localhost:8180' + url.pathname, maxRetries: 0 });
-      return route.fulfill({ response });
-    }
-    if (/^\/(history|reports|notify|phishing|malware)(\/|$)/.test(url.pathname)) return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(url.pathname.endsWith('/health') ? {status:'ok'} : []) });
-    return route.continue();
-  });
+  // Local traffic uses a real HTTP gateway; only external browser requests are intercepted.
+  await page.route(url => url.origin !== base, route => route.abort('blockedbyclient'));
   const login = async () => {
     await page.goto(base + '/login');
     await page.getByLabel('Email', { exact: true }).fill(email);
@@ -113,7 +101,7 @@ async (hostPage) => {
     assert(errors.length===0,'Browser runtime errors');
     return {passed, runtimeErrors:errors.length};
   } finally {
-    // Finish active Auth proxy handlers before their APIResponse objects are disposed.
+    // Drain any external-request abort handlers before closing the disposable context.
     await page.unrouteAll({ behavior: 'wait' });
     await context.close();
   }
