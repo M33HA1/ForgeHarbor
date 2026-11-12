@@ -1,13 +1,15 @@
 param()
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
+& node --test (Join-Path $PSScriptRoot 'ci/mfa-proxy.test.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'MFA fixture gateway regression failed.' }
 $projectName = 'fh-mfa-' + [guid]::NewGuid().ToString('N').Substring(0, 10)
 $fixtureRoot = Join-Path ([IO.Path]::GetTempPath()) $projectName
 $composeFile = Join-Path $fixtureRoot 'compose.json'
 $oldFixture = $env:FH_MFA_FIXTURE
 $oldProject = $env:FH_MFA_PROJECT
 # Dedicated loopback ports; never replace or stop an existing development stack.
-foreach ($port in @(8088, 8180, 8181)) {
+foreach ($port in @(8088, 8180, 8181, 8182)) {
     $probe = [Net.Sockets.TcpClient]::new()
     try { $probe.Connect('127.0.0.1', $port); throw "Port $port is occupied; stop its owner before running the isolated MFA suite." }
     catch [Net.Sockets.SocketException] { }
@@ -28,7 +30,7 @@ writeFileSync(path.join(root,'jwt-public.pem'),pair.publicKey);
 writeFileSync(path.join(root,'mfa-encryption.key'),randomBytes(32),{mode:0o600});
 const auth={image:project+'-go',command:['auth'],ports:['127.0.0.1:8180:8080'],volumes:[root.replaceAll('\\','/')+':/app/config:ro'],environment:{MONGO_URI:'mongodb://mongo:27017',REDIS_URL:'redis://redis:6379',AUTH_COOKIE_SECURE:'false',CORS_ALLOWED_ORIGINS:'http://localhost:8088'},depends_on:{mongo:{condition:'service_healthy'},redis:{condition:'service_healthy'}}};
 const legacy={...auth,image:project+'-rust',ports:['127.0.0.1:8181:8080']};delete legacy.command;
-const config={services:{mongo:{image:'mongo:6.0',healthcheck:{test:['CMD','mongosh','--quiet','--eval',"db.adminCommand('ping')"],interval:'2s',timeout:'5s',retries:30}},redis:{image:'redis:7-alpine',healthcheck:{test:['CMD','redis-cli','ping'],interval:'2s',timeout:'5s',retries:30}},auth,legacy,web:{image:project+'-web',ports:['127.0.0.1:8088:3000']}}};
+const config={services:{mongo:{image:'mongo:6.0',healthcheck:{test:['CMD','mongosh','--quiet','--eval',"db.adminCommand('ping')"],interval:'2s',timeout:'5s',retries:30}},redis:{image:'redis:7-alpine',healthcheck:{test:['CMD','redis-cli','ping'],interval:'2s',timeout:'5s',retries:30}},auth,legacy,web:{image:project+'-web',ports:['127.0.0.1:8182:3000']}}};
 writeFileSync(path.join(root,'compose.json'),JSON.stringify(config));
 '@ | node
     if ($LASTEXITCODE -ne 0) { throw 'MFA fixture generation failed.' }

@@ -1,11 +1,13 @@
 ---
 type: change-index
 status: active
-updated: 2026-11-09
+updated: 2026-11-12
 tags: [change, changelog]
 ---
 
 # Change Log
+
+- [[2026-11-12-dependency-followup]] — refreshed AWS SDK, Lucide and paired Tailwind compiler patch updates after PR #71 merged.
 
 - [[2026-11-11-demo-finalisation]] â€” TypeScript/MFA integration, interface redesign, browser fixture fixes, CI and corrected AWS demo scope.
 
