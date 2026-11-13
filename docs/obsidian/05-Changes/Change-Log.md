@@ -1,11 +1,13 @@
 ---
 type: change-index
 status: active
-updated: 2026-11-13
+updated: 2026-11-14
 tags: [change, changelog]
 ---
 
 # Change Log
+
+- [[2026-11-14-test-resource-cleanup]] — clean up uniquely named MFA/parity images after isolated tests and verify the cleanup boundary.
 
 - [[2026-11-13-aws-report-storage]] — start AWS preparation with refreshable Reports credentials, regional S3 and HTTPS trust roots.
 

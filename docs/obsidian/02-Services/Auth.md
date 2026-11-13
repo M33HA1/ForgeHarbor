@@ -3,7 +3,7 @@ type: service
 status: protected
 priority: P0
 language: go
-updated: 2026-11-12
+updated: 2026-11-14
 tags: [service/auth, status/p0, area/security, language/go]
 ---
 
@@ -22,6 +22,10 @@ The active Go runtime container runs as UID 65532. [PR #71](https://github.com/M
 ## Responsibility
 
 Registration, login, JWT issuance, JWKS exposure, and current-user lookup. This is the trust anchor for every protected service.
+
+## Isolated test cleanup
+
+[[2026-11-14-test-resource-cleanup]] adds exact-project image cleanup to `scripts/check-mfa.ps1` and `scripts/check-go-parity.ps1`. These disposable fixtures are separate from the development Auth stack; their repeated image tags previously survived container teardown.
 
 ## Authenticator MFA
 

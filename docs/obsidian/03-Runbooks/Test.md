@@ -1,7 +1,7 @@
 ---
 type: runbook
 status: active
-updated: 2026-11-09
+updated: 2026-11-14
 tags: [runbook, test]
 ---
 
@@ -28,6 +28,12 @@ Auth credential boundaries: `python scripts/check-auth-inputs.py` verifies signu
 Local outage drill: `powershell -ExecutionPolicy Bypass -File scripts/check-edge-auth-outage.ps1`. This intentionally stops only local Auth, asserts protected HTTP failures and public health, then restores Auth in `finally` and verifies recovery. It requires local Docker engine access, a running Auth service, and the default local URLs. Do not interrupt it while Auth is stopped. Evidence: [[2026-11-03-edge-auth-outage-and-recovery]].
 
 Shared edge authentication (running stack and Traefik API required): `node scripts/check-edge-auth.mjs`. This strict check covers loaded router attachments and token/health/preflight boundaries. See [[ADR-0005-shared-edge-auth]].
+
+## Disposable fixture resources
+
+`scripts/check-mfa.ps1` and `scripts/check-go-parity.ps1` generate unique Compose project names. Their `finally` blocks remove fixture containers, anonymous volumes and networks, then only the exact per-run application image tags. Shared MongoDB/Redis/RabbitMQ images, development volumes and reusable build caches remain. `scripts/ci/test-resources.test.ps1` verifies project/image allowlists and failure handling without contacting Docker.
+
+A failed Compose teardown fails the suite; MFA retains its temporary Compose/key directory for scoped recovery instead of deleting mounted inputs. Temporary environment variables are restored even when cleanup fails. A forcibly killed process or Docker outage can still leave resources: inspect Compose project labels and exact generated image names before targeted cleanup; do not use a global system/volume prune. See [[2026-11-14-test-resource-cleanup]].
 
 ## When to use
 
