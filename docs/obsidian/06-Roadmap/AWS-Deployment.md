@@ -1,7 +1,7 @@
 ---
 type: plan
-status: proposed
-updated: 2026-11-11
+status: in-progress
+updated: 2026-11-13
 tags: [roadmap, aws, demo]
 ---
 
@@ -27,14 +27,30 @@ flowchart LR
     ECR --> Apps
 ```
 
+## Preparation progress
+
+The Reports storage prerequisite is implemented on `codex/aws-reports-storage`; see [[2026-11-13-aws-report-storage]]. Local race tests, SDK request/refresh fixtures and the minimal image build pass. Terraform, demo HTTPS Compose, deployment automation and real AWS validation remain undelivered. This is preparation progress, not a running AWS environment.
+
 ## Ordered AWS work
 
-1. Add AWS credential-chain mode to Reports. Its current static credentials/custom endpoint are for RustFS; use regional S3 and an appropriately scoped role in AWS. Retain local compatibility and test temporary credentials and owner-authorized create/download/cleanup. Model the EC2 role as a shared host permission boundary; it is not per-service IAM isolation.
+1. Reports credential-chain implementation and local SDK fixtures are complete; AWS role permissions and real owner-authorized create/download/cleanup remain to verify on the provisioned environment. Model the EC2 role as a shared host permission boundary; it is not per-service IAM isolation.
 2. Add Terraform for the dedicated VPC/subnet, security groups, EC2/EBS, S3/ECR, IAM/OIDC, secret references, logs and budget alarms. Use a nonoverlapping Docker/VPC CIDR. Select supported pinned MongoDB/Redis/RabbitMQ images and verify upgrades separately.
 3. Add a demo Compose configuration with real hostname, HTTPS, Secure cookies, exact origins, stable trusted proxy peer, resource limits and safe key mounts. Do not inherit development ports, localhost routing or insecure dashboards. Prove spoofed forwarding headers cannot bypass rate limits.
 4. Build/scan once in GitHub Actions; push commit-tagged ECR images and record digests. Use OIDC roles scoped to this repository and environment. Deploy approved release manifests through a restricted SSM document; retain the previous compatible release for rollback. No permanent AWS keys in GitHub.
 5. Verify signup/login/MFA/recovery, owner isolation, report storage and notifications on AWS. Use new test keys and bounded provider calls; do not copy local secrets or real user data. Rehearse restoration of MongoDB, report objects and MFA key; record Redis revocation-loss and broker-recovery limitations.
 6. Produce the resume evidence: architecture diagram, CI/deployment/rollback run links, sanitized screenshots, cost notes and a concise demo recording. Describe verified capabilities and limitations; make no uptime, accuracy or scalability claims without measurements.
+
+## Reports storage configuration
+
+For AWS, supply `S3_MODE=aws`, `S3_BUCKET=<precreated-private-bucket>` and `S3_REGION=ap-south-1` (or use the SDK region configuration). Omit `S3_ENDPOINT`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` and `S3_SESSION_TOKEN`; reusing the development environment file fails startup deliberately. Standard `AWS_ENDPOINT_URL`/`AWS_ENDPOINT_URL_S3` overrides are rejected, and shared-profile S3 endpoint settings are ignored. Use the SDK role chain rather than permanent keys; environment credentials and session tokens remain supported by that chain for isolated testing. Missing credentials, region or bucket prevent startup. Do not enable SDK request/credential debug logging.
+
+For RustFS, omit `S3_MODE` or set `compatible`, retain the explicit endpoint and both local credentials, and keep the local region default. The custom endpoint must be an HTTP(S) origin without embedded credentials, path, query or fragment. Plain HTTP is for the private local store only. Neither mode changes JWT, ownership, provenance, report deadlines or compensation semantics.
+
+Provision a private general-purpose S3 bucket before starting Reports. The runtime needs `s3:ListBucket` on that bucket for `HeadBucket`, and `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject` on its `report-*.json` objects. Keep bucket creation, policy updates, public-access settings and version deletion with the provisioning role. This assumes bucket-default SSE-S3; SSE-KMS needs separately reviewed key permissions. With versioning, compensating `DeleteObject` creates a delete marker rather than erasing retained versions; configure a lifecycle and recovery policy. IAM grants bucket access to the host role, while application JWT/ownership checks isolate users. Containers sharing an EC2 instance role do not have independent IAM identities.
+
+Local fixtures cover regional signing with temporary tokens, role-provider refresh, upload/download/delete requests, local path-style bucket creation and refusal to create AWS buckets after 403/404. They do not establish real S3 permissions, EC2 metadata reachability from Docker, AWS bucket encryption, IAM isolation or cloud recovery. Verify IMDSv2 and an appropriate container hop limit during deployment without publishing metadata proxy endpoints.
+
+Implementation references checked 2026-11-13: [SDK credential chain](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/configure-gosdk.html), [S3 endpoint configuration](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/configure-endpoints.html), [S3 operation permissions](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-policy-actions.html).
 
 ## Cost and run policy
 

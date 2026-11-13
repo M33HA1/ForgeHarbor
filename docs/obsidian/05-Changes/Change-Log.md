@@ -7,6 +7,8 @@ tags: [change, changelog]
 
 # Change Log
 
+- [[2026-11-13-aws-report-storage]] — start AWS preparation with refreshable Reports credentials, regional S3 and HTTPS trust roots.
+
 - [[2026-11-13-brand-and-workspace-ux]] — custom identity, workspace shortcuts, evidence copy and file-selection review.
 
 - [[2026-11-12-dependency-followup]] — refreshed AWS SDK, Lucide and paired Tailwind compiler patch updates after PR #71 merged.

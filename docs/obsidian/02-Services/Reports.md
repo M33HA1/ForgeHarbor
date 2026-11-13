@@ -3,7 +3,7 @@ type: service
 status: protected
 priority: P1
 language: go
-updated: 2026-11-12
+updated: 2026-11-13
 tags: [service/reports, status/p0, area/security, language/go]
 ---
 
@@ -53,11 +53,13 @@ Reports registers `/reports` and `/reports/:id`, and the gateway does not rewrit
 | `MONGO_URI` | Yes | MongoDB connection string |
 | `MONGO_DB` | Yes | Database name |
 | `RABBITMQ_URL` | Yes | RabbitMQ connection string |
-| `S3_ENDPOINT` | Yes | RustFS S3 endpoint |
-| `S3_REGION` | No | Defaults to `us-east-1` |
-| `S3_BUCKET` | Yes | Report bucket; service creates it if missing |
-| `S3_ACCESS_KEY` | Yes | RustFS access key |
-| `S3_SECRET_KEY` | Yes | RustFS secret key |
+| `S3_MODE` | No | `compatible` (default, RustFS) or `aws` (SDK credential chain) |
+| `S3_ENDPOINT` | Compatible only | HTTP(S) origin; forbidden in AWS mode |
+| `S3_REGION` | AWS needs a region | Compatible defaults to `us-east-1`; AWS uses this override or the SDK region configuration |
+| `S3_BUCKET` | Yes | Compatible mode creates missing buckets; AWS requires a pre-provisioned bucket |
+| `S3_ACCESS_KEY` | Compatible only | RustFS access key; forbidden in AWS mode |
+| `S3_SECRET_KEY` | Compatible only | RustFS secret key; forbidden in AWS mode |
+| `S3_SESSION_TOKEN` | No | Optional compatible-store session token; forbidden in AWS mode |
 | `REPORT_PORT` | No | Defaults to 8084 |
 | `JWT_PUBLIC_KEY_PATH` | No | Defaults to `/app/config/jwt-public.pem` |
 | `JWT_ISSUER` | No | Defaults to `forgeharbor` |
@@ -99,6 +101,8 @@ python scripts/check-report-integrity.py
 
 ## Recent changes
 
+- [[2026-11-13-aws-report-storage]]: explicit AWS credential-chain mode, regional signing, refreshable role credentials and a CA bundle; no AWS runtime bucket creation. Local RustFS remains the default.
+
 - [[2026-11-05-reports-bucket-startup-retry]]: startup retries bucket discovery/creation for up to 30 seconds when RustFS is temporarily unavailable.
 
 - [[2026-11-04-legacy-report-download-provenance]]: downloads fail closed for missing or unknown provenance; Web shows regeneration guidance.
@@ -133,4 +137,4 @@ python scripts/check-report-integrity.py
 
 ## Dependency follow-up
 
-[[2026-11-12-dependency-followup]] updates the AWS SDK core/config/credentials/S3 packages together after Dependabot renewed its four PRs. Retain owner/provenance checks, operation deadlines and the patched quic-go/x/crypto dependencies from PR #71. Credential-chain support for real AWS S3 is still planned in [[AWS-Deployment]].
+[[2026-11-12-dependency-followup]] updates the AWS SDK core/config/credentials/S3 packages together after Dependabot renewed its four PRs. Retain owner/provenance checks, operation deadlines and the patched quic-go/x/crypto dependencies from PR #71. Credential-chain support is implemented and locally tested in [[2026-11-13-aws-report-storage]]; real AWS role/bucket verification remains under [[AWS-Deployment]].

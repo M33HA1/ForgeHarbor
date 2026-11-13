@@ -12,6 +12,10 @@ tags: [security, review, p0]
 
 Auth, History, Reports, Notify, the Traefik edge, local configuration, and the frontend's handling of tokens and results.
 
+## AWS Reports preparation (2026-11-13)
+
+[[2026-11-13-aws-report-storage]] adds explicit AWS storage mode with the SDK credential chain, temporary-token signing and credential refresh fixtures. AWS mode rejects local static S3 configuration and explicit endpoint overrides, ignores shared-profile endpoint overrides and never creates buckets. The runtime now includes HTTPS CA roots. The EC2 instance role is a shared host boundary; this does not provide per-container IAM isolation. Real bucket policy, IMDSv2/container reachability, rotation and cloud ownership/restore tests remain deployment gates in [[AWS-Deployment]].
+
 ## Latest backend evidence (2026-11-09)
 
 PR #69 merged Go Auth/History/Notify and backend MFA APIs as `bbb8055`. The high/critical security gate, real-store race contracts, owner/API/browser regressions and all build jobs passed for PR head `9d41051` in [CI run #209](https://github.com/M33HA1/ForgeHarbor/actions/runs/42642752091). The report-only workflow also passed; its success does not establish the absence of findings. No new finding suppression was added.

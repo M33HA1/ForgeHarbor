@@ -1,7 +1,7 @@
 ---
 type: backlog
 status: active
-updated: 2026-11-09
+updated: 2026-11-13
 tags: [roadmap, backlog]
 ---
 
@@ -59,7 +59,7 @@ tags: [roadmap, backlog]
 | FH-029 | CI | Add language matrix and security scans | Prevent regressions | In progress: eight language build/test jobs, Go store race contracts, strict API/browser runner and HIGH/CRITICAL security gate passed on PR #69 head 9d41051 (run #209); main ruleset requires all 11 checks; finalisation revision adds real MFA to integration; report-only finding triage and production CD remain |
 | FH-030 | Testing | Add k6 load tests | Measure performance claims | Open |
 | FH-031 | Docs | Add demo video and screenshots | Portfolio presentation | Open |
-| FH-032 | Infra | Add Terraform or Kubernetes manifests | Deployment maturity | Open |
+| FH-032 | Infra | Prepare the single-host AWS resume demo | Reproducible deployment without a managed-stack baseline | In progress: Reports credential-chain prerequisite locally verified in [[2026-11-13-aws-report-storage]]; Terraform, HTTPS Compose, OIDC/SSM and real cloud tests remain |
 | FH-039 | Security | Move the Gemini key out of the query string and tokens out of `localStorage` | Key leakage and XSS token theft | Done in the browser path — Gemini uses `x-goog-api-key`; Web uses an HttpOnly Strict cookie, never stores JWTs in Web storage, clears the cookie and revokes its token ID on logout; API bearer support remains |
 
 | FH-040 | Architecture | Migrate Auth, History and Notify to Go | Preserve API/data/queue contracts during the language cutover | Merged in PR #69 as bbb8055; Go is the dev default; PR-head race parity, security and full-stack/browser CI passed; MongoDB and legacy rollback retained; production rollout remains |

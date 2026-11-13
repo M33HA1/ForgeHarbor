@@ -1,7 +1,7 @@
 ---
 type: roadmap
 status: active
-updated: 2026-11-09
+updated: 2026-11-13
 tags: [roadmap, planning]
 ---
 
@@ -10,6 +10,10 @@ tags: [roadmap, planning]
 ## Current phase
 
 **Phase 0 — Stabilize.** The stack must start reliably and enforce basic security before new services are added.
+
+## Active resume-demo delivery workstream
+
+The core demo and brand/UX changes are merged through PR #73. AWS preparation is now active under [[AWS-Deployment]], separately from the larger product expansion phases below. [[2026-11-13-aws-report-storage]] delivers the Reports credential-chain prerequisite locally; Terraform and HTTPS deployment configuration are next. Live provider keys, rotation and actual cloud verification still gate publication.
 
 ## Phase overview
 

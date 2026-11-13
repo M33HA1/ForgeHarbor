@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ## [Unreleased]
 
+- Prepare Reports for AWS S3 with an explicit SDK credential-chain mode, refreshing role credentials, regional endpoints and pre-provisioned buckets; retain RustFS defaults and add HTTPS trust roots to the minimal runtime image.
+
 - Introduce the original ForgeHarbor channel mark across navigation, footer and favicon; add keyboard-searchable workspace shortcuts, copy-evidence feedback and clearer file review with multiple-drop rejection.
 
 - Replace the MFA browser interception bridge with a loopback test gateway; verify cancellation, cookie forwarding and listener readiness.
