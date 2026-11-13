@@ -1,6 +1,8 @@
 param()
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
+. (Join-Path $PSScriptRoot 'ci/test-resources.ps1')
+& (Join-Path $PSScriptRoot 'ci/test-resources.test.ps1')
 & node --test (Join-Path $PSScriptRoot 'ci/mfa-proxy.test.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'MFA fixture gateway regression failed.' }
 $projectName = 'fh-mfa-' + [guid]::NewGuid().ToString('N').Substring(0, 10)
@@ -45,15 +47,20 @@ writeFileSync(path.join(root,'compose.json'),JSON.stringify(config));
     & node (Join-Path $PSScriptRoot 'ci/mfa-browser.mjs')
     if ($LASTEXITCODE -ne 0) { throw 'MFA browser verification failed.' }
 } finally {
-    if (Test-Path -LiteralPath $composeFile) {
-        & docker compose -p $projectName -f $composeFile down --volumes --remove-orphans
+    try {
+        if (Test-Path -LiteralPath $composeFile) {
+            & docker compose -p $projectName -f $composeFile down --volumes --remove-orphans
+            if ($LASTEXITCODE -ne 0) { throw "MFA fixture teardown failed; retained configuration at $composeFile" }
+        }
+        Remove-ForgeHarborTestImages -ProjectName $projectName
+        # Verify the exact generated temporary directory before recursive cleanup.
+        $resolvedFixture = [IO.Path]::GetFullPath($fixtureRoot)
+        $expectedFixture = [IO.Path]::GetFullPath((Join-Path ([IO.Path]::GetTempPath()) $projectName))
+        if ($resolvedFixture -eq $expectedFixture -and (Split-Path $resolvedFixture -Leaf) -match '^fh-mfa-[0-9a-f]{10}$') {
+            Remove-Item -LiteralPath $resolvedFixture -Recurse -Force
+        }
+    } finally {
+        $env:FH_MFA_FIXTURE = $oldFixture
+        $env:FH_MFA_PROJECT = $oldProject
     }
-    # Verify the exact generated temporary directory before recursive cleanup.
-    $resolvedFixture = [IO.Path]::GetFullPath($fixtureRoot)
-    $expectedFixture = [IO.Path]::GetFullPath((Join-Path ([IO.Path]::GetTempPath()) $projectName))
-    if ($resolvedFixture -eq $expectedFixture -and (Split-Path $resolvedFixture -Leaf) -match '^fh-mfa-[0-9a-f]{10}$') {
-        Remove-Item -LiteralPath $resolvedFixture -Recurse -Force
-    }
-    $env:FH_MFA_FIXTURE = $oldFixture
-    $env:FH_MFA_PROJECT = $oldProject
 }
