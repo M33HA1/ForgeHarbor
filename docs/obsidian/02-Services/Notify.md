@@ -3,11 +3,15 @@ type: service
 status: protected
 priority: P1
 language: go
-updated: 2026-11-09
+updated: 2026-11-17
 tags: [service/notify, status/p0, area/security, language/go]
 ---
 
 # Notify
+
+## Dependency maintenance
+
+[[2026-11-17-pr-and-branch-cleanup]] consolidates the pending dependency updates. The note and PR checks record verification; provider and deployment gates remain separate.
 
 ## Go language migration
 

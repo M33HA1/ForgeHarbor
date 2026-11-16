@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-actix-web = "4.18.1"
+actix-web = "4.19.0"
 actix-cors = "0.7.2"
 actix-web-httpauth = "0.8.3"
 serde = { version = "1.0.229", features = ["derive"] }

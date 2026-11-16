@@ -1,11 +1,13 @@
 ---
 type: change-index
 status: active
-updated: 2026-11-14
+updated: 2026-11-17
 tags: [change, changelog]
 ---
 
 # Change Log
+
+- [[2026-11-17-pr-and-branch-cleanup]] — review/consolidate dependency PRs, verify legacy hash compatibility and prune merged/superseded branches.
 
 - [[2026-11-14-test-resource-cleanup]] — clean up uniquely named MFA/parity images after isolated tests and verify the cleanup boundary.
 

@@ -1,6 +1,4 @@
 use actix_web::web;
-use argon2::password_hash::SaltString;
-use rand_core::OsRng;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use std::sync::Arc;
 use tokio::sync::Semaphore;
@@ -46,9 +44,8 @@ impl PasswordJobs {
 
     pub async fn hash(&self, password: String) -> Result<String, PasswordError> {
         self.run(move || {
-            let salt = SaltString::generate(&mut OsRng);
             Argon2::default()
-                .hash_password(password.as_bytes(), &salt)
+                .hash_password(password.as_bytes())
                 .map(|hash| hash.to_string())
                 .map_err(|_| ())
         })
@@ -79,7 +76,9 @@ mod tests {
         let jobs = PasswordJobs::new(1);
         let password = "  fixture 🛟 passphrase  ".to_string();
         let hash = jobs.hash(password.clone()).await.unwrap();
-        assert!(hash.starts_with("$argon2id$"));
+        assert!(hash.starts_with("$argon2id$v=19$m=19456,t=2,p=1$"));
+        let second = jobs.hash(password.clone()).await.unwrap();
+        assert_ne!(hash, second, "password hashes must use fresh random salts");
         assert!(jobs.verify(password, hash.clone()).await.unwrap());
         assert!(
             !jobs
@@ -91,6 +90,32 @@ mod tests {
             jobs.verify("fixture".into(), "invalid hash".into()).await,
             Err(PasswordError::Failed)
         );
+    }
+
+    #[actix_web::test]
+    async fn reads_pre_upgrade_rust_and_go_password_hashes() {
+        // Public synthetic vectors: Rust 0.5.3 (shared with Go's existing test)
+        // and Go's active encoder. Never use account credentials in fixtures.
+        let fixtures = [
+            (
+                "synthetic interoperability fixture",
+                "$argon2id$v=19$m=19456,t=2,p=1$cHVibGljLXRlc3Qtc2FsdA$wcIdazdJKFdJPNZeu2zxWZSsR+Y80K2rrt94ZCe4Oxg",
+            ),
+            (
+                "compatibility fixture passphrase",
+                "$argon2id$v=19$m=19456,t=2,p=1$Zml4dHVyZS1zYWx0LTEyMw$S14qMF7J0MusrmJe4chFyj2mUl2S9+N6Y0IPRAqF64Q",
+            ),
+        ];
+        let jobs = PasswordJobs::new(1);
+        for (password, hash) in fixtures {
+            assert!(jobs.verify(password.into(), hash.into()).await.unwrap());
+            assert!(
+                !jobs
+                    .verify("incorrect fixture".into(), hash.into())
+                    .await
+                    .unwrap()
+            );
+        }
     }
 
     #[actix_web::test]

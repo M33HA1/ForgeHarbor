@@ -3,11 +3,15 @@ type: service
 status: partially-verified
 priority: P0
 language: typescript
-updated: 2026-11-13
+updated: 2026-11-17
 tags: [service/web, status/p0, area/frontend, language/typescript]
 ---
 
 # Web
+
+## Dependency maintenance
+
+[[2026-11-17-pr-and-branch-cleanup]] consolidates the pending dependency updates. The note and PR checks record verification; provider and deployment gates remain separate.
 
 ## Current interface and integration
 
