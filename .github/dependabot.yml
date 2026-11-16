@@ -8,6 +8,10 @@ updates:
     directory: "/apps/web"
     schedule:
       interval: "weekly"
+    groups:
+      web-build-tooling:
+        patterns: ["vite", "@vitejs/*", "tailwindcss", "@tailwindcss/*"]
+        update-types: ["minor", "patch"]
   - package-ecosystem: "npm"
     directory: "/apps/history-ts"
     schedule:
@@ -32,3 +36,7 @@ updates:
     directory: "/apps/report-go"
     schedule:
       interval: "weekly"
+    groups:
+      aws-sdk:
+        patterns: ["github.com/aws/aws-sdk-go-v2", "github.com/aws/aws-sdk-go-v2/*", "github.com/aws/smithy-go"]
+        update-types: ["minor", "patch"]

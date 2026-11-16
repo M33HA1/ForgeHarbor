@@ -3,7 +3,7 @@ type: service
 status: protected
 priority: P1
 language: go
-updated: 2026-11-13
+updated: 2026-11-17
 tags: [service/reports, status/p0, area/security, language/go]
 ---
 
@@ -12,6 +12,10 @@ tags: [service/reports, status/p0, area/security, language/go]
 Reports now pins x/net v0.62.0 and its required Go modules after post-merge CI #171 detected CVE-2026-78661. Hosted verification is tracked in [PR #40 checks](https://github.com/M33HA1/ForgeHarbor/pull/40/checks); see [[2026-11-07-reports-x-net-security]].
 
 Protected gateway requests use the shared Auth ForwardAuth gate; service JWT and ownership checks remain active. Exact GET health paths and CORS preflights remain public. See [[ADR-0005-shared-edge-auth]] and [[2026-11-03-shared-edge-auth]].
+
+## Dependency maintenance
+
+[[2026-11-17-pr-and-branch-cleanup]] consolidates the pending dependency updates. The note and PR checks record verification; provider and deployment gates remain separate.
 
 ## Runtime hardening
 

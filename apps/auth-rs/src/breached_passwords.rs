@@ -84,7 +84,10 @@ impl BreachedPasswordChecker {
 }
 
 fn hash_range(password: &str) -> (String, String) {
-    let hash = format!("{:X}", Sha1::digest(password.as_bytes()));
+    let hash: String = Sha1::digest(password.as_bytes())
+        .iter()
+        .map(|byte| format!("{byte:02X}"))
+        .collect();
     (hash[..5].to_string(), hash[5..].to_string())
 }
 

@@ -6,6 +6,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The
 
 ## [Unreleased]
 
+- Consolidate the 18 pending dependency updates; adapt legacy Rust Auth to the Argon2/SHA-1 APIs with stored-hash and random-salt regression coverage. Group related AWS SDK and Web build-tool updates for future review.
+- Prune verified merged/superseded branches and fast-forward local main while preserving unmerged language/security history and the edited AWS-plan worktree.
+
 - Remove per-run MFA and Go parity image tags during fixture teardown; retain recovery configuration after teardown failures and always restore temporary environment variables. Add fail-closed cleanup regression checks.
 
 - Prepare Reports for AWS S3 with an explicit SDK credential-chain mode, refreshing role credentials, regional endpoints and pre-provisioned buckets; retain RustFS defaults and add HTTPS trust roots to the minimal runtime image.
